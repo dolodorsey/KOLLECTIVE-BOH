@@ -48,7 +48,20 @@ export const [UserContext, useUser] = createContextHook(() => {
         }
 
         console.log('✅ User profile loaded:', profile.name);
-        return profile as User;
+        
+        const userProfile: User = {
+          id: profile.id,
+          name: profile.name || 'User',
+          role: profile.role || 'Ops / VA',
+          rank: profile.rank,
+          assignedBrands: Array.isArray(profile.assignedBrands) 
+            ? profile.assignedBrands 
+            : (profile.assigned_brands ? (Array.isArray(profile.assigned_brands) ? profile.assigned_brands : []) : []),
+          xp: profile.xp || 0,
+          profileImage: profile.profileImage || profile.profile_image,
+        };
+        
+        return userProfile;
       } catch (error) {
         console.error('❌ Error in user query:', error);
         throw error;

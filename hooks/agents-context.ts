@@ -32,7 +32,17 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
         }
 
         console.log(`✅ Loaded ${agentsData?.length || 0} agents`);
-        return (agentsData || []) as Agent[];
+        
+        const normalizedAgents: Agent[] = (agentsData || []).map((agent: any) => ({
+          id: agent.id,
+          name: agent.name,
+          status: agent.status || 'active',
+          brandId: agent.brand_id || agent.brandId,
+          completedTasks: agent.completed_tasks || agent.completedTasks || 0,
+          avatar: agent.avatar || '🤖',
+        }));
+        
+        return normalizedAgents;
       } catch (error) {
         console.error('❌ Error in agents query:', error);
         throw error;
@@ -48,7 +58,8 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
   }, [agentsQuery.data]);
 
   const userAgents = useMemo(() => {
-    if (!user) return [];
+    if (!user) return agents;
+    if (user.assignedBrands.length === 0) return agents;
     
     return agents.filter(agent => 
       user.assignedBrands.includes(agent.brandId)

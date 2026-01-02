@@ -32,7 +32,19 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
         }
 
         console.log(`✅ Loaded ${brandsData?.length || 0} brands`);
-        return (brandsData || []) as Brand[];
+        
+        const normalizedBrands: Brand[] = (brandsData || []).map((brand: any) => ({
+          id: brand.id,
+          name: brand.name,
+          mascot: brand.mascot || '🏢',
+          color: brand.color || '#FFD700',
+          taskCompletion: brand.task_completion || brand.taskCompletion || 0,
+          activeAgents: brand.active_agents || brand.activeAgents || 0,
+          recentUploads: brand.recent_uploads || brand.recentUploads || 0,
+          status: brand.status || 'good',
+        }));
+        
+        return normalizedBrands;
       } catch (error) {
         console.error('❌ Error in brands query:', error);
         throw error;
@@ -48,7 +60,8 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
   }, [brandsQuery.data]);
 
   const userBrands = useMemo(() => {
-    if (!user) return [];
+    if (!user) return brands;
+    if (user.assignedBrands.length === 0) return brands;
     
     return brands.filter(brand => 
       user.assignedBrands.includes(brand.id)

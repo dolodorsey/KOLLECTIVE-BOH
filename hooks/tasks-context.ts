@@ -25,7 +25,7 @@ export const [TasksContext, useTasks] = createContextHook(() => {
         const { data: tasksData, error } = await supabase
           .from('tasks')
           .select('*')
-          .order('dueDate', { ascending: true });
+          .order('due_date', { ascending: true });
 
         if (error) {
           console.error('❌ Error fetching tasks:', error);
@@ -33,7 +33,31 @@ export const [TasksContext, useTasks] = createContextHook(() => {
         }
 
         console.log(`✅ Loaded ${tasksData?.length || 0} tasks`);
-        return (tasksData || []) as Task[];
+        
+        const normalizedTasks: Task[] = (tasksData || []).map((task: any) => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          dueDate: task.due_date || task.dueDate,
+          priority: task.priority || 'medium',
+          status: task.status || 'pending',
+          brandId: task.brand_id || task.brandId,
+          agentOrigin: task.agent_origin || task.agentOrigin,
+          collaborators: Array.isArray(task.collaborators) 
+            ? task.collaborators 
+            : [],
+          attachments: Array.isArray(task.attachments) 
+            ? task.attachments 
+            : [],
+          sopLink: task.sop_link || task.sopLink,
+          createdAt: task.created_at || task.createdAt || new Date().toISOString(),
+          lastUpdated: task.last_updated || task.lastUpdated || new Date().toISOString(),
+          automationTrail: Array.isArray(task.automation_trail) 
+            ? task.automation_trail 
+            : (task.automationTrail ? task.automationTrail : []),
+        }));
+        
+        return normalizedTasks;
       } catch (error) {
         console.error('❌ Error in tasks query:', error);
         throw error;
@@ -77,10 +101,11 @@ export const [TasksContext, useTasks] = createContextHook(() => {
   const userTasks = useMemo(() => {
     if (!user) return [];
     
-    return tasks.filter(task => 
-      user.assignedBrands.includes(task.brandId) && 
-      task.collaborators.some(collab => collab.id === user.id)
-    );
+    return tasks.filter(task => {
+      const brandMatch = user.assignedBrands.length === 0 || user.assignedBrands.includes(task.brandId);
+      const collabMatch = task.collaborators.length === 0 || task.collaborators.some(collab => collab.id === user.id);
+      return brandMatch && collabMatch;
+    });
   }, [tasks, user]);
 
   const updateTaskStatus = (taskId: string, status: TaskStatus) => {
