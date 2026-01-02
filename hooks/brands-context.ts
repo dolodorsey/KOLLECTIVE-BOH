@@ -15,7 +15,7 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
     queryFn: async () => {
       if (!SUPABASE_CONFIG_OK) {
         console.error('❌ Supabase not configured in brands context');
-        throw new Error('Supabase not configured');
+        return [];
       }
 
       try {
@@ -28,7 +28,7 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
 
         if (error) {
           console.error('❌ Error fetching brands:', error);
-          throw error;
+          return [];
         }
 
         console.log(`✅ Loaded ${brandsData?.length || 0} brands`);
@@ -47,10 +47,11 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
         return normalizedBrands;
       } catch (error) {
         console.error('❌ Error in brands query:', error);
-        throw error;
+        return [];
       }
     },
     enabled: SUPABASE_CONFIG_OK,
+    retry: false,
   });
 
   useEffect(() => {

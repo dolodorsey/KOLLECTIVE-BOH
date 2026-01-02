@@ -15,7 +15,7 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
     queryFn: async () => {
       if (!SUPABASE_CONFIG_OK) {
         console.error('❌ Supabase not configured in agents context');
-        throw new Error('Supabase not configured');
+        return [];
       }
 
       try {
@@ -28,7 +28,7 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
 
         if (error) {
           console.error('❌ Error fetching agents:', error);
-          throw error;
+          return [];
         }
 
         console.log(`✅ Loaded ${agentsData?.length || 0} agents`);
@@ -45,10 +45,11 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
         return normalizedAgents;
       } catch (error) {
         console.error('❌ Error in agents query:', error);
-        throw error;
+        return [];
       }
     },
     enabled: SUPABASE_CONFIG_OK,
+    retry: false,
   });
 
   useEffect(() => {

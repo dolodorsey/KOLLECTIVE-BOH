@@ -16,7 +16,7 @@ export const [TasksContext, useTasks] = createContextHook(() => {
     queryFn: async () => {
       if (!SUPABASE_CONFIG_OK) {
         console.error('❌ Supabase not configured in tasks context');
-        throw new Error('Supabase not configured');
+        return [];
       }
 
       try {
@@ -29,7 +29,7 @@ export const [TasksContext, useTasks] = createContextHook(() => {
 
         if (error) {
           console.error('❌ Error fetching tasks:', error);
-          throw error;
+          return [];
         }
 
         console.log(`✅ Loaded ${tasksData?.length || 0} tasks`);
@@ -60,10 +60,11 @@ export const [TasksContext, useTasks] = createContextHook(() => {
         return normalizedTasks;
       } catch (error) {
         console.error('❌ Error in tasks query:', error);
-        throw error;
+        return [];
       }
     },
     enabled: SUPABASE_CONFIG_OK,
+    retry: false,
   });
 
   const updateTaskMutation = useMutation({

@@ -13,7 +13,7 @@ export const [UserContext, useUser] = createContextHook(() => {
     queryFn: async () => {
       if (!SUPABASE_CONFIG_OK) {
         console.error('❌ Supabase not configured in user context');
-        throw new Error('Supabase not configured');
+        return null;
       }
 
       try {
@@ -22,7 +22,7 @@ export const [UserContext, useUser] = createContextHook(() => {
 
         if (sessionError) {
           console.error('❌ Error getting session:', sessionError);
-          throw sessionError;
+          return null;
         }
 
         if (!session) {
@@ -35,16 +35,16 @@ export const [UserContext, useUser] = createContextHook(() => {
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error('❌ Error fetching profile:', profileError);
-          throw profileError;
+          return null;
         }
 
         if (!profile) {
-          console.error('❌ No profile found for user');
-          throw new Error('Profile not found');
+          console.warn('⚠️ No profile found for user, returning default');
+          return null;
         }
 
         console.log('✅ User profile loaded:', profile.name);
@@ -64,10 +64,11 @@ export const [UserContext, useUser] = createContextHook(() => {
         return userProfile;
       } catch (error) {
         console.error('❌ Error in user query:', error);
-        throw error;
+        return null;
       }
     },
     enabled: SUPABASE_CONFIG_OK,
+    retry: false,
   });
 
   useEffect(() => {
