@@ -8,7 +8,7 @@ import { Agent } from '@/types/agent';
 import { useUser } from '@/hooks/user-context';
 
 export const [AgentsContext, useAgents] = createContextHook(() => {
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<Agent[]>(mockAgents);
   const { user } = useUser();
 
   const agentsQuery = useQuery({
@@ -19,14 +19,14 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
         if (storedAgents) {
           return JSON.parse(storedAgents) as Agent[];
         }
-        // For demo purposes, we'll use the mock data
         await AsyncStorage.setItem('agents', JSON.stringify(mockAgents));
         return mockAgents;
       } catch (error) {
         console.error('Error fetching agents data:', error);
         return mockAgents;
       }
-    }
+    },
+    initialData: mockAgents
   });
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
   return {
     agents: userAgents,
     allAgents: agents,
-    isLoading: agentsQuery.isLoading,
+    isLoading: false,
     error: agentsQuery.error
   };
 });

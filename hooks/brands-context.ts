@@ -8,7 +8,7 @@ import { Brand } from '@/types/brand';
 import { useUser } from '@/hooks/user-context';
 
 export const [BrandsContext, useBrands] = createContextHook(() => {
-  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brands, setBrands] = useState<Brand[]>(mockBrands);
   const { user } = useUser();
 
   const brandsQuery = useQuery({
@@ -19,14 +19,14 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
         if (storedBrands) {
           return JSON.parse(storedBrands) as Brand[];
         }
-        // For demo purposes, we'll use the mock data
         await AsyncStorage.setItem('brands', JSON.stringify(mockBrands));
         return mockBrands;
       } catch (error) {
         console.error('Error fetching brands data:', error);
         return mockBrands;
       }
-    }
+    },
+    initialData: mockBrands
   });
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
   return {
     brands: userBrands,
     allBrands: brands,
-    isLoading: brandsQuery.isLoading,
+    isLoading: false,
     error: brandsQuery.error
   };
 });

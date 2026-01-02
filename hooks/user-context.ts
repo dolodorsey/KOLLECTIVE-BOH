@@ -7,7 +7,7 @@ import { currentUser } from '@/mocks/users';
 import { User } from '@/types/user';
 
 export const [UserContext, useUser] = createContextHook(() => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(currentUser);
 
   const userQuery = useQuery({
     queryKey: ['user'],
@@ -17,14 +17,14 @@ export const [UserContext, useUser] = createContextHook(() => {
         if (storedUser) {
           return JSON.parse(storedUser) as User;
         }
-        // For demo purposes, we'll use the mock data
         await AsyncStorage.setItem('user', JSON.stringify(currentUser));
         return currentUser;
       } catch (error) {
         console.error('Error fetching user data:', error);
         return currentUser;
       }
-    }
+    },
+    initialData: currentUser
   });
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export const [UserContext, useUser] = createContextHook(() => {
 
   return {
     user,
-    isLoading: userQuery.isLoading,
+    isLoading: false,
     error: userQuery.error
   };
 });

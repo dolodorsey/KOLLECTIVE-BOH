@@ -8,7 +8,7 @@ import { Task, TaskStatus } from '@/types/task';
 import { useUser } from '@/hooks/user-context';
 
 export const [TasksContext, useTasks] = createContextHook(() => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const { user } = useUser();
   const queryClient = useQueryClient();
 
@@ -20,14 +20,14 @@ export const [TasksContext, useTasks] = createContextHook(() => {
         if (storedTasks) {
           return JSON.parse(storedTasks) as Task[];
         }
-        // For demo purposes, we'll use the mock data
         await AsyncStorage.setItem('tasks', JSON.stringify(mockTasks));
         return mockTasks;
       } catch (error) {
         console.error('Error fetching tasks data:', error);
         return mockTasks;
       }
-    }
+    },
+    initialData: mockTasks
   });
 
   const updateTaskMutation = useMutation({
@@ -79,7 +79,7 @@ export const [TasksContext, useTasks] = createContextHook(() => {
   return {
     tasks: userTasks,
     allTasks: tasks,
-    isLoading: tasksQuery.isLoading,
+    isLoading: false,
     error: tasksQuery.error,
     updateTaskStatus
   };
