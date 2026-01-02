@@ -5,6 +5,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
+// DIAGNOSTIC: Check if env vars exist at runtime
+const hasUrl = !!process.env.EXPO_PUBLIC_SUPABASE_URL;
+const hasKey = !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const url = process.env.EXPO_PUBLIC_SUPABASE_URL || 'MISSING';
+const keyPreview = (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '').slice(0, 6) + '...';
+
+console.log('🔍 SUPABASE CONFIG DIAGNOSTIC:', {
+  hasUrl,
+  hasKey,
+  url,
+  keyPreview
+});
+
+export const DIAGNOSTIC_INFO = {
+  hasUrl,
+  hasKey,
+  url,
+  keyPreview
+};
+
 export const SUPABASE_CONFIG_OK = !!(supabaseUrl && supabaseAnonKey);
 
 let supabaseInstance: SupabaseClient | null = null;

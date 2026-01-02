@@ -8,7 +8,7 @@ import { Session } from "@supabase/supabase-js";
 import { View, Text, StyleSheet } from "react-native";
 
 import { trpc, trpcClient } from "@/lib/trpc";
-import { getSupabase, SUPABASE_CONFIG_OK } from "@/lib/supabase";
+import { getSupabase, SUPABASE_CONFIG_OK, DIAGNOSTIC_INFO } from "@/lib/supabase";
 import { UserContext } from "@/hooks/user-context";
 import { TasksContext } from "@/hooks/tasks-context";
 import { BrandsContext } from "@/hooks/brands-context";
@@ -73,6 +73,14 @@ function RootLayoutNav() {
           - EXPO_PUBLIC_SUPABASE_URL{"\n"}
           - EXPO_PUBLIC_SUPABASE_ANON_KEY
         </Text>
+        
+        <View style={configErrorStyles.diagnosticBox}>
+          <Text style={configErrorStyles.diagnosticTitle}>🔍 RUNTIME DIAGNOSTICS</Text>
+          <Text style={configErrorStyles.diagnosticText}>hasUrl: {String(DIAGNOSTIC_INFO.hasUrl)}</Text>
+          <Text style={configErrorStyles.diagnosticText}>hasKey: {String(DIAGNOSTIC_INFO.hasKey)}</Text>
+          <Text style={configErrorStyles.diagnosticText}>url: {DIAGNOSTIC_INFO.url}</Text>
+          <Text style={configErrorStyles.diagnosticText}>keyPreview: {DIAGNOSTIC_INFO.keyPreview}</Text>
+        </View>
       </View>
     );
   }
@@ -98,15 +106,36 @@ const configErrorStyles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: '#EF4444',
     marginBottom: 16,
   },
   message: {
     fontSize: 16,
     color: '#D1D5DB',
-    textAlign: 'center',
+    textAlign: 'center' as const,
     lineHeight: 24,
+  },
+  diagnosticBox: {
+    marginTop: 32,
+    backgroundColor: '#1F2937',
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#374151',
+    width: '100%',
+  },
+  diagnosticTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#10B981',
+    marginBottom: 12,
+  },
+  diagnosticText: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontFamily: 'monospace' as const,
+    marginBottom: 6,
   },
 });
 
