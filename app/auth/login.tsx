@@ -69,7 +69,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#667eea', '#764ba2', '#f093fb']}
+        colors={['#0a0a0a', '#121212', '#1a1a1a']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
@@ -82,27 +82,28 @@ export default function LoginScreen() {
             <View style={styles.decorativeCircle1} />
             <View style={styles.decorativeCircle2} />
             <View style={styles.decorativeCircle3} />
+            <View style={styles.decorativeCircle4} />
             
             <View style={styles.content}>
               <View style={styles.header}>
                 <View style={styles.logoContainer}>
                   <View style={styles.logoCircle}>
-                    <Sparkles size={32} color="#FFFFFF" strokeWidth={2.5} />
+                    <Sparkles size={32} color="#FFD700" strokeWidth={2.5} />
                   </View>
                 </View>
                 <Text style={styles.title}>Kollective BOH</Text>
-                <Text style={styles.subtitle}>Your AI-powered operations hub</Text>
+                <Text style={styles.subtitle}>Elite Operations Command Center</Text>
               </View>
 
               <View style={styles.form}>
                 <View style={styles.card}>
                   <View style={styles.inputWrapper}>
                     <View style={styles.inputContainer}>
-                      <Mail size={20} color="#8B5CF6" style={styles.inputIcon} />
+                      <Mail size={20} color="#FFD700" style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
                         placeholder="Enter your email"
-                        placeholderTextColor="#A0A0B0"
+                        placeholderTextColor="#666666"
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
@@ -121,16 +122,16 @@ export default function LoginScreen() {
                     activeOpacity={0.8}
                   >
                     <LinearGradient
-                      colors={['#8B5CF6', '#6366F1']}
+                      colors={['#FFD700', '#FFA500']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.buttonGradient}
                     >
                       {loading ? (
-                        <ActivityIndicator color="#FFFFFF" />
+                        <ActivityIndicator color="#000000" />
                       ) : (
                         <>
-                          <Zap size={20} color="#FFFFFF" style={styles.buttonIcon} />
+                          <Zap size={20} color="#000000" style={styles.buttonIcon} />
                           <Text style={styles.buttonText}>Send Magic Link</Text>
                         </>
                       )}
@@ -138,7 +139,7 @@ export default function LoginScreen() {
                   </TouchableOpacity>
 
                   <Text style={styles.infoText}>
-                    We&apos;ll send you a magic link to sign in securely
+                    We&apos;ll send you a secure magic link to access your command center
                   </Text>
                 </View>
               </View>
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 215, 0, 0.05)',
     top: -100,
     right: -100,
   },
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(255, 215, 0, 0.08)',
     bottom: 100,
     left: -50,
   },
@@ -186,9 +187,18 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    backgroundColor: 'rgba(255, 215, 0, 0.03)',
     top: 200,
     left: 50,
+  },
+  decorativeCircle4: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 165, 0, 0.06)',
+    top: '50%',
+    right: 20,
   },
   content: {
     flex: 1,
@@ -206,39 +216,44 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 16,
     elevation: 8,
   },
   title: {
     fontSize: 36,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#FFD700',
     marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowColor: 'rgba(255, 215, 0, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadowRadius: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: '#CCCCCC',
     fontWeight: '500',
+    letterSpacing: 0.5,
   },
   form: {
     width: '100%',
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: '#1a1a1a',
     borderRadius: 24,
     padding: 24,
-    shadowColor: '#000',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.2)',
+    shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.3,
     shadowRadius: 24,
     elevation: 12,
   },
@@ -248,14 +263,14 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#0a0a0a',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: '#E9D5FF',
+    borderColor: 'rgba(255, 215, 0, 0.3)',
     paddingHorizontal: 16,
-    shadowColor: '#8B5CF6',
+    shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
@@ -266,7 +281,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 56,
     fontSize: 16,
-    color: '#1F2937',
+    color: '#FFFFFF',
     fontWeight: '500',
   },
   button: {
@@ -274,9 +289,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#8B5CF6',
+    shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.5,
     shadowRadius: 12,
     elevation: 8,
   },
@@ -293,13 +308,13 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 17,
     fontWeight: '700',
   },
   infoText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#888888',
     textAlign: 'center',
     lineHeight: 20,
     fontWeight: '500',
