@@ -27,6 +27,7 @@ function RootLayoutNav() {
 
   useEffect(() => {
     let mounted = true;
+    console.log('🚀 RootLayoutNav mounted - Starting session check...');
 
     const checkSession = async () => {
       console.log('🔐 Checking authentication session...');
@@ -68,12 +69,12 @@ function RootLayoutNav() {
     };
 
     const timeoutId = setTimeout(() => {
-      console.warn('⏰ Forcing loading to complete after 2 seconds');
+      console.warn('⏰ TIMEOUT: Forcing loading to complete after 1.5 seconds');
       if (mounted) {
         setSession(null);
         setIsLoading(false);
       }
-    }, 2000);
+    }, 1500);
 
     checkSession().finally(() => {
       clearTimeout(timeoutId);
