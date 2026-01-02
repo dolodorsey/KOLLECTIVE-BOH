@@ -1,28 +1,32 @@
 import 'react-native-url-polyfill/auto';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl || process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 // DIAGNOSTIC: Check if env vars exist at runtime
-const hasUrl = !!process.env.EXPO_PUBLIC_SUPABASE_URL;
-const hasKey = !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL || 'MISSING';
-const keyPreview = (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '').slice(0, 6) + '...';
+const hasUrl = !!supabaseUrl;
+const hasKey = !!supabaseAnonKey;
+const url = supabaseUrl || 'MISSING';
+const keyPreview = (supabaseAnonKey || '').slice(0, 6) + '...';
+const source = Constants.expoConfig?.extra?.supabaseUrl ? 'app.config.js' : 'process.env';
 
 console.log('🔍 SUPABASE CONFIG DIAGNOSTIC:', {
   hasUrl,
   hasKey,
   url,
-  keyPreview
+  keyPreview,
+  source
 });
 
 export const DIAGNOSTIC_INFO = {
   hasUrl,
   hasKey,
   url,
-  keyPreview
+  keyPreview,
+  source
 };
 
 export const SUPABASE_CONFIG_OK = !!(supabaseUrl && supabaseAnonKey);
