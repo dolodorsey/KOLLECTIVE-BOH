@@ -27,11 +27,16 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
           .order('name', { ascending: true });
 
         if (error) {
-          console.error('❌ Error fetching brands:', error);
+          console.error('❌ Error fetching brands:', error.message || error);
           return [];
         }
 
-        console.log(`✅ Loaded ${brandsData?.length || 0} brands`);
+        if (!brandsData) {
+          console.log('ℹ️ No brands found (table might be empty)');
+          return [];
+        }
+
+        console.log(`✅ Loaded ${brandsData.length} brands`);
         
         const normalizedBrands: Brand[] = (brandsData || []).map((brand: any) => ({
           id: brand.id,

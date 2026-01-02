@@ -28,11 +28,16 @@ export const [TasksContext, useTasks] = createContextHook(() => {
           .order('due_date', { ascending: true });
 
         if (error) {
-          console.error('❌ Error fetching tasks:', error);
+          console.error('❌ Error fetching tasks:', error.message || error);
           return [];
         }
 
-        console.log(`✅ Loaded ${tasksData?.length || 0} tasks`);
+        if (!tasksData) {
+          console.log('ℹ️ No tasks found (table might be empty)');
+          return [];
+        }
+
+        console.log(`✅ Loaded ${tasksData.length} tasks`);
         
         const normalizedTasks: Task[] = (tasksData || []).map((task: any) => ({
           id: task.id,

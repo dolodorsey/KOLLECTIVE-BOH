@@ -27,11 +27,16 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
           .order('name', { ascending: true });
 
         if (error) {
-          console.error('❌ Error fetching agents:', error);
+          console.error('❌ Error fetching agents:', error.message || error);
           return [];
         }
 
-        console.log(`✅ Loaded ${agentsData?.length || 0} agents`);
+        if (!agentsData) {
+          console.log('ℹ️ No agents found (table might be empty)');
+          return [];
+        }
+
+        console.log(`✅ Loaded ${agentsData.length} agents`);
         
         const normalizedAgents: Agent[] = (agentsData || []).map((agent: any) => ({
           id: agent.id,
