@@ -12,6 +12,7 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
 
   const agentsQuery = useQuery({
     queryKey: ['agents'],
+    enabled: false,
     queryFn: async () => {
       try {
         if (!SUPABASE_CONFIG_OK) {

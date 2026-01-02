@@ -12,6 +12,7 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
 
   const brandsQuery = useQuery({
     queryKey: ['brands'],
+    enabled: false,
     queryFn: async () => {
       try {
         if (!SUPABASE_CONFIG_OK) {
