@@ -6,6 +6,11 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 
 import { trpc, trpcClient } from "@/lib/trpc";
+import { UserContext } from "@/hooks/user-context";
+import { BrandsContext } from "@/hooks/brands-context";
+import { AgentsContext } from "@/hooks/agents-context";
+import { TasksContext } from "@/hooks/tasks-context";
+import { CultureContext } from "@/hooks/culture-context";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,8 +40,18 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="light" />
-          <RootLayoutNav />
+          <UserContext>
+            <BrandsContext>
+              <AgentsContext>
+                <TasksContext>
+                  <CultureContext>
+                    <StatusBar style="light" />
+                    <RootLayoutNav />
+                  </CultureContext>
+                </TasksContext>
+              </AgentsContext>
+            </BrandsContext>
+          </UserContext>
         </QueryClientProvider>
       </trpc.Provider>
     </GestureHandlerRootView>
