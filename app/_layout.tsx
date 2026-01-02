@@ -5,9 +5,10 @@ import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { Session } from "@supabase/supabase-js";
+import { View, Text, StyleSheet } from "react-native";
 
 import { trpc, trpcClient } from "@/lib/trpc";
-import { supabase } from "@/lib/supabase";
+import { getSupabase, SUPABASE_CONFIG_OK } from "@/lib/supabase";
 import { UserContext } from "@/hooks/user-context";
 import { TasksContext } from "@/hooks/tasks-context";
 import { BrandsContext } from "@/hooks/brands-context";
@@ -26,6 +27,14 @@ function RootLayoutNav() {
   const router = useRouter();
 
   useEffect(() => {
+    if (!SUPABASE_CONFIG_OK) {
+      console.error('Supabase configuration missing');
+      setLoading(false);
+      return;
+    }
+
+    const supabase = getSupabase();
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session:', session?.user?.email);
       setSession(session);
@@ -54,6 +63,20 @@ function RootLayoutNav() {
     }
   }, [session, segments, loading, router]);
 
+  if (!SUPABASE_CONFIG_OK) {
+    return (
+      <View style={configErrorStyles.container}>
+        <Text style={configErrorStyles.title}>Configuration Error</Text>
+        <Text style={configErrorStyles.message}>
+          Supabase configuration is missing.{"\n\n"}
+          Please set the following environment variables:{"\n"}
+          - EXPO_PUBLIC_SUPABASE_URL{"\n"}
+          - EXPO_PUBLIC_SUPABASE_ANON_KEY
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <Stack screenOptions={{ 
       headerShown: false,
@@ -64,6 +87,28 @@ function RootLayoutNav() {
     </Stack>
   );
 }
+
+const configErrorStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#EF4444',
+    marginBottom: 16,
+  },
+  message: {
+    fontSize: 16,
+    color: '#D1D5DB',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+});
 
 export default function RootLayout() {
   useEffect(() => {

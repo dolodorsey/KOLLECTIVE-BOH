@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { supabase } from '@/lib/supabase';
+import { getSupabase, SUPABASE_CONFIG_OK } from '@/lib/supabase';
 import { Mail } from 'lucide-react-native';
 
 export default function LoginScreen() {
@@ -19,6 +19,11 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const handleMagicLinkLogin = async () => {
+    if (!SUPABASE_CONFIG_OK) {
+      Alert.alert('Configuration Error', 'Supabase is not configured. Please check your environment variables.');
+      return;
+    }
+
     if (!email) {
       Alert.alert('Error', 'Please enter your email address');
       return;
@@ -34,6 +39,7 @@ export default function LoginScreen() {
     console.log('Sending magic link to:', email);
 
     try {
+      const supabase = getSupabase();
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
         options: {

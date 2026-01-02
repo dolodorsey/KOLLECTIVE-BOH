@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { supabase } from '@/lib/supabase';
+import { getSupabase, SUPABASE_CONFIG_OK } from '@/lib/supabase';
 
 export default function CallbackScreen() {
   const router = useRouter();
@@ -13,6 +13,15 @@ export default function CallbackScreen() {
       console.log('Callback params:', params);
 
       try {
+        if (!SUPABASE_CONFIG_OK) {
+          console.error('Supabase configuration missing');
+          setError('Configuration error');
+          setTimeout(() => {
+            router.replace('/auth/login');
+          }, 2000);
+          return;
+        }
+
         const tokenHash = params.token_hash as string | undefined;
         const type = params.type as string | undefined;
 
@@ -26,6 +35,7 @@ export default function CallbackScreen() {
         }
 
         console.log('Verifying OTP with token hash...');
+        const supabase = getSupabase();
         const { data, error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: 'magiclink',
