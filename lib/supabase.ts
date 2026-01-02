@@ -3,7 +3,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const supabaseUrl = 'https://wfkohcwxxsrhcxhepfql.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indma29oY3d4eHNyaGN4aGVwZnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjUzMTg5MjksImV4cCI6MjA0MDg5NDkyOX0.eL5SoR6I0MSC1d2hWwOsgtlU-_CUQvz50_TczIvw1yE';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
 
 // DIAGNOSTIC: Check if env vars exist at runtime
 const hasUrl = !!supabaseUrl;
