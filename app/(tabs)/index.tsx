@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView } from 'react-native';
+import { StyleSheet, View, SafeAreaView, ScrollView } from 'react-native';
 
 import TopNavBar from '@/components/TopNavBar';
 import HeroCommandStrip from '@/components/HeroCommandStrip';
@@ -9,33 +9,7 @@ import EntityHubSnapshots from '@/components/EntityHubSnapshots';
 import LeaderboardIncentives from '@/components/LeaderboardIncentives';
 import ToolsShortcutsPanel from '@/components/ToolsShortcutsPanel';
 
-import { useUser } from '@/hooks/user-context';
-import { useTasks } from '@/hooks/tasks-context';
-import { useBrands } from '@/hooks/brands-context';
-import { useAgents } from '@/hooks/agents-context';
-
 export default function DashboardScreen() {
-  const { isLoading: isUserLoading } = useUser();
-  const { isLoading: isTasksLoading } = useTasks();
-  const { isLoading: isBrandsLoading } = useBrands();
-  const { isLoading: isAgentsLoading } = useAgents();
-  
-  const isLoading = isUserLoading || isTasksLoading || isBrandsLoading || isAgentsLoading;
-  
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <View style={styles.loadingContent}>
-          <View style={styles.loadingSpinner} />
-          <View style={styles.loadingTextContainer}>
-            <Text style={styles.loadingTitle}>KOLLECTIVE OS</Text>
-            <Text style={styles.loadingSubtitle}>Initializing your command center...</Text>
-          </View>
-        </View>
-      </View>
-    );
-  }
-  
   return (
     <SafeAreaView style={styles.safeArea}>
       <TopNavBar />
@@ -92,38 +66,5 @@ const styles = StyleSheet.create({
   section: {
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#121212',
-  },
-  loadingContent: {
-    alignItems: 'center',
-  },
-  loadingSpinner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 4,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
-    borderTopColor: '#FFD700',
-    marginBottom: 24,
-  },
-  loadingTextContainer: {
-    alignItems: 'center',
-  },
-  loadingTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFD700',
-    letterSpacing: 2,
-    marginBottom: 8,
-  },
-  loadingSubtitle: {
-    fontSize: 16,
-    color: '#aaa',
-    fontStyle: 'italic',
   },
 });
