@@ -1,30 +1,60 @@
 import createContextHook from '@nkzw/create-context-hook';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 
-import { currentUser } from '@/mocks/users';
 import { User } from '@/types/user';
+import { getSupabase, SUPABASE_CONFIG_OK } from '@/lib/supabase';
 
 export const [UserContext, useUser] = createContextHook(() => {
-  const [user, setUser] = useState<User | null>(currentUser);
+  const [user, setUser] = useState<User | null>(null);
 
   const userQuery = useQuery({
     queryKey: ['user'],
     queryFn: async () => {
+      if (!SUPABASE_CONFIG_OK) {
+        console.error('❌ Supabase not configured in user context');
+        throw new Error('Supabase not configured');
+      }
+
       try {
-        const storedUser = await AsyncStorage.getItem('user');
-        if (storedUser) {
-          return JSON.parse(storedUser) as User;
+        const supabase = getSupabase();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error('❌ Error getting session:', sessionError);
+          throw sessionError;
         }
-        await AsyncStorage.setItem('user', JSON.stringify(currentUser));
-        return currentUser;
+
+        if (!session) {
+          console.log('⚠️ No session found in user context');
+          return null;
+        }
+
+        console.log('👤 Fetching user profile for:', session.user.id);
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error('❌ Error fetching profile:', profileError);
+          throw profileError;
+        }
+
+        if (!profile) {
+          console.error('❌ No profile found for user');
+          throw new Error('Profile not found');
+        }
+
+        console.log('✅ User profile loaded:', profile.name);
+        return profile as User;
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        return currentUser;
+        console.error('❌ Error in user query:', error);
+        throw error;
       }
     },
-    initialData: currentUser
+    enabled: SUPABASE_CONFIG_OK,
   });
 
   useEffect(() => {
@@ -35,7 +65,7 @@ export const [UserContext, useUser] = createContextHook(() => {
 
   return {
     user,
-    isLoading: false,
+    isLoading: userQuery.isLoading,
     error: userQuery.error
   };
 });

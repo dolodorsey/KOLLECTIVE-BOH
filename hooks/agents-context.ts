@@ -1,32 +1,44 @@
 import createContextHook from '@nkzw/create-context-hook';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useMemo } from 'react';
 
-import { agents as mockAgents } from '@/mocks/agents';
 import { Agent } from '@/types/agent';
 import { useUser } from '@/hooks/user-context';
+import { getSupabase, SUPABASE_CONFIG_OK } from '@/lib/supabase';
 
 export const [AgentsContext, useAgents] = createContextHook(() => {
-  const [agents, setAgents] = useState<Agent[]>(mockAgents);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const { user } = useUser();
 
   const agentsQuery = useQuery({
     queryKey: ['agents'],
     queryFn: async () => {
+      if (!SUPABASE_CONFIG_OK) {
+        console.error('❌ Supabase not configured in agents context');
+        throw new Error('Supabase not configured');
+      }
+
       try {
-        const storedAgents = await AsyncStorage.getItem('agents');
-        if (storedAgents) {
-          return JSON.parse(storedAgents) as Agent[];
+        console.log('🤖 Fetching agents from Supabase...');
+        const supabase = getSupabase();
+        const { data: agentsData, error } = await supabase
+          .from('agents')
+          .select('*')
+          .order('name', { ascending: true });
+
+        if (error) {
+          console.error('❌ Error fetching agents:', error);
+          throw error;
         }
-        await AsyncStorage.setItem('agents', JSON.stringify(mockAgents));
-        return mockAgents;
+
+        console.log(`✅ Loaded ${agentsData?.length || 0} agents`);
+        return (agentsData || []) as Agent[];
       } catch (error) {
-        console.error('Error fetching agents data:', error);
-        return mockAgents;
+        console.error('❌ Error in agents query:', error);
+        throw error;
       }
     },
-    initialData: mockAgents
+    enabled: SUPABASE_CONFIG_OK,
   });
 
   useEffect(() => {
@@ -38,7 +50,6 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
   const userAgents = useMemo(() => {
     if (!user) return [];
     
-    // Filter agents based on user's assigned brands
     return agents.filter(agent => 
       user.assignedBrands.includes(agent.brandId)
     );
@@ -47,7 +58,7 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
   return {
     agents: userAgents,
     allAgents: agents,
-    isLoading: false,
+    isLoading: agentsQuery.isLoading,
     error: agentsQuery.error
   };
 });

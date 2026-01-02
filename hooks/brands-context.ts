@@ -1,32 +1,44 @@
 import createContextHook from '@nkzw/create-context-hook';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect, useMemo } from 'react';
 
-import { brands as mockBrands } from '@/mocks/brands';
 import { Brand } from '@/types/brand';
 import { useUser } from '@/hooks/user-context';
+import { getSupabase, SUPABASE_CONFIG_OK } from '@/lib/supabase';
 
 export const [BrandsContext, useBrands] = createContextHook(() => {
-  const [brands, setBrands] = useState<Brand[]>(mockBrands);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const { user } = useUser();
 
   const brandsQuery = useQuery({
     queryKey: ['brands'],
     queryFn: async () => {
+      if (!SUPABASE_CONFIG_OK) {
+        console.error('❌ Supabase not configured in brands context');
+        throw new Error('Supabase not configured');
+      }
+
       try {
-        const storedBrands = await AsyncStorage.getItem('brands');
-        if (storedBrands) {
-          return JSON.parse(storedBrands) as Brand[];
+        console.log('🏢 Fetching brands from Supabase...');
+        const supabase = getSupabase();
+        const { data: brandsData, error } = await supabase
+          .from('brands')
+          .select('*')
+          .order('name', { ascending: true });
+
+        if (error) {
+          console.error('❌ Error fetching brands:', error);
+          throw error;
         }
-        await AsyncStorage.setItem('brands', JSON.stringify(mockBrands));
-        return mockBrands;
+
+        console.log(`✅ Loaded ${brandsData?.length || 0} brands`);
+        return (brandsData || []) as Brand[];
       } catch (error) {
-        console.error('Error fetching brands data:', error);
-        return mockBrands;
+        console.error('❌ Error in brands query:', error);
+        throw error;
       }
     },
-    initialData: mockBrands
+    enabled: SUPABASE_CONFIG_OK,
   });
 
   useEffect(() => {
@@ -38,7 +50,6 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
   const userBrands = useMemo(() => {
     if (!user) return [];
     
-    // Filter brands based on user's assigned brands
     return brands.filter(brand => 
       user.assignedBrands.includes(brand.id)
     );
@@ -47,7 +58,7 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
   return {
     brands: userBrands,
     allBrands: brands,
-    isLoading: false,
+    isLoading: brandsQuery.isLoading,
     error: brandsQuery.error
   };
 });

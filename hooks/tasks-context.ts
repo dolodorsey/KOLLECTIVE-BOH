@@ -1,49 +1,69 @@
 import createContextHook from '@nkzw/create-context-hook';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useMemo } from 'react';
 
-import { tasks as mockTasks } from '@/mocks/tasks';
 import { Task, TaskStatus } from '@/types/task';
 import { useUser } from '@/hooks/user-context';
+import { getSupabase, SUPABASE_CONFIG_OK } from '@/lib/supabase';
 
 export const [TasksContext, useTasks] = createContextHook(() => {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const { user } = useUser();
   const queryClient = useQueryClient();
 
   const tasksQuery = useQuery({
     queryKey: ['tasks'],
     queryFn: async () => {
+      if (!SUPABASE_CONFIG_OK) {
+        console.error('❌ Supabase not configured in tasks context');
+        throw new Error('Supabase not configured');
+      }
+
       try {
-        const storedTasks = await AsyncStorage.getItem('tasks');
-        if (storedTasks) {
-          return JSON.parse(storedTasks) as Task[];
+        console.log('📋 Fetching tasks from Supabase...');
+        const supabase = getSupabase();
+        const { data: tasksData, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .order('dueDate', { ascending: true });
+
+        if (error) {
+          console.error('❌ Error fetching tasks:', error);
+          throw error;
         }
-        await AsyncStorage.setItem('tasks', JSON.stringify(mockTasks));
-        return mockTasks;
+
+        console.log(`✅ Loaded ${tasksData?.length || 0} tasks`);
+        return (tasksData || []) as Task[];
       } catch (error) {
-        console.error('Error fetching tasks data:', error);
-        return mockTasks;
+        console.error('❌ Error in tasks query:', error);
+        throw error;
       }
     },
-    initialData: mockTasks
+    enabled: SUPABASE_CONFIG_OK,
   });
 
   const updateTaskMutation = useMutation({
     mutationFn: async (updatedTask: Task) => {
-      const currentTasks = [...tasks];
-      const taskIndex = currentTasks.findIndex(task => task.id === updatedTask.id);
-      
-      if (taskIndex !== -1) {
-        currentTasks[taskIndex] = updatedTask;
-        await AsyncStorage.setItem('tasks', JSON.stringify(currentTasks));
+      if (!SUPABASE_CONFIG_OK) {
+        throw new Error('Supabase not configured');
       }
-      
-      return currentTasks;
+
+      console.log('💾 Updating task:', updatedTask.id);
+      const supabase = getSupabase();
+      const { error } = await supabase
+        .from('tasks')
+        .update(updatedTask)
+        .eq('id', updatedTask.id);
+
+      if (error) {
+        console.error('❌ Error updating task:', error);
+        throw error;
+      }
+
+      console.log('✅ Task updated successfully');
+      return updatedTask;
     },
-    onSuccess: (updatedTasks) => {
-      setTasks(updatedTasks);
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     }
   });
@@ -57,7 +77,6 @@ export const [TasksContext, useTasks] = createContextHook(() => {
   const userTasks = useMemo(() => {
     if (!user) return [];
     
-    // Filter tasks based on user's assigned brands
     return tasks.filter(task => 
       user.assignedBrands.includes(task.brandId) && 
       task.collaborators.some(collab => collab.id === user.id)
@@ -79,8 +98,9 @@ export const [TasksContext, useTasks] = createContextHook(() => {
   return {
     tasks: userTasks,
     allTasks: tasks,
-    isLoading: false,
+    isLoading: tasksQuery.isLoading,
     error: tasksQuery.error,
-    updateTaskStatus
+    updateTaskStatus,
+    isUpdating: updateTaskMutation.isPending
   };
 });
