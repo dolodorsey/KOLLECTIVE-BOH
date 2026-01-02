@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 
+import { trpc, trpcClient } from "@/lib/trpc";
 import { UserContext } from "@/hooks/user-context";
 import { TasksContext } from "@/hooks/tasks-context";
 import { BrandsContext } from "@/hooks/brands-context";
@@ -33,21 +34,23 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <UserContext>
-        <TasksContext>
-          <BrandsContext>
-            <AgentsContext>
-              <CultureContext>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <StatusBar style="light" />
-                  <RootLayoutNav />
-                </GestureHandlerRootView>
-              </CultureContext>
-            </AgentsContext>
-          </BrandsContext>
-        </TasksContext>
-      </UserContext>
-    </QueryClientProvider>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <UserContext>
+          <TasksContext>
+            <BrandsContext>
+              <AgentsContext>
+                <CultureContext>
+                  <GestureHandlerRootView style={{ flex: 1 }}>
+                    <StatusBar style="light" />
+                    <RootLayoutNav />
+                  </GestureHandlerRootView>
+                </CultureContext>
+              </AgentsContext>
+            </BrandsContext>
+          </TasksContext>
+        </UserContext>
+      </QueryClientProvider>
+    </trpc.Provider>
   );
 }
