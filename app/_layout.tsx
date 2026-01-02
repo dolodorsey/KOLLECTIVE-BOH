@@ -34,42 +34,19 @@ function RootLayoutNav() {
     }
 
     const supabase = getSupabase();
-    let mounted = true;
 
-    const timeout = setTimeout(() => {
-      if (mounted) {
-        console.warn('Session check timed out, proceeding without session');
-        setLoading(false);
-      }
-    }, 3000);
-
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        if (mounted) {
-          console.log('Initial session:', session?.user?.email || 'No session');
-          setSession(session);
-          clearTimeout(timeout);
-          setLoading(false);
-        }
-      })
-      .catch((error) => {
-        console.error('Error getting session:', error);
-        if (mounted) {
-          clearTimeout(timeout);
-          setLoading(false);
-        }
-      });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.email);
+      setSession(session);
+      setLoading(false);
+    });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state changed:', _event, session?.user?.email || 'No session');
+      console.log('Auth state changed:', _event, session?.user?.email);
       setSession(session);
     });
 
-    return () => {
-      mounted = false;
-      clearTimeout(timeout);
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
