@@ -56,7 +56,6 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
         return [];
       }
     },
-    enabled: false,
     retry: false,
     staleTime: 30000,
   });

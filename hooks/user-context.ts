@@ -69,7 +69,6 @@ export const [UserContext, useUser] = createContextHook(() => {
         return null;
       }
     },
-    enabled: false,
     retry: false,
     staleTime: 30000,
   });

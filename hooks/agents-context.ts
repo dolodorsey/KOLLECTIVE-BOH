@@ -54,7 +54,6 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
         return [];
       }
     },
-    enabled: false,
     retry: false,
     staleTime: 30000,
   });

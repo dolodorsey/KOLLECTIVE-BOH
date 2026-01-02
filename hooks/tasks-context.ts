@@ -69,7 +69,6 @@ export const [TasksContext, useTasks] = createContextHook(() => {
         return [];
       }
     },
-    enabled: false,
     retry: false,
     staleTime: 30000,
   });
