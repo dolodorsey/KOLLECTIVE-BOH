@@ -22,27 +22,35 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isReady, setIsReady] = useState(false);
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
+    console.log('🚀 RootLayoutNav mounting');
+    
     if (!SUPABASE_CONFIG_OK) {
-      console.error('Supabase configuration missing');
-      setLoading(false);
+      console.error('❌ Supabase configuration missing');
+      setIsReady(true);
       return;
     }
 
     const supabase = getSupabase();
+    console.log('✅ Supabase client initialized');
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session?.user?.email);
-      setSession(session);
-      setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        console.log('📱 Initial session:', session?.user?.email || 'none');
+        setSession(session);
+        setIsReady(true);
+      })
+      .catch((error) => {
+        console.error('❌ Session fetch error:', error);
+        setIsReady(true);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state changed:', _event, session?.user?.email);
+      console.log('🔄 Auth state changed:', _event, session?.user?.email || 'none');
       setSession(session);
     });
 
@@ -50,18 +58,22 @@ function RootLayoutNav() {
   }, []);
 
   useEffect(() => {
-    if (loading) return;
+    if (!isReady) {
+      console.log('⏳ Not ready yet, waiting...');
+      return;
+    }
 
     const inAuthGroup = segments[0] === 'auth';
+    console.log('🧭 Navigation check - segments:', segments, 'session:', !!session, 'inAuthGroup:', inAuthGroup);
 
     if (!session && !inAuthGroup) {
-      console.log('No session, redirecting to login');
+      console.log('➡️ No session, redirecting to login');
       router.replace('/auth/login');
     } else if (session && inAuthGroup) {
-      console.log('Session exists, redirecting to app');
+      console.log('➡️ Session exists, redirecting to app');
       router.replace('/(tabs)');
     }
-  }, [session, segments, loading, router]);
+  }, [session, segments, isReady, router]);
 
   if (!SUPABASE_CONFIG_OK) {
     return (
@@ -81,6 +93,15 @@ function RootLayoutNav() {
           <Text style={configErrorStyles.diagnosticText}>url: {DIAGNOSTIC_INFO.url}</Text>
           <Text style={configErrorStyles.diagnosticText}>keyPreview: {DIAGNOSTIC_INFO.keyPreview}</Text>
         </View>
+      </View>
+    );
+  }
+
+  if (!isReady) {
+    return (
+      <View style={configErrorStyles.container}>
+        <Text style={[configErrorStyles.title, { color: '#10B981' }]}>Starting...</Text>
+        <Text style={configErrorStyles.message}>Initializing app...</Text>
       </View>
     );
   }
