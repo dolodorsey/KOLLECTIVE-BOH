@@ -13,7 +13,6 @@ export const [TasksContext, useTasks] = createContextHook(() => {
 
   const tasksQuery = useQuery({
     queryKey: ['tasks'],
-    enabled: false,
     queryFn: async () => {
       try {
         if (!SUPABASE_CONFIG_OK) {

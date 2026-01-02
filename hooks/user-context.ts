@@ -10,7 +10,6 @@ export const [UserContext, useUser] = createContextHook(() => {
 
   const userQuery = useQuery({
     queryKey: ['user'],
-    enabled: false,
     queryFn: async () => {
       try {
         if (!SUPABASE_CONFIG_OK) {
