@@ -54,7 +54,7 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
         return [];
       }
     },
-    enabled: SUPABASE_CONFIG_OK,
+    enabled: false,
     retry: false,
     staleTime: 30000,
   });

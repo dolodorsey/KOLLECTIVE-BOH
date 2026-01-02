@@ -69,7 +69,7 @@ export const [TasksContext, useTasks] = createContextHook(() => {
         return [];
       }
     },
-    enabled: SUPABASE_CONFIG_OK,
+    enabled: false,
     retry: false,
     staleTime: 30000,
   });
@@ -114,7 +114,7 @@ export const [TasksContext, useTasks] = createContextHook(() => {
   }, [tasksQuery.data]);
 
   const userTasks = useMemo(() => {
-    if (!user) return [];
+    if (!user) return tasks;
     
     return tasks.filter(task => {
       const brandMatch = user.assignedBrands.length === 0 || user.assignedBrands.includes(task.brandId);

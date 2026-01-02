@@ -69,7 +69,7 @@ export const [UserContext, useUser] = createContextHook(() => {
         return null;
       }
     },
-    enabled: SUPABASE_CONFIG_OK,
+    enabled: false,
     retry: false,
     staleTime: 30000,
   });

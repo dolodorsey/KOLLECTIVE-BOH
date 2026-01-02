@@ -56,7 +56,7 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
         return [];
       }
     },
-    enabled: SUPABASE_CONFIG_OK,
+    enabled: false,
     retry: false,
     staleTime: 30000,
   });
