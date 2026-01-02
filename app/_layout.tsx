@@ -26,7 +26,6 @@ function RootLayoutNav() {
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
     let mounted = true;
 
     const checkSession = async () => {
@@ -35,8 +34,8 @@ function RootLayoutNav() {
       if (!SUPABASE_CONFIG_OK) {
         console.error('❌ Supabase not configured');
         if (mounted) {
+          setSession(null);
           setIsLoading(false);
-          router.replace('/auth/login');
         }
         return;
       }
@@ -68,22 +67,23 @@ function RootLayoutNav() {
       }
     };
 
-    timeoutId = setTimeout(() => {
-      if (mounted && isLoading) {
-        console.warn('⚠️ Session check timeout after 3 seconds');
+    const timeoutId = setTimeout(() => {
+      console.warn('⏰ Forcing loading to complete after 2 seconds');
+      if (mounted) {
         setSession(null);
         setIsLoading(false);
       }
-    }, 3000);
+    }, 2000);
 
-    checkSession();
+    checkSession().finally(() => {
+      clearTimeout(timeoutId);
+    });
 
     return () => {
       mounted = false;
       clearTimeout(timeoutId);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;
