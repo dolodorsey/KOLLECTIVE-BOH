@@ -14,32 +14,33 @@ export const [TasksContext, useTasks] = createContextHook(() => {
   const tasksQuery = useQuery({
     queryKey: ['tasks'],
     queryFn: async () => {
-      if (!SUPABASE_CONFIG_OK) {
-        console.error('❌ Supabase not configured in tasks context');
-        return [];
-      }
-
       try {
+        if (!SUPABASE_CONFIG_OK) {
+          console.error('❌ Supabase not configured in tasks context');
+          return [];
+        }
+
         console.log('📋 Fetching tasks from Supabase...');
         const supabase = getSupabase();
+        
         const { data: tasksData, error } = await supabase
           .from('tasks')
           .select('*')
           .order('due_date', { ascending: true });
 
         if (error) {
-          console.error('❌ Error fetching tasks:', error.message || error);
+          console.error('❌ Supabase error fetching tasks:', error.message || error);
           return [];
         }
 
-        if (!tasksData) {
-          console.log('ℹ️ No tasks found (table might be empty)');
+        if (!tasksData || tasksData.length === 0) {
+          console.log('ℹ️ No tasks found (table is empty)');
           return [];
         }
 
         console.log(`✅ Loaded ${tasksData.length} tasks`);
         
-        const normalizedTasks: Task[] = (tasksData || []).map((task: any) => ({
+        const normalizedTasks: Task[] = tasksData.map((task: any) => ({
           id: task.id,
           title: task.title,
           description: task.description,
@@ -64,34 +65,42 @@ export const [TasksContext, useTasks] = createContextHook(() => {
         
         return normalizedTasks;
       } catch (error) {
-        console.error('❌ Error in tasks query:', error);
+        console.error('❌ Network/fetch error in tasks query:', error);
         return [];
       }
     },
     enabled: SUPABASE_CONFIG_OK,
     retry: false,
+    staleTime: 30000,
   });
 
   const updateTaskMutation = useMutation({
     mutationFn: async (updatedTask: Task) => {
-      if (!SUPABASE_CONFIG_OK) {
-        throw new Error('Supabase not configured');
+      try {
+        if (!SUPABASE_CONFIG_OK) {
+          console.error('❌ Supabase not configured for task update');
+          return updatedTask;
+        }
+
+        console.log('💾 Updating task:', updatedTask.id);
+        const supabase = getSupabase();
+        
+        const { error } = await supabase
+          .from('tasks')
+          .update(updatedTask)
+          .eq('id', updatedTask.id);
+
+        if (error) {
+          console.error('❌ Supabase error updating task:', error.message || error);
+          return updatedTask;
+        }
+
+        console.log('✅ Task updated successfully');
+        return updatedTask;
+      } catch (error) {
+        console.error('❌ Network/fetch error updating task:', error);
+        return updatedTask;
       }
-
-      console.log('💾 Updating task:', updatedTask.id);
-      const supabase = getSupabase();
-      const { error } = await supabase
-        .from('tasks')
-        .update(updatedTask)
-        .eq('id', updatedTask.id);
-
-      if (error) {
-        console.error('❌ Error updating task:', error);
-        throw error;
-      }
-
-      console.log('✅ Task updated successfully');
-      return updatedTask;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });

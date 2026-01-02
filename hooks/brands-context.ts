@@ -13,32 +13,33 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
   const brandsQuery = useQuery({
     queryKey: ['brands'],
     queryFn: async () => {
-      if (!SUPABASE_CONFIG_OK) {
-        console.error('❌ Supabase not configured in brands context');
-        return [];
-      }
-
       try {
+        if (!SUPABASE_CONFIG_OK) {
+          console.error('❌ Supabase not configured in brands context');
+          return [];
+        }
+
         console.log('🏢 Fetching brands from Supabase...');
         const supabase = getSupabase();
+        
         const { data: brandsData, error } = await supabase
           .from('brands')
           .select('*')
           .order('name', { ascending: true });
 
         if (error) {
-          console.error('❌ Error fetching brands:', error.message || error);
+          console.error('❌ Supabase error fetching brands:', error.message || error);
           return [];
         }
 
-        if (!brandsData) {
-          console.log('ℹ️ No brands found (table might be empty)');
+        if (!brandsData || brandsData.length === 0) {
+          console.log('ℹ️ No brands found (table is empty)');
           return [];
         }
 
         console.log(`✅ Loaded ${brandsData.length} brands`);
         
-        const normalizedBrands: Brand[] = (brandsData || []).map((brand: any) => ({
+        const normalizedBrands: Brand[] = brandsData.map((brand: any) => ({
           id: brand.id,
           name: brand.name,
           mascot: brand.mascot || '🏢',
@@ -51,12 +52,13 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
         
         return normalizedBrands;
       } catch (error) {
-        console.error('❌ Error in brands query:', error);
+        console.error('❌ Network/fetch error in brands query:', error);
         return [];
       }
     },
     enabled: SUPABASE_CONFIG_OK,
     retry: false,
+    staleTime: 30000,
   });
 
   useEffect(() => {

@@ -13,32 +13,33 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
   const agentsQuery = useQuery({
     queryKey: ['agents'],
     queryFn: async () => {
-      if (!SUPABASE_CONFIG_OK) {
-        console.error('❌ Supabase not configured in agents context');
-        return [];
-      }
-
       try {
+        if (!SUPABASE_CONFIG_OK) {
+          console.error('❌ Supabase not configured in agents context');
+          return [];
+        }
+
         console.log('🤖 Fetching agents from Supabase...');
         const supabase = getSupabase();
+        
         const { data: agentsData, error } = await supabase
           .from('agents')
           .select('*')
           .order('name', { ascending: true });
 
         if (error) {
-          console.error('❌ Error fetching agents:', error.message || error);
+          console.error('❌ Supabase error fetching agents:', error.message || error);
           return [];
         }
 
-        if (!agentsData) {
-          console.log('ℹ️ No agents found (table might be empty)');
+        if (!agentsData || agentsData.length === 0) {
+          console.log('ℹ️ No agents found (table is empty)');
           return [];
         }
 
         console.log(`✅ Loaded ${agentsData.length} agents`);
         
-        const normalizedAgents: Agent[] = (agentsData || []).map((agent: any) => ({
+        const normalizedAgents: Agent[] = agentsData.map((agent: any) => ({
           id: agent.id,
           name: agent.name,
           status: agent.status || 'active',
@@ -49,12 +50,13 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
         
         return normalizedAgents;
       } catch (error) {
-        console.error('❌ Error in agents query:', error);
+        console.error('❌ Network/fetch error in agents query:', error);
         return [];
       }
     },
     enabled: SUPABASE_CONFIG_OK,
     retry: false,
+    staleTime: 30000,
   });
 
   useEffect(() => {

@@ -11,17 +11,18 @@ export const [UserContext, useUser] = createContextHook(() => {
   const userQuery = useQuery({
     queryKey: ['user'],
     queryFn: async () => {
-      if (!SUPABASE_CONFIG_OK) {
-        console.error('❌ Supabase not configured in user context');
-        return null;
-      }
-
       try {
+        if (!SUPABASE_CONFIG_OK) {
+          console.error('❌ Supabase not configured in user context');
+          return null;
+        }
+
         const supabase = getSupabase();
+        
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
-          console.error('❌ Error getting session:', sessionError);
+          console.error('❌ Supabase error getting session:', sessionError.message || sessionError);
           return null;
         }
 
@@ -31,6 +32,7 @@ export const [UserContext, useUser] = createContextHook(() => {
         }
 
         console.log('👤 Fetching user profile for:', session.user.id);
+        
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -38,12 +40,12 @@ export const [UserContext, useUser] = createContextHook(() => {
           .maybeSingle();
 
         if (profileError) {
-          console.error('❌ Error fetching profile:', profileError);
+          console.error('❌ Supabase error fetching profile:', profileError.message || profileError);
           return null;
         }
 
         if (!profile) {
-          console.warn('⚠️ No profile found for user, returning default');
+          console.warn('⚠️ No profile found for user');
           return null;
         }
 
@@ -63,12 +65,13 @@ export const [UserContext, useUser] = createContextHook(() => {
         
         return userProfile;
       } catch (error) {
-        console.error('❌ Error in user query:', error);
+        console.error('❌ Network/fetch error in user query:', error);
         return null;
       }
     },
     enabled: SUPABASE_CONFIG_OK,
     retry: false,
+    staleTime: 30000,
   });
 
   useEffect(() => {
