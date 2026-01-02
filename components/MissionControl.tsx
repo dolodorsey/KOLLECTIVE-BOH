@@ -105,7 +105,7 @@ const PriorityTask: React.FC<PriorityTaskProps> = ({ task, rank, onPress }) => {
 };
 
 const MissionControl: React.FC = () => {
-  const { tasks, updateTaskStatus } = useTasks();
+  const { tasks } = useTasks();
   const { user } = useUser();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
@@ -153,8 +153,7 @@ const MissionControl: React.FC = () => {
     const totalToday = todayTasks.length;
     const completionPercentage = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
     
-    // Mock streak counter (would be stored in user data)
-    const streak = Math.floor(Math.random() * 15) + 1;
+    const streak = 0;
     
     return {
       completionPercentage,
@@ -166,18 +165,6 @@ const MissionControl: React.FC = () => {
 
   const handleTaskPress = useCallback((task: Task) => {
     console.log('Navigate to task detail:', task.id);
-  }, []);
-
-  const handleCompleteTask = useCallback((taskId: string) => {
-    updateTaskStatus(taskId, 'completed');
-  }, [updateTaskStatus]);
-
-  const handleRequestAssistance = useCallback((taskId: string) => {
-    console.log('Request assistance for task:', taskId);
-  }, []);
-
-  const handleDelegateToAgent = useCallback((taskId: string) => {
-    console.log('Delegate to Rork Agent:', taskId);
   }, []);
 
   return (
@@ -269,10 +256,14 @@ const MissionControl: React.FC = () => {
             ))
           ) : (
             <View style={styles.emptyState}>
-              <CheckCircle size={48} color="#2ECC40" />
-              <Text style={styles.emptyTitle}>All Clear!</Text>
+              <Target size={48} color="#666" />
+              <Text style={styles.emptyTitle}>
+                {tasks.length === 0 ? 'No Tasks Yet' : 'All Clear!'}
+              </Text>
               <Text style={styles.emptySubtitle}>
-                No urgent priorities. Great work!
+                {tasks.length === 0 
+                  ? 'Tasks will appear here when they are assigned to you'
+                  : 'No urgent priorities. Great work!'}
               </Text>
             </View>
           )}

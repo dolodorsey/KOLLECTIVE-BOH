@@ -19,7 +19,6 @@ import {
   Sparkles,
 } from 'lucide-react-native';
 
-import { useUser } from '@/hooks/user-context';
 import { useBrands } from '@/hooks/brands-context';
 import { brandMoods, mascotAffirmations } from '@/mocks/culture';
 
@@ -267,7 +266,16 @@ const KollectivePulse: React.FC = () => {
         ) : (
           // Help Board
           <View style={styles.helpBoard}>
-            {helpRequests.map((request) => (
+            {helpRequests.length === 0 ? (
+              <View style={styles.emptyHelpState}>
+                <HelpCircle size={48} color="#666" />
+                <Text style={styles.emptyHelpTitle}>No Help Requests</Text>
+                <Text style={styles.emptyHelpSubtitle}>
+                  Post a help request to get started
+                </Text>
+              </View>
+            ) : (
+              helpRequests.map((request) => (
               <TouchableOpacity key={request.id} style={styles.helpItem}>
                 <View style={styles.helpHeader}>
                   <View style={[
@@ -303,12 +311,14 @@ const KollectivePulse: React.FC = () => {
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
-            ))}
+            )))}
             
-            <TouchableOpacity style={styles.postHelpButton}>
-              <HelpCircle size={20} color="#FFD700" />
-              <Text style={styles.postHelpText}>Post Help Request</Text>
-            </TouchableOpacity>
+            {helpRequests.length > 0 && (
+              <TouchableOpacity style={styles.postHelpButton}>
+                <HelpCircle size={20} color="#FFD700" />
+                <Text style={styles.postHelpText}>Post Help Request</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </ScrollView>
@@ -587,6 +597,40 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     marginLeft: 8,
     fontWeight: 'bold',
+  },
+  emptyActivityState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyActivityTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#666',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyActivitySubtitle: {
+    fontSize: 14,
+    color: '#aaa',
+    textAlign: 'center',
+  },
+  emptyHelpState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyHelpTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#666',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyHelpSubtitle: {
+    fontSize: 14,
+    color: '#aaa',
+    textAlign: 'center',
   },
 });
 

@@ -52,7 +52,13 @@ const LeaderboardIncentives: React.FC = () => {
   const [filterBy, setFilterBy] = useState<'kollective' | 'entity'>('kollective');
 
   // Mock leaderboard data
-  const leaderboardData = useMemo<LeaderboardEntry[]>(() => [
+  const leaderboardData = useMemo<LeaderboardEntry[]>(() => {
+    // If no user data, show minimal leaderboard
+    if (!user) {
+      return [];
+    }
+    
+    return [
     {
       id: '1',
       name: 'Jordan Martinez',
@@ -113,7 +119,8 @@ const LeaderboardIncentives: React.FC = () => {
       badges: ['📈', '🎪'],
       brandId: 'hq',
     },
-  ], [user]);
+  ];
+  }, [user]);
 
   // Mock rewards data
   const rewardsData = useMemo<RewardItem[]>(() => [
@@ -354,7 +361,16 @@ const LeaderboardIncentives: React.FC = () => {
         ) : (
           // Leaderboard
           <View style={styles.leaderboard}>
-            {leaderboardData.map((entry) => {
+            {leaderboardData.length === 0 ? (
+              <View style={styles.emptyLeaderboardState}>
+                <Trophy size={48} color="#666" />
+                <Text style={styles.emptyLeaderboardTitle}>No Leaderboard Data</Text>
+                <Text style={styles.emptyLeaderboardSubtitle}>
+                  Complete tasks to start earning XP
+                </Text>
+              </View>
+            ) : (
+              leaderboardData.map((entry) => {
               const brand = entry.brandId ? brands.find(b => b.id === entry.brandId) : null;
               const isCurrentUser = entry.name === user?.name || entry.name === 'You';
               const xpToShow = activeTab === 'weekly' ? entry.weeklyXP : entry.monthlyXP;
@@ -402,7 +418,7 @@ const LeaderboardIncentives: React.FC = () => {
                   </View>
                 </View>
               );
-            })}
+            }))}
           </View>
         )}
       </ScrollView>
@@ -728,6 +744,23 @@ const styles = StyleSheet.create({
   },
   disabledButtonText: {
     color: '#666',
+  },
+  emptyLeaderboardState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyLeaderboardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#666',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyLeaderboardSubtitle: {
+    fontSize: 14,
+    color: '#aaa',
+    textAlign: 'center',
   },
 });
 
