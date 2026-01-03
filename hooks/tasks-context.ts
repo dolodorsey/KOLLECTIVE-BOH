@@ -28,7 +28,7 @@ interface TasksProviderProps {
   children: React.ReactNode;
 }
 
-export function TasksProvider({ children }: TasksProviderProps) {
+export function TasksProvider({ children }: TasksProviderProps): JSX.Element {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
