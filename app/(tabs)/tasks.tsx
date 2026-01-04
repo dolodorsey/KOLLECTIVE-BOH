@@ -31,11 +31,7 @@ export default function TasksScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all');
 
-  useEffect(() => {
-    loadTasks();
-  }, [filter]);
-
-  const loadTasks = async () => {
+  const loadTasks = React.useCallback(async () => {
     try {
       const supabase = getSupabase();
       
@@ -59,13 +55,17 @@ export default function TasksScreen() {
       if (error) throw error;
       setTasks(data || []);
     } catch (error) {
-      console.error('Failed to load tasks:', error);
-      Alert.alert('Error', 'Failed to load tasks');
+      console.error('[Tasks] Recalibrating the blueprint:', error);
+      Alert.alert('System Recalibrating', 'Blueprint refresh in progress');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   const updateTaskStatus = async (taskId: string, newStatus: 'pending' | 'in_progress' | 'completed') => {
     try {
@@ -85,10 +85,10 @@ export default function TasksScreen() {
         )
       );
 
-      Alert.alert('Success', 'Task status updated');
+      Alert.alert('Vision Executed', 'Mission status evolved');
     } catch (error) {
-      console.error('Failed to update task:', error);
-      Alert.alert('Error', 'Failed to update task status');
+      console.error('[Tasks] Recalibrating the blueprint:', error);
+      Alert.alert('System Recalibrating', 'Status update in progress');
     }
   };
 
@@ -159,6 +159,7 @@ export default function TasksScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#FFD700" />
+        <Text style={styles.loadingText}>Orchestrating missions...</Text>
       </View>
     );
   }
@@ -222,8 +223,8 @@ export default function TasksScreen() {
             ListEmptyComponent={
               <View style={styles.emptyState}>
                 <AlertCircle size={48} color="#666" />
-                <Text style={styles.emptyText}>No tasks found</Text>
-                <Text style={styles.emptySubtext}>Pull down to refresh</Text>
+                <Text style={styles.emptyText}>The blueprint is clear</Text>
+                <Text style={styles.emptySubtext}>Pull to sync the vision</Text>
               </View>
             }
           />
@@ -248,6 +249,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#FFD700',
+    marginTop: 16,
+    fontWeight: '600',
   },
   header: {
     padding: 24,

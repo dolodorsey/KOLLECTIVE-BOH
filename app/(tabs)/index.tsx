@@ -56,19 +56,19 @@ export default function OwnerPortalScreen() {
         const orgId = orgs.id;
 
         // Get total entities (brands + locations)
-        const { data: entities, error: entitiesError } = await supabase
+        const { data: entities } = await supabase
           .from('entities')
           .select('id')
           .eq('org_id', orgId);
 
         // Get team members count
-        const { data: profiles, error: profilesError } = await supabase
+        const { data: profiles } = await supabase
           .from('profiles')
           .select('id')
           .eq('org_id', orgId);
 
         // Get active tasks
-        const { data: tasks, error: tasksError } = await supabase
+        const { data: tasks } = await supabase
           .from('tasks')
           .select('id, status')
           .eq('org_id', orgId);
@@ -86,7 +86,7 @@ export default function OwnerPortalScreen() {
         });
       }
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
+      console.error('[Dashboard] Recalibrating the blueprint:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -102,6 +102,7 @@ export default function OwnerPortalScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#FFD700" />
+        <Text style={styles.loadingText}>Processing the vision...</Text>
       </View>
     );
   }
@@ -203,6 +204,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#FFD700',
+    marginTop: 16,
+    fontWeight: '600',
   },
   header: {
     padding: 24,

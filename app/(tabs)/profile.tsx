@@ -37,7 +37,7 @@ export default function ProfileScreen() {
       await supabase.auth.signOut();
       router.replace('/auth/login');
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error('[Profile] Session transition:', error);
     }
   };
 
@@ -118,7 +118,7 @@ export default function ProfileScreen() {
               ))}
             </View>
           ) : (
-            <Text style={styles.emptyText}>No entities assigned</Text>
+            <Text style={styles.emptyText}>Your empire awaits assignment</Text>
           )}
         </View>
 
@@ -129,17 +129,17 @@ export default function ProfileScreen() {
           <View style={styles.activityList}>
             <View style={styles.activityItem}>
               <Calendar size={16} color="#FFD700" />
-              <Text style={styles.activityText}>Completed 5 tasks today</Text>
+              <Text style={styles.activityText}>Crushed 5 missions today</Text>
             </View>
             
             <View style={styles.activityItem}>
               <Trophy size={16} color="#FFD700" />
-              <Text style={styles.activityText}>Earned 150 XP this week</Text>
+              <Text style={styles.activityText}>Dominated with 150 XP this week</Text>
             </View>
             
             <View style={styles.activityItem}>
               <Award size={16} color="#FFD700" />
-              <Text style={styles.activityText}>Unlocked &ldquo;Team Player&rdquo; badge</Text>
+              <Text style={styles.activityText}>Unlocked &quot;Kollective Legend&quot; status</Text>
             </View>
           </View>
         </View>
