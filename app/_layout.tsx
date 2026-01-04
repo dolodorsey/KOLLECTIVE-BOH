@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 
 import { trpc, trpcClient } from "@/lib/trpc";
-import { UserContext } from "@/hooks/user-context";
+import { AuthContext } from "@/hooks/auth-context";
 import { BrandsContext } from "@/hooks/brands-context";
 import { AgentsContext } from "@/hooks/agents-context";
 import { TasksProvider } from "@/hooks/tasks-context";
@@ -16,14 +16,16 @@ const queryClient = new QueryClient();
 function RootLayoutNav() {
   return (
     <Stack 
-      initialRouteName="(tabs)"
       screenOptions={{ 
         headerShown: false,
         contentStyle: { backgroundColor: '#121212' }
       }}
     >
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="(owner)" options={{ headerShown: false }} />
+      <Stack.Screen name="(team)" options={{ headerShown: false }} />
       <Stack.Screen name="auth" options={{ headerShown: false }} />
+      <Stack.Screen name="modal" options={{ headerShown: false }} />
     </Stack>
   );
 }
@@ -33,7 +35,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <UserContext>
+          <AuthContext>
             <BrandsContext>
               <AgentsContext>
                 <TasksProvider>
@@ -44,7 +46,7 @@ export default function RootLayout() {
                 </TasksProvider>
               </AgentsContext>
             </BrandsContext>
-          </UserContext>
+          </AuthContext>
         </QueryClientProvider>
       </trpc.Provider>
     </GestureHandlerRootView>

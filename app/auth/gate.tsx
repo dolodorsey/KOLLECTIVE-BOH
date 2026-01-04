@@ -29,6 +29,7 @@ export default function AuthGateScreen() {
 
   useEffect(() => {
     checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkAuth = async () => {
@@ -75,7 +76,7 @@ export default function AuthGateScreen() {
     try {
       // Store selected org in context/state
       // Navigate to owner portal
-      router.replace('/(tabs)');
+      router.replace('/');
     } catch (error) {
       console.error('Failed to select organization:', error);
       Alert.alert('Error', 'Failed to select organization');

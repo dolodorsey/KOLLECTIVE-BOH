@@ -1,14 +1,12 @@
 import { Tabs } from "expo-router";
-import { Home, User, CheckCircle } from "lucide-react-native";
+import { CheckCircle, User } from "lucide-react-native";
 import React from "react";
 
-import Colors from "@/constants/colors";
-
-export default function TabLayout() {
+export default function TeamLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.dark.tint,
+        tabBarActiveTintColor: '#FFD700',
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#121212',
@@ -20,24 +18,17 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
-        options={{
-          title: "Dashboard",
-          tabBarIcon: ({ color }) => <Home color={color} />,
-        }}
-      />
-            <Tabs.Screen
         name="tasks"
         options={{
           title: "Tasks",
-          tabBarIcon: ({ color }) => <CheckCircle color={color} />,
+          tabBarIcon: ({ color }) => <CheckCircle color={color} size={24} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => <User color={color} />,
+          tabBarIcon: ({ color }) => <User color={color} size={24} />,
         }}
       />
     </Tabs>

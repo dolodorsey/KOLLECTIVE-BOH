@@ -52,7 +52,7 @@ export default function CallbackScreen() {
 
         if (data?.session) {
           console.log('Authentication successful, redirecting to app...');
-          router.replace('/(tabs)');
+          router.replace('/');
         } else {
           console.error('No session received after verification');
           setError('Authentication failed');
