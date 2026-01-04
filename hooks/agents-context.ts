@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useEffect } from 'react';
-import { api } from '@/lib/api';
 import { Agent } from '@/types/agent';
+import { agents as mockAgents } from '@/mocks/agents';
 
 export const [AgentsContext, useAgents] = createContextHook(() => {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -10,22 +10,15 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAgents = async () => {
+    const loadAgents = () => {
       try {
         setIsLoading(true);
         setError(null);
-        
-        const response = await api.get<Agent[]>('/api/agents');
-        
-        if (response.error) {
-          setError(response.error);
-          console.error('[Agents] Failed to fetch agents:', response.error);
-        } else if (response.data) {
-          setAgents(response.data);
-          setAllAgents(response.data);
-        }
+        console.log('✅ Agents loaded:', mockAgents.length);
+        setAgents(mockAgents);
+        setAllAgents(mockAgents);
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to fetch agents';
+        const errorMsg = err instanceof Error ? err.message : 'Failed to load agents';
         setError(errorMsg);
         console.error('[Agents] Error:', err);
       } finally {
@@ -33,7 +26,7 @@ export const [AgentsContext, useAgents] = createContextHook(() => {
       }
     };
 
-    fetchAgents();
+    loadAgents();
   }, []);
 
   return {
