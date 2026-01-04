@@ -1,5 +1,15 @@
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://kollective-api--drdor5.replit.app';
 
+if (API_BASE_URL.startsWith('http://')) {
+  console.warn('⚠️ [API] Using HTTP instead of HTTPS. iOS will block these requests:', API_BASE_URL);
+}
+
+if (API_BASE_URL.includes('localhost')) {
+  console.warn('⚠️ [API] Using localhost URL. This will not work on physical devices:', API_BASE_URL);
+}
+
+console.log('🔗 [API] Configured base URL:', API_BASE_URL);
+
 export interface ApiResponse<T> {
   data: T | null;
   error: string | null;
@@ -32,9 +42,11 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
+    const url = `${this.baseUrl}${endpoint}`;
+    const startTime = Date.now();
+    
     try {
-      const url = `${this.baseUrl}${endpoint}`;
-      console.log(`[API] ${options.method || 'GET'} ${url}`);
+      console.log(`📡 [API] ${options.method || 'GET'} ${url}`);
 
       const response = await fetch(url, {
         ...options,
@@ -44,12 +56,26 @@ class ApiClient {
         },
       });
 
+      const duration = Date.now() - startTime;
+      console.log(`⏱️ [API] Request took ${duration}ms`);
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`[API] Error ${response.status}:`, errorText);
+        console.error(`❌ [API] Error ${response.status}:`, {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+        });
+        
         if (response.status === 404) {
-          console.error('[API] 404 NOT FOUND: Endpoint does not exist:', url);
+          console.error('🔍 [API] 404 NOT FOUND: Endpoint does not exist:', url);
+        } else if (response.status === 403 || response.status === 401) {
+          console.error('🔒 [API] Authentication/Authorization error');
+        } else if (response.status >= 500) {
+          console.error('🔥 [API] Server error - backend may be down');
         }
+        
         return {
           data: null,
           error: `HTTP ${response.status}: ${errorText}`,
@@ -57,19 +83,41 @@ class ApiClient {
       }
 
       const data = await response.json();
-      console.log(`[API] Success:`, data);
+      console.log(`✅ [API] Success:`, data);
 
       return {
         data,
         error: null,
       };
     } catch (error) {
-      console.error('[API] Request failed:', error);
+      const duration = Date.now() - startTime;
+      console.error(`❌ [API] Request failed after ${duration}ms:`, {
+        url,
+        error: error instanceof Error ? {
+          message: error.message,
+          name: error.name,
+          stack: error.stack,
+        } : error,
+      });
+      
       if (error instanceof Error) {
         if (error.message.includes('Network request failed')) {
-          console.error('[API] NETWORK ERROR: Cannot reach server at', this.baseUrl);
+          console.error('🌐 [API] NETWORK ERROR: Cannot reach server');
+          console.error('💡 Possible causes:');
+          console.error('   1. Server is down');
+          console.error('   2. No internet connection');
+          console.error('   3. CORS policy blocking request');
+          console.error('   4. iOS blocking HTTP (non-HTTPS) request');
+          console.error('   5. Server URL is incorrect:', this.baseUrl);
+        } else if (error.message.includes('Failed to fetch')) {
+          console.error('🌐 [API] FETCH ERROR: Network or CORS issue');
+          console.error('💡 Check:');
+          console.error('   1. Is the API URL correct?', this.baseUrl);
+          console.error('   2. Is the server running?');
+          console.error('   3. CORS headers configured?');
         }
       }
+      
       return {
         data: null,
         error: error instanceof Error ? error.message : 'Unknown error occurred',

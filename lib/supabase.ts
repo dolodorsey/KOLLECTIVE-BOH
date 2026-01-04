@@ -12,13 +12,21 @@ const url = supabaseUrl || 'MISSING';
 const keyPreview = (supabaseAnonKey || '').slice(0, 6) + '...';
 const source = 'hardcoded';
 
-console.log('🔍 SUPABASE CONFIG DIAGNOSTIC:', {
+console.log('🔍 [Supabase] CONFIG DIAGNOSTIC:', {
   hasUrl,
   hasKey,
   url,
   keyPreview,
   source
 });
+
+if (url.startsWith('http://')) {
+  console.warn('⚠️ [Supabase] Using HTTP instead of HTTPS. iOS will block these requests.');
+}
+
+if (!hasUrl || !hasKey) {
+  console.error('❌ [Supabase] Missing configuration!');
+}
 
 export const DIAGNOSTIC_INFO = {
   hasUrl,

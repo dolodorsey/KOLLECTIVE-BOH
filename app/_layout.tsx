@@ -11,7 +11,19 @@ import { AgentsContext } from "@/hooks/agents-context";
 import { TasksProvider } from "@/hooks/tasks-context";
 import { CultureContext } from "@/hooks/culture-context";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
+
+console.log('🔧 [React Query] Configured with retry: 2 for queries, 1 for mutations');
 
 function RootLayoutNav() {
   return (
