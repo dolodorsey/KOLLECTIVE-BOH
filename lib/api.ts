@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://kollective-api--drdor5.replit.app';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://kollective-api--DRDORS.replit.app';
 
 if (API_BASE_URL.startsWith('http://')) {
   console.warn('⚠️ [API] Using HTTP instead of HTTPS. iOS will block these requests:', API_BASE_URL);
