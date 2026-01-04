@@ -1,5 +1,8 @@
 -- Kollective BOH - Complete Database Schema
 -- Drop tables in reverse dependency order
+DROP TABLE IF EXISTS workflow_executions CASCADE;
+DROP TABLE IF EXISTS webhook_registry CASCADE;
+DROP TABLE IF EXISTS brand_configurations CASCADE;
 DROP TABLE IF EXISTS tasks CASCADE;
 DROP TABLE IF EXISTS entity_members CASCADE;
 DROP TABLE IF EXISTS entities CASCADE;
@@ -302,3 +305,149 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION handle_new_user();
+
+-- ============================================================================
+-- BRAND_CONFIGURATIONS TABLE
+-- ============================================================================
+CREATE TABLE brand_configurations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  brand_key TEXT UNIQUE NOT NULL,
+  brand_display_name TEXT NOT NULL,
+  ghl_location_id TEXT,
+  email_from TEXT,
+  instagram_account_id TEXT,
+  sms_enabled BOOLEAN DEFAULT false,
+  email_enabled BOOLEAN DEFAULT false,
+  dm_enabled BOOLEAN DEFAULT false,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE brand_configurations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can view brand configurations"
+  ON brand_configurations FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Owners/Admins can manage brand configurations"
+  ON brand_configurations FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM org_members
+      WHERE org_members.user_id = auth.uid()
+      AND org_members.role IN ('owner', 'admin')
+      AND org_members.status = 'active'
+    )
+  );
+
+-- ============================================================================
+-- WEBHOOK_REGISTRY TABLE
+-- ============================================================================
+CREATE TABLE webhook_registry (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workflow_name TEXT NOT NULL,
+  n8n_endpoint TEXT NOT NULL,
+  brand TEXT,
+  channel TEXT,
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'testing')),
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE webhook_registry ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can view webhook registry"
+  ON webhook_registry FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Owners/Admins can manage webhook registry"
+  ON webhook_registry FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM org_members
+      WHERE org_members.user_id = auth.uid()
+      AND org_members.role IN ('owner', 'admin')
+      AND org_members.status = 'active'
+    )
+  );
+
+-- ============================================================================
+-- WORKFLOW_EXECUTIONS TABLE
+-- ============================================================================
+CREATE TABLE workflow_executions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workflow_id UUID REFERENCES webhook_registry(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  input_payload JSONB DEFAULT '{}',
+  output_payload JSONB DEFAULT '{}',
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'success', 'failed', 'timeout')),
+  execution_time_ms INTEGER,
+  error_message TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE workflow_executions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own workflow executions"
+  ON workflow_executions FOR SELECT
+  USING (
+    auth.uid() = user_id
+    OR EXISTS (
+      SELECT 1 FROM org_members
+      WHERE org_members.user_id = auth.uid()
+      AND org_members.role IN ('owner', 'admin')
+      AND org_members.status = 'active'
+    )
+  );
+
+CREATE POLICY "Authenticated users can create workflow executions"
+  ON workflow_executions FOR INSERT
+  WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "System can update workflow executions"
+  ON workflow_executions FOR UPDATE
+  USING (auth.uid() IS NOT NULL);
+
+-- ============================================================================
+-- INDEXES FOR WEBHOOK SYSTEM
+-- ============================================================================
+CREATE INDEX idx_webhook_registry_workflow_name ON webhook_registry(workflow_name);
+CREATE INDEX idx_webhook_registry_brand ON webhook_registry(brand);
+CREATE INDEX idx_webhook_registry_status ON webhook_registry(status);
+CREATE INDEX idx_workflow_executions_workflow_id ON workflow_executions(workflow_id);
+CREATE INDEX idx_workflow_executions_user_id ON workflow_executions(user_id);
+CREATE INDEX idx_workflow_executions_status ON workflow_executions(status);
+CREATE INDEX idx_workflow_executions_created_at ON workflow_executions(created_at DESC);
+CREATE INDEX idx_brand_configurations_brand_key ON brand_configurations(brand_key);
+
+-- ============================================================================
+-- SEED DATA FOR BRAND CONFIGURATIONS
+-- ============================================================================
+INSERT INTO brand_configurations (brand_key, brand_display_name, ghl_location_id, email_from, instagram_account_id, sms_enabled, email_enabled, dm_enabled, metadata)
+VALUES
+  ('thepinkypromiseatl', 'The Pinky Promise ATL', 'ppATL_ghl_123', 'hello@thepinkypromiseatl.com', '@thepinkypromiseatl', true, true, true, '{"region": "atlanta", "timezone": "America/New_York"}'::jsonb),
+  ('dolodorsey', 'DOLO DORSEY', 'dd_ghl_456', 'yo@dolodorsey.com', '@dolodorsey', true, true, true, '{"type": "personal_brand", "timezone": "America/Los_Angeles"}'::jsonb)
+ON CONFLICT (brand_key) DO NOTHING;
+
+-- ============================================================================
+-- FUNCTIONS FOR UPDATED_AT TRIGGERS
+-- ============================================================================
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_brand_configurations_updated_at
+  BEFORE UPDATE ON brand_configurations
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_webhook_registry_updated_at
+  BEFORE UPDATE ON webhook_registry
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
