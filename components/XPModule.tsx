@@ -13,9 +13,10 @@ const XPModule: React.FC = () => {
   const userPosition = leaderboard.findIndex(u => u.id === user.id) + 1;
   
   // Calculate XP progress to next level
-  const currentLevel = Math.floor(user.xp / 500);
+  const currentXP = user.xp ?? 0;
+  const currentLevel = Math.floor(currentXP / 500);
   const nextLevelXP = (currentLevel + 1) * 500;
-  const progress = ((user.xp % 500) / 500) * 100;
+  const progress = ((currentXP % 500) / 500) * 100;
   
   return (
     <View style={styles.container} testID="xp-module">

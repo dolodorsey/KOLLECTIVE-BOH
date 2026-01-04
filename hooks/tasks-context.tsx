@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Task, TaskStatus } from '@/types/task';
 import { supabase } from '@/lib/supabase';
+
 
 interface TasksContextValue {
   tasks: Task[];
@@ -11,7 +12,7 @@ interface TasksContextValue {
   isUpdating: boolean;
 }
 
-const TasksContext = createContext<TasksContextValue>({
+export const TasksContext = createContext<TasksContextValue>({
   tasks: [],
   allTasks: [],
   isLoading: false,
@@ -24,11 +25,13 @@ export function useTasksContext() {
   return useContext(TasksContext);
 }
 
+export const useTasks = useTasksContext;
+
 interface TasksProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export function TasksProvider({ children }: TasksProviderProps): JSX.Element {
+export function TasksProvider({ children }: TasksProviderProps) {
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

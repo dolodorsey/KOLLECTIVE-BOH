@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 import { User } from '@/types/user';
 
@@ -90,8 +90,10 @@ export const [UserContext, useUser] = createContextHook(() => {
         id: authUser.id,
         email: authUser.email || profileData.email,
         name: profileData.full_name,
-        avatar: profileData.avatar_url,
+        profileImage: profileData.avatar_url,
         role: orgMembers && orgMembers.length > 0 ? orgMembers[0].role : 'staff',
+        assignedBrands: [],
+        xp: 0,
       };
 
       setUser(userData);
@@ -105,7 +107,7 @@ export const [UserContext, useUser] = createContextHook(() => {
 
   useEffect(() => {
     // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session?.user) {
         fetchUserData(session.user);
       } else {
@@ -115,7 +117,7 @@ export const [UserContext, useUser] = createContextHook(() => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (_event: string, session: Session | null) => {
         if (session?.user) {
           fetchUserData(session.user);
         } else {
@@ -144,7 +146,7 @@ export const [UserContext, useUser] = createContextHook(() => {
     isLoading,
     error,
     refetch: () => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
         if (session?.user) {
           fetchUserData(session.user);
         }

@@ -26,7 +26,7 @@ const HeroCommandStrip: React.FC = () => {
   const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
 
   const userBrands = useMemo(() => {
-    return brands.filter(brand => user?.assignedBrands.includes(brand.id));
+    return brands.filter(brand => user?.assignedBrands?.includes(brand.id));
   }, [brands, user?.assignedBrands]);
 
   const todayQuote = useMemo(() => {

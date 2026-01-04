@@ -16,9 +16,10 @@ export type UserRank =
 export interface User {
   id: string;
   name: string;
-  role: UserRole;
+  email?: string;
+  role: UserRole | string;
   rank?: UserRank;
-  assignedBrands: string[];
-  xp: number;
+  assignedBrands?: string[];
+  xp?: number;
   profileImage?: string;
 }

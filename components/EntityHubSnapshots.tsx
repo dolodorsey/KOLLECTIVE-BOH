@@ -166,7 +166,7 @@ const EntityHubSnapshots: React.FC = () => {
     if (!user) return [];
     
     return brands.filter(brand => 
-      user.assignedBrands.includes(brand.id) ||
+      user.assignedBrands?.includes(brand.id) ||
       user.role === 'Super Admin' ||
       user.role === 'Inner Circle'
     );

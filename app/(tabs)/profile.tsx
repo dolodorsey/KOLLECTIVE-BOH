@@ -42,7 +42,7 @@ export default function ProfileScreen() {
   };
 
   const userBrands = brands.filter(brand => 
-    user?.assignedBrands.includes(brand.id)
+    user?.assignedBrands?.includes(brand.id)
   );
 
   return (

@@ -8,7 +8,7 @@ import { trpc, trpcClient } from "@/lib/trpc";
 import { UserContext } from "@/hooks/user-context";
 import { BrandsContext } from "@/hooks/brands-context";
 import { AgentsContext } from "@/hooks/agents-context";
-import { TasksContext } from "@/hooks/tasks-context";
+import { TasksProvider } from "@/hooks/tasks-context";
 import { CultureContext } from "@/hooks/culture-context";
 
 const queryClient = new QueryClient();
@@ -36,12 +36,12 @@ export default function RootLayout() {
           <UserContext>
             <BrandsContext>
               <AgentsContext>
-                <TasksContext>
+                <TasksProvider>
                   <CultureContext>
                     <StatusBar style="light" />
                     <RootLayoutNav />
                   </CultureContext>
-                </TasksContext>
+                </TasksProvider>
               </AgentsContext>
             </BrandsContext>
           </UserContext>

@@ -105,7 +105,7 @@ const LeaderboardIncentives: React.FC = () => {
       monthlyXP: 950,
       streak: 6,
       badges: ['💪', '🎯'],
-      brandId: user?.assignedBrands[0],
+      brandId: user?.assignedBrands?.[0],
     },
     {
       id: '5',
