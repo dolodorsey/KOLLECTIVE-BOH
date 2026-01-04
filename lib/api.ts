@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://kollective-api--drdor5.replit.app';
 
 export interface ApiResponse<T> {
   data: T | null;
@@ -47,6 +47,9 @@ class ApiClient {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`[API] Error ${response.status}:`, errorText);
+        if (response.status === 404) {
+          console.error('[API] 404 NOT FOUND: Endpoint does not exist:', url);
+        }
         return {
           data: null,
           error: `HTTP ${response.status}: ${errorText}`,
@@ -62,6 +65,11 @@ class ApiClient {
       };
     } catch (error) {
       console.error('[API] Request failed:', error);
+      if (error instanceof Error) {
+        if (error.message.includes('Network request failed')) {
+          console.error('[API] NETWORK ERROR: Cannot reach server at', this.baseUrl);
+        }
+      }
       return {
         data: null,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
