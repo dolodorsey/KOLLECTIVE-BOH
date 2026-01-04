@@ -20,7 +20,7 @@ import {
 } from 'lucide-react-native';
 
 import { useBrands } from '@/hooks/brands-context';
-import { brandMoods, mascotAffirmations } from '@/mocks/culture';
+import { useCulture } from '@/hooks/culture-context';
 
 interface ActivityItem {
   id: string;
@@ -153,15 +153,7 @@ const KollectivePulse: React.FC = () => {
     }
   };
 
-  const todayMood = useMemo(() => {
-    const today = new Date().getDate();
-    return brandMoods[today % brandMoods.length];
-  }, []);
-
-  const todayAffirmation = useMemo(() => {
-    const today = new Date().getDate();
-    return mascotAffirmations[today % mascotAffirmations.length];
-  }, []);
+  const { brandMood: todayMood, affirmation: todayAffirmation } = useCulture();
 
   return (
     <View style={styles.container}>

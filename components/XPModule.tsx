@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
-
-import { leaderboard } from '@/mocks/users';
+import { User } from '@/types/user';
+import { api } from '@/lib/api';
 import { useUser } from '@/hooks/user-context';
 
 const XPModule: React.FC = () => {
   const { user } = useUser();
+  const [leaderboard, setLeaderboard] = useState<User[]>([]);
+  
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const response = await api.get<User[]>('/api/leaderboard');
+        
+        if (response.data) {
+          setLeaderboard(response.data);
+        }
+      } catch (error) {
+        console.error('[XPModule] Failed to fetch leaderboard:', error);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
   
   if (!user) return null;
   

@@ -17,7 +17,7 @@ import {
 
 import { useUser } from '@/hooks/user-context';
 import { useBrands } from '@/hooks/brands-context';
-import { quotes } from '@/mocks/culture';
+import { useCulture } from '@/hooks/culture-context';
 
 const HeroCommandStrip: React.FC = () => {
   const { user } = useUser();
@@ -29,10 +29,7 @@ const HeroCommandStrip: React.FC = () => {
     return brands.filter(brand => user?.assignedBrands?.includes(brand.id));
   }, [brands, user?.assignedBrands]);
 
-  const todayQuote = useMemo(() => {
-    const today = new Date().getDate();
-    return quotes[today % quotes.length];
-  }, []);
+  const { quoteOfTheDay: todayQuote } = useCulture();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
