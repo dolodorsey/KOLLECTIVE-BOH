@@ -18,7 +18,7 @@ EXPO_PUBLIC_SUPABASE_URL=https://wfkohcwxxsrhcxhepfql.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-actual-anon-key-here
 
 # API Configuration (Production)
-EXPO_PUBLIC_API_URL=https://kollective-api--drdor5.replit.app
+EXPO_PUBLIC_API_URL=https://kollective-api--drdorsey.replit.app
 
 # n8n Webhook Configuration (Production)
 EXPO_PUBLIC_WEBHOOK_URL=https://drdorsey.app.n8n.cloud
@@ -34,7 +34,7 @@ The app includes a built-in diagnostic component that validates your configurati
 ```
 [ConnectionDiagnostic] ✓ Environment Variables - API URL configured
 [ConnectionDiagnostic] ✓ Supabase Config - Configuration valid
-[ConnectionDiagnostic] ✓ API Base URL - Valid URL (https://kollective-api--drdor5.replit.app)
+[ConnectionDiagnostic] ✓ API Base URL - Valid URL (https://kollective-api--drdorsey.replit.app)
 [ConnectionDiagnostic] ✓ HTTPS Protocol - Using secure HTTPS
 [ConnectionDiagnostic] ✓ Network Connectivity - Internet connection active
 ```
@@ -135,7 +135,7 @@ export function WebhookTest() {
 
 **Fix:**
 1. Open `.env` file
-2. Ensure `EXPO_PUBLIC_API_URL` is set to: `https://kollective-api--drdor5.replit.app`
+2. Ensure `EXPO_PUBLIC_API_URL` is set to: `https://kollective-api--drdorsey.replit.app`
 3. Ensure `EXPO_PUBLIC_WEBHOOK_URL` is set to: `https://drdorsey.app.n8n.cloud`
 4. Restart Expo dev server: `npx expo start -c`
 
