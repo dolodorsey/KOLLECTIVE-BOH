@@ -5,24 +5,16 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "env": {
-        "API_URL": "https://kollective-api--drdorsey.replit.app"
-      }
+      "distribution": "internal"
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "API_URL": "https://kollective-api--drdorsey.replit.app"
       }
     },
     "production": {
-      "env": {
-        "API_URL": "https://kollective-api--drdorsey.replit.app"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
