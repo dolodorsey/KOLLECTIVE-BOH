@@ -1,12 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/auth-context';
 import { trpc } from '@/lib/trpc';
 
 export default function OwnerDashboard() {
   const { profile, orgRole } = useAuth();
-  const { data: dashboardData } = trpc.dashboard.summary.useQuery();
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const { data: dashboardData, isLoading: summaryLoading } = trpc.dashboard.summary.useQuery();
 
   const summaryData = dashboardData || {
     active_entities_count: 0,
@@ -22,7 +26,19 @@ export default function OwnerDashboard() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView style={styles.scrollView}>
+        <ScrollView
+            style={styles.scrollView}
+            refreshControl={
+              <RefreshControl
+                refreshing={summaryLoading}
+                onRefresh={() => {
+                  queryClient.invalidateQueries();
+                }}
+                tintColor="#FFD700"
+                colors={['#FFD700']}
+              />
+            }
+          >
           <View style={styles.header}>
             <Text style={styles.title}>Command Center</Text>
             <Text style={styles.subtitle}>Welcome back, {profile?.full_name}</Text>
@@ -55,6 +71,24 @@ export default function OwnerDashboard() {
             <View style={[styles.statCard, styles.healthCard]}>
               <Text style={styles.healthValue}>{summaryData.system_health.toUpperCase()}</Text>
               <Text style={styles.statLabel}>System Health</Text>
+            </View>
+          </View>
+
+          <View style={styles.shortcutsSection}>
+            <Text style={styles.sectionTitle}>Operator Shortcuts</Text>
+            <View style={styles.shortcutsGrid}>
+              <TouchableOpacity style={styles.shortcutButton} onPress={() => router.push('/workflows')}>
+                <Text style={styles.shortcutText}>Trigger Workflow</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shortcutButton} onPress={() => router.push('/(team)/tasks')}>
+                <Text style={styles.shortcutText}>Create Task</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shortcutButton} onPress={() => router.push('/compose')}>
+                <Text style={styles.shortcutText}>Broadcast Message</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shortcutButton} onPress={() => router.push('/entities')}>
+                <Text style={styles.shortcutText}>Add Entity</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
@@ -137,5 +171,33 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#22c55e',
     marginBottom: 4,
+  },
+  shortcutsSection: {
+    padding: 16,
+    paddingTop: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: '#fff',
+    marginBottom: 16,
+  },
+  shortcutsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  shortcutButton: {
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  shortcutText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#FFD700',
   },
 });
