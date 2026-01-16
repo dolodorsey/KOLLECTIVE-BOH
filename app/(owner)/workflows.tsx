@@ -25,7 +25,7 @@ export default function WorkflowsScreen() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const { data: workflows, isLoading, refetch } = trpc.workflows.list.useQuery();
+  const { data: workflows, isLoading, refetch } = trpc.workflows.runs.useQuery();
 
   const executions = (workflows || []).filter((w: any) => 
     statusFilter === 'all' ? true : w.status === statusFilter
