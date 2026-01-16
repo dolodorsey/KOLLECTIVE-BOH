@@ -1,29 +1,29 @@
-import { createTRPCRouter, publicProcedure } from '../create-context';
 import * as z from 'zod';
+import { createTRPCRouter, publicProcedure } from '../create-context';
 
 export const entitiesRouter = createTRPCRouter({
   list: publicProcedure
     .input(
-      z.object({
-        search: z.string().optional(),
-        status: z.string().optional(),
-      }).optional()
+      z
+        .object({
+          status: z.string().optional(),
+          search: z.string().optional(),
+        })
+        .optional()
     )
     .query(async ({ input, ctx }) => {
-      let q = ctx.supabase
-        .from('entities')
-        .select('*, owners(id,name)')
-        .order('created_at', { ascending: false });
+      let query = ctx.supabase.from('entities').select('*, owner:users(id, name)');
 
       if (input?.status && input.status !== 'all') {
-        q = q.eq('status', input.status);
+        query = query.eq('status', input.status);
       }
 
       if (input?.search) {
-        q = q.ilike('name', `%${input.search}%`);
+        query = query.ilike('name', `%${input.search}%`);
       }
 
-      const { data } = await q;
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (error) throw new Error(error.message);
       return data || [];
     }),
 });
