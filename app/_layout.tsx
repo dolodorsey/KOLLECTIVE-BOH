@@ -69,22 +69,22 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <AuthContext>
-            <BrandsContext>
-              <AgentsContext>
-                <TasksProvider>
-                  <CultureContext>
-                    <StatusBar style="light" />
-                    <RootLayoutNav />
-                  </CultureContext>
-                </TasksProvider>
-              </AgentsContext>
-            </BrandsContext>
-          </AuthContext>
+          <trpc.Provider client={trpcClient} queryClient={queryClient}>
+            <AuthContext>
+              <BrandsContext>
+                <AgentsContext>
+                  <TasksProvider>
+                    <CultureContext>
+                      <StatusBar style="light" />
+                      <RootLayoutNav />
+                    </CultureContext>
+                  </TasksProvider>
+                </AgentsContext>
+              </BrandsContext>
+            </AuthContext>
+          </trpc.Provider>
         </QueryClientProvider>
-      </trpc.Provider>
       </ThemeProvider>
     </GestureHandlerRootView>
   );
