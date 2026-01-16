@@ -45,6 +45,7 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  console.log('✅ RootLayout mounted');
   const [isBooting, setIsBooting] = useState(true);
 
   useEffect(() => {
