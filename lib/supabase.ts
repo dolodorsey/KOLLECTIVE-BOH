@@ -1,6 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 const supabaseUrl = 'https://wfkohcwxxsrhcxhepfql.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indma29oY3d4eHNyaGN4aGVwZnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NDk2MjYsImV4cCI6MjA1MTQyNTYyNn0.fXRLof3bExNH-YRiPo3TqhwyY-C2dGZ4dmuW1xIVqnY';
@@ -48,14 +49,18 @@ export function getSupabase(): SupabaseClient {
   }
 
   if (!supabaseInstance) {
+    const storageAdapter = Platform.OS === 'web' ? undefined : AsyncStorage;
+    
     supabaseInstance = createClient(supabaseUrl!, supabaseAnonKey!, {
       auth: {
-        storage: AsyncStorage,
+        storage: storageAdapter,
         autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: false,
+        persistSession: Platform.OS !== 'web',
+        detectSessionInUrl: Platform.OS === 'web',
       },
     });
+    
+    console.log('🔧 [Supabase] Client created with storage:', Platform.OS === 'web' ? 'localStorage (default)' : 'AsyncStorage');
   }
 
   return supabaseInstance;

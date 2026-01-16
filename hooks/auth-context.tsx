@@ -1,5 +1,5 @@
 import createContextHook from '@/lib/create-context-hook';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import type { OrgMembership, EntityMembership, Profile, OrgRole } from '@/types/rbac';
@@ -14,6 +14,8 @@ export const [AuthContext, useAuth] = createContextHook(() => {
   const [entityMemberships, setEntityMemberships] = useState<EntityMembership[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
+  const initStarted = useRef(false);
 
   const loadUserData = async (authSession: Session) => {
     try {
@@ -109,9 +111,20 @@ export const [AuthContext, useAuth] = createContextHook(() => {
   };
 
   useEffect(() => {
+    if (initStarted.current) return;
+    initStarted.current = true;
+    
     console.log('🚀 Auth context initializing...');
 
+    const timeoutId = setTimeout(() => {
+      console.warn('⏰ Auth initialization timed out after 8 seconds');
+      setTimedOut(true);
+      setIsLoading(false);
+      setError('Authentication timed out. Please check your connection.');
+    }, 8000);
+
     supabase.auth.getSession().then(({ data: { session: currentSession } }: { data: { session: Session | null } }) => {
+      clearTimeout(timeoutId);
       console.log('📡 Current session:', currentSession ? 'Found' : 'None');
       setSession(currentSession);
       if (currentSession) {
@@ -119,6 +132,11 @@ export const [AuthContext, useAuth] = createContextHook(() => {
       } else {
         setIsLoading(false);
       }
+    }).catch((err: Error) => {
+      clearTimeout(timeoutId);
+      console.error('❌ Failed to get session:', err);
+      setError('Failed to initialize authentication');
+      setIsLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -141,6 +159,7 @@ export const [AuthContext, useAuth] = createContextHook(() => {
     );
 
     return () => {
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
@@ -175,6 +194,7 @@ export const [AuthContext, useAuth] = createContextHook(() => {
     entityMemberships,
     isLoading,
     error,
+    timedOut,
     switchOrg,
     refetch,
     hasEntityAccess,

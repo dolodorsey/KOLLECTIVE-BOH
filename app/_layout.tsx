@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 
@@ -44,6 +45,26 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const [isBooting, setIsBooting] = useState(true);
+
+  useEffect(() => {
+    console.log('🔄 App booting...');
+    const timer = setTimeout(() => {
+      console.log('✅ Boot complete');
+      setIsBooting(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isBooting) {
+    return (
+      <View style={bootStyles.container}>
+        <ActivityIndicator size="large" color="#FFD700" />
+        <Text style={bootStyles.text}>Booting…</Text>
+      </View>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
@@ -67,3 +88,18 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+const bootStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+  },
+  text: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+});
