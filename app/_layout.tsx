@@ -10,6 +10,7 @@ import { BrandsContext } from "@/hooks/brands-context";
 import { AgentsContext } from "@/hooks/agents-context";
 import { TasksProvider } from "@/hooks/tasks-context";
 import { CultureContext } from "@/hooks/culture-context";
+import { ThemeProvider } from "@/src/ui/theme";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,7 +46,8 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <ThemeProvider>
+        <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           <AuthContext>
             <BrandsContext>
@@ -61,6 +63,7 @@ export default function RootLayout() {
           </AuthContext>
         </QueryClientProvider>
       </trpc.Provider>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
