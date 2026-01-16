@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useWorkflowExecutions } from '@/hooks/webhooks-context';
+import { trpc } from '@/lib/trpc';
 import {
   CheckCircle,
   XCircle,
@@ -25,8 +25,10 @@ export default function WorkflowsScreen() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const { data: executions, isLoading, refetch } = useWorkflowExecutions(
-    statusFilter === 'all' ? undefined : { status: statusFilter }
+  const { data: workflows, isLoading, refetch } = trpc.workflows.list.useQuery();
+
+  const executions = (workflows || []).filter((w: any) => 
+    statusFilter === 'all' ? true : w.status === statusFilter
   );
 
   const onRefresh = async () => {
@@ -153,7 +155,7 @@ export default function WorkflowsScreen() {
                   <View style={styles.executionTitleRow}>
                     {getStatusIcon(execution.status)}
                     <Text style={styles.executionWorkflow}>
-                      {execution.webhook_registry?.workflow_name || 'Unknown'}
+                      {execution.workflow_name || 'Unknown'}
                     </Text>
                   </View>
                   <View
@@ -171,46 +173,33 @@ export default function WorkflowsScreen() {
                         { color: getStatusColor(execution.status) },
                       ]}
                     >
-                      {execution.status.toUpperCase()}
+                      {execution.status?.toUpperCase() || 'UNKNOWN'}
                     </Text>
                   </View>
-                </View>
-
-                <View style={styles.executionMeta}>
-                  {execution.webhook_registry?.brand && (
-                    <Text style={styles.metaText}>
-                      Brand: {execution.webhook_registry.brand}
-                    </Text>
-                  )}
-                  {execution.webhook_registry?.channel && (
-                    <Text style={styles.metaText}>
-                      Channel: {execution.webhook_registry.channel}
-                    </Text>
-                  )}
                 </View>
 
                 <View style={styles.executionStats}>
                   <View style={styles.stat}>
                     <Text style={styles.statLabel}>Duration</Text>
                     <Text style={styles.statValue}>
-                      {formatDuration(execution.execution_time_ms)}
+                      {formatDuration(execution.duration_ms)}
                     </Text>
                   </View>
                   <View style={styles.stat}>
-                    <Text style={styles.statLabel}>Executed</Text>
+                    <Text style={styles.statLabel}>Started</Text>
                     <Text style={styles.statValue}>
-                      {formatDate(execution.created_at)}
+                      {execution.started_at ? formatDate(execution.started_at) : 'N/A'}
                     </Text>
                   </View>
+                  {execution.completed_at && (
+                    <View style={styles.stat}>
+                      <Text style={styles.statLabel}>Completed</Text>
+                      <Text style={styles.statValue}>
+                        {formatDate(execution.completed_at)}
+                      </Text>
+                    </View>
+                  )}
                 </View>
-
-                {execution.error_message && (
-                  <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>
-                      {execution.error_message}
-                    </Text>
-                  </View>
-                )}
               </View>
             ))
           ) : (

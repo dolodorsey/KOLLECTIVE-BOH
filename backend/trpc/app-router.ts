@@ -5,6 +5,7 @@ import { aoCoreRouter } from "./routes/ao-core";
 import { brandsRouter } from "./routes/brands";
 import { dashboardRouter } from "./routes/dashboard";
 import { entitiesRouter } from "./routes/entities";
+import { workflowsRouter } from "./routes/workflows";
 
 export const appRouter = createTRPCRouter({
   example: exampleRouter,
@@ -13,6 +14,7 @@ export const appRouter = createTRPCRouter({
   brands: brandsRouter,
   dashboard: dashboardRouter,
   entities: entitiesRouter,
+  workflows: workflowsRouter,
 });
 
 export type AppRouter = typeof appRouter;
