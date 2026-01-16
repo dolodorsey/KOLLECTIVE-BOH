@@ -1,5 +1,5 @@
 import { createTRPCRouter, publicProcedure } from '../create-context';
-import { quotes, commandments, mascotAffirmations, brandMoods } from '../../../mocks/culture';
+import { quotes, commandments, mascotAffirmations, brandMoods } from '@/mocks/culture';
 
 export const cultureRouter = createTRPCRouter({
   getAll: publicProcedure.query(async () => {
