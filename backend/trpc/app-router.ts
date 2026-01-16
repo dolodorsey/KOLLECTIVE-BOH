@@ -6,6 +6,7 @@ import { brandsRouter } from "./routes/brands";
 import { dashboardRouter } from "./routes/dashboard";
 import { entitiesRouter } from "./routes/entities";
 import { workflowsRouter } from "./routes/workflows";
+import { activityRouter } from "./routes/activity";
 
 export const appRouter = createTRPCRouter({
   example: exampleRouter,
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
   dashboard: dashboardRouter,
   entities: entitiesRouter,
   workflows: workflowsRouter,
+  activity: activityRouter,
 });
 
 export type AppRouter = typeof appRouter;
