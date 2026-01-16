@@ -8,6 +8,8 @@ import { entitiesRouter } from "./routes/entities";
 import { workflowsRouter } from "./routes/workflows";
 import { activityRouter } from "./routes/activity";
 import { cultureRouter } from "./routes/culture";
+import { profilesRouter } from "./routes/profiles";
+import { locationsRouter } from "./routes/locations";
 
 export const appRouter = createTRPCRouter({
   example: exampleRouter,
@@ -19,6 +21,8 @@ export const appRouter = createTRPCRouter({
   workflows: workflowsRouter,
   activity: activityRouter,
   culture: cultureRouter,
+  profiles: profilesRouter,
+  locations: locationsRouter,
 });
 
 export type AppRouter = typeof appRouter;
