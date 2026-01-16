@@ -1,5 +1,4 @@
-import createContextHook from '@nkzw/create-context-hook';
-import { useEffect, useState } from 'react';
+import createContextHook from '@/lib/create-context-hook';import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import type { OrgMembership, EntityMembership, Profile, OrgRole } from '@/types/rbac';
