@@ -9,7 +9,7 @@ export default function createContextHook<T>(
 
   const Provider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const value = useValue();
-    return <Context.Provider value={value}>{children}</Context.Provider>;
+    return React.createElement(Context.Provider, { value }, children);
   };
 
   const useContextValue = (): T => {
