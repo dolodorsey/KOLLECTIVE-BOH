@@ -5,9 +5,12 @@ export default function AuthLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
+        contentStyle: { backgroundColor: '#121212' },
       }}
     >
+      <Stack.Screen name="index" />
       <Stack.Screen name="login" />
+      <Stack.Screen name="gate" />
       <Stack.Screen name="callback" />
     </Stack>
   );
