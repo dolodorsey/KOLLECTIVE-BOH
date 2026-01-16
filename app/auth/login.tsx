@@ -13,28 +13,110 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getSupabase, SUPABASE_CONFIG_OK } from '@/lib/supabase';
-import { Mail, Sparkles, Zap } from 'lucide-react-native';
+import { Mail, Lock, Sparkles, Zap, UserPlus, LogIn } from 'lucide-react-native';
+
+type LoginMode = 'password' | 'magic';
 
 export default function LoginScreen() {
+  const [mode, setMode] = useState<LoginMode>('password');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleMagicLinkLogin = async () => {
-    if (!SUPABASE_CONFIG_OK) {
-      Alert.alert('Configuration Error', 'Supabase is not configured. Please check your environment variables.');
-      return;
-    }
-
+  const validateEmail = () => {
     if (!email) {
       Alert.alert('Error', 'Please enter your email address');
-      return;
+      return false;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Error', 'Please enter a valid email address');
+      return false;
+    }
+    return true;
+  };
+
+  const handlePasswordLogin = async () => {
+    if (!SUPABASE_CONFIG_OK) {
+      Alert.alert('Configuration Error', 'Supabase is not configured.');
       return;
     }
+    if (!validateEmail()) return;
+    if (!password) {
+      Alert.alert('Error', 'Please enter your password');
+      return;
+    }
+
+    setLoading(true);
+    console.log('Attempting password login for:', email);
+
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (error) {
+        console.error('Password login error:', error);
+        Alert.alert('Login failed', error.message);
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignup = async () => {
+    if (!SUPABASE_CONFIG_OK) {
+      Alert.alert('Configuration Error', 'Supabase is not configured.');
+      return;
+    }
+    if (!validateEmail()) return;
+    if (!password) {
+      Alert.alert('Error', 'Please enter a password');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+    console.log('Attempting signup for:', email);
+
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (error) {
+        console.error('Signup error:', error);
+        Alert.alert('Signup failed', error.message);
+      } else {
+        Alert.alert(
+          'Account created',
+          'Please check your email to confirm your account, then log in.'
+        );
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMagicLinkLogin = async () => {
+    if (!SUPABASE_CONFIG_OK) {
+      Alert.alert('Configuration Error', 'Supabase is not configured.');
+      return;
+    }
+    if (!validateEmail()) return;
 
     setLoading(true);
     console.log('Sending magic link to:', email);
@@ -97,6 +179,29 @@ export default function LoginScreen() {
 
               <View style={styles.form}>
                 <View style={styles.card}>
+                  <View style={styles.modeToggle}>
+                    <TouchableOpacity
+                      style={[styles.modeButton, mode === 'password' && styles.modeButtonActive]}
+                      onPress={() => setMode('password')}
+                      activeOpacity={0.8}
+                    >
+                      <Lock size={16} color={mode === 'password' ? '#000000' : '#888888'} />
+                      <Text style={[styles.modeButtonText, mode === 'password' && styles.modeButtonTextActive]}>
+                        Password
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.modeButton, mode === 'magic' && styles.modeButtonActive]}
+                      onPress={() => setMode('magic')}
+                      activeOpacity={0.8}
+                    >
+                      <Zap size={16} color={mode === 'magic' ? '#000000' : '#888888'} />
+                      <Text style={[styles.modeButtonText, mode === 'magic' && styles.modeButtonTextActive]}>
+                        Magic Link
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
                   <View style={styles.inputWrapper}>
                     <View style={styles.inputContainer}>
                       <Mail size={20} color="#FFD700" style={styles.inputIcon} />
@@ -115,31 +220,96 @@ export default function LoginScreen() {
                     </View>
                   </View>
 
-                  <TouchableOpacity
-                    style={[styles.button, loading && styles.buttonDisabled]}
-                    onPress={handleMagicLinkLogin}
-                    disabled={loading}
-                    activeOpacity={0.8}
-                  >
-                    <LinearGradient
-                      colors={['#FFD700', '#FFA500']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.buttonGradient}
+                  {mode === 'password' && (
+                    <View style={styles.inputWrapper}>
+                      <View style={styles.inputContainer}>
+                        <Lock size={20} color="#FFD700" style={styles.inputIcon} />
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Enter your password"
+                          placeholderTextColor="#666666"
+                          value={password}
+                          onChangeText={setPassword}
+                          secureTextEntry
+                          autoCapitalize="none"
+                          autoComplete="password"
+                          autoCorrect={false}
+                          editable={!loading}
+                        />
+                      </View>
+                    </View>
+                  )}
+
+                  {mode === 'password' ? (
+                    <View style={styles.buttonGroup}>
+                      <TouchableOpacity
+                        style={[styles.button, loading && styles.buttonDisabled]}
+                        onPress={handlePasswordLogin}
+                        disabled={loading}
+                        activeOpacity={0.8}
+                      >
+                        <LinearGradient
+                          colors={['#FFD700', '#FFA500']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.buttonGradient}
+                        >
+                          {loading ? (
+                            <ActivityIndicator color="#000000" />
+                          ) : (
+                            <>
+                              <LogIn size={20} color="#000000" style={styles.buttonIcon} />
+                              <Text style={styles.buttonText}>Log In</Text>
+                            </>
+                          )}
+                        </LinearGradient>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.secondaryButton, loading && styles.buttonDisabled]}
+                        onPress={handleSignup}
+                        disabled={loading}
+                        activeOpacity={0.8}
+                      >
+                        {loading ? (
+                          <ActivityIndicator color="#FFD700" />
+                        ) : (
+                          <>
+                            <UserPlus size={20} color="#FFD700" style={styles.buttonIcon} />
+                            <Text style={styles.secondaryButtonText}>Create Account</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.button, loading && styles.buttonDisabled]}
+                      onPress={handleMagicLinkLogin}
+                      disabled={loading}
+                      activeOpacity={0.8}
                     >
-                      {loading ? (
-                        <ActivityIndicator color="#000000" />
-                      ) : (
-                        <>
-                          <Zap size={20} color="#000000" style={styles.buttonIcon} />
-                          <Text style={styles.buttonText}>Send Magic Link</Text>
-                        </>
-                      )}
-                    </LinearGradient>
-                  </TouchableOpacity>
+                      <LinearGradient
+                        colors={['#FFD700', '#FFA500']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.buttonGradient}
+                      >
+                        {loading ? (
+                          <ActivityIndicator color="#000000" />
+                        ) : (
+                          <>
+                            <Zap size={20} color="#000000" style={styles.buttonIcon} />
+                            <Text style={styles.buttonText}>Send Magic Link</Text>
+                          </>
+                        )}
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
 
                   <Text style={styles.infoText}>
-                    We&apos;ll send you a secure magic link to access your command center
+                    {mode === 'password'
+                      ? 'Sign in with your email and password or create a new account'
+                      : "We'll send you a secure magic link to access your command center"}
                   </Text>
                 </View>
               </View>
@@ -257,8 +427,35 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 12,
   },
-  inputWrapper: {
+  modeToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#0a0a0a',
+    borderRadius: 12,
+    padding: 4,
     marginBottom: 20,
+  },
+  modeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 6,
+  },
+  modeButtonActive: {
+    backgroundColor: '#FFD700',
+  },
+  modeButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#888888',
+  },
+  modeButtonTextActive: {
+    color: '#000000',
+  },
+  inputWrapper: {
+    marginBottom: 16,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -284,11 +481,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '500',
   },
+  buttonGroup: {
+    gap: 12,
+  },
   button: {
     height: 56,
     borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.5,
@@ -309,6 +509,22 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#000000',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  secondaryButton: {
+    height: 56,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 215, 0, 0.5)',
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  secondaryButtonText: {
+    color: '#FFD700',
     fontSize: 17,
     fontWeight: '700',
   },
