@@ -27,7 +27,16 @@ const queryClient = new QueryClient({
 
 console.log('🔧 [React Query] Configured with retry: 2 for queries, 1 for mutations');
 
-function RootLayoutNav() {
+function RootLayoutNav({ isBooting }: { isBooting: boolean }) {
+  if (isBooting) {
+    return (
+      <View style={bootStyles.container}>
+        <ActivityIndicator size="large" color="#FFD700" />
+        <Text style={bootStyles.text}>Booting…</Text>
+      </View>
+    );
+  }
+
   return (
     <Stack 
       screenOptions={{ 
@@ -57,15 +66,6 @@ export default function RootLayout() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (isBooting) {
-    return (
-      <View style={bootStyles.container}>
-        <ActivityIndicator size="large" color="#FFD700" />
-        <Text style={bootStyles.text}>Booting…</Text>
-      </View>
-    );
-  }
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
@@ -77,7 +77,7 @@ export default function RootLayout() {
                   <TasksProvider>
                     <CultureContext>
                       <StatusBar style="light" />
-                      <RootLayoutNav />
+                      <RootLayoutNav isBooting={isBooting} />
                     </CultureContext>
                   </TasksProvider>
                 </AgentsContext>
