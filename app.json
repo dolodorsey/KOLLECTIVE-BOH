@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "the Kollective BOH",
-    "slug": "kollective-os-dashboard",
+    "slug": "kollective-boh",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,14 +15,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.kollective-os-dashboard"
+      "bundleIdentifier": "app.rork.kollective-boh"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.kollective-os-dashboard"
+      "package": "app.rork.kollective-boh"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
