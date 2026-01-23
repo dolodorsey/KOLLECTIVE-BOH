@@ -11,7 +11,8 @@ interface BrandTileProps {
 
 const BrandTile: React.FC<BrandTileProps> = ({ brand }) => {
 
-  const statusColor = STATUS_COLORS[brand.status ?? 'good'];
+  const status = brand.status ?? 'good';
+  const statusColor = STATUS_COLORS[status as keyof typeof STATUS_COLORS];
   
   const handlePress = () => {
     // In a real app, this would navigate to the brand dashboard
