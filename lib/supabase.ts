@@ -3,15 +3,15 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const supabaseUrl = 'https://wfkohcwxxsrhcxhepfql.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indma29oY3d4eHNyaGN4aGVwZnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NDk2MjYsImV4cCI6MjA1MTQyNTYyNn0.fXRLof3bExNH-YRiPo3TqhwyY-C2dGZ4dmuW1xIVqnY';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // DIAGNOSTIC: Check if env vars exist at runtime
 const hasUrl = !!supabaseUrl;
 const hasKey = !!supabaseAnonKey;
 const url = supabaseUrl || 'MISSING';
 const keyPreview = (supabaseAnonKey || '').slice(0, 6) + '...';
-const source = 'hardcoded';
+const source = 'environment';
 
 console.log('🔍 [Supabase] CONFIG DIAGNOSTIC:', {
   hasUrl,
