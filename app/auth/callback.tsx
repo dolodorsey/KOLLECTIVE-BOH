@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { getSupabase, SUPABASE_CONFIG_OK } from '@/lib/supabase';
+import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export default function CallbackScreen() {
   const router = useRouter();
@@ -13,7 +13,7 @@ export default function CallbackScreen() {
       console.log('Callback params:', params);
 
       try {
-        if (!SUPABASE_CONFIG_OK) {
+        if (!isSupabaseConfigured()) {
           console.error('Supabase configuration missing');
           setError('Configuration error');
           setTimeout(() => {

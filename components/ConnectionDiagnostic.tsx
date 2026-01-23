@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { DIAGNOSTIC_INFO, SUPABASE_CONFIG_OK } from '@/lib/supabase';
+import { getDiagnosticInfo, isSupabaseConfigured } from '@/lib/supabase';
 
 interface ConnectionTest {
   name: string;
@@ -30,11 +30,12 @@ export function ConnectionDiagnostic() {
       details: `EXPO_PUBLIC_RORK_API_BASE_URL: ${apiUrl}`,
     });
 
+    const diagInfo = getDiagnosticInfo();
     newTests.push({
       name: 'Supabase Config',
-      status: SUPABASE_CONFIG_OK ? 'success' : 'failed',
-      message: SUPABASE_CONFIG_OK ? 'Configuration valid' : 'Configuration missing',
-      details: `URL: ${DIAGNOSTIC_INFO.url}\nKey: ${DIAGNOSTIC_INFO.keyPreview}`,
+      status: isSupabaseConfigured() ? 'success' : 'failed',
+      message: isSupabaseConfigured() ? 'Configuration valid' : 'Configuration missing',
+      details: `URL: ${diagInfo.url}\nKey: ${diagInfo.keyPreview}`,
     });
 
     newTests.push({

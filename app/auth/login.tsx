@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { getSupabase, SUPABASE_CONFIG_OK } from '@/lib/supabase';
+import { getSupabase, isSupabaseConfigured, getDiagnosticInfo } from '@/lib/supabase';
 import { Mail, Lock, Sparkles, Zap, UserPlus, LogIn } from 'lucide-react-native';
 
 type LoginMode = 'password' | 'magic';
@@ -37,7 +37,8 @@ export default function LoginScreen() {
   };
 
   const handlePasswordLogin = async () => {
-    if (!SUPABASE_CONFIG_OK) {
+    if (!isSupabaseConfigured()) {
+      console.error('Supabase not configured:', getDiagnosticInfo());
       Alert.alert('Configuration Error', 'Supabase is not configured.');
       return;
     }
@@ -70,7 +71,8 @@ export default function LoginScreen() {
   };
 
   const handleSignup = async () => {
-    if (!SUPABASE_CONFIG_OK) {
+    if (!isSupabaseConfigured()) {
+      console.error('Supabase not configured:', getDiagnosticInfo());
       Alert.alert('Configuration Error', 'Supabase is not configured.');
       return;
     }
@@ -112,7 +114,8 @@ export default function LoginScreen() {
   };
 
   const handleMagicLinkLogin = async () => {
-    if (!SUPABASE_CONFIG_OK) {
+    if (!isSupabaseConfigured()) {
+      console.error('Supabase not configured:', getDiagnosticInfo());
       Alert.alert('Configuration Error', 'Supabase is not configured.');
       return;
     }
