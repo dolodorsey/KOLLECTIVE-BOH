@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 
 function getEnvVars() {
   const url = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://wfkohcwxxsrhcxhepfql.supabase.co';
-  const key =const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indma29oY3d4eHNyaGN4aGVwZnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczMzMxODUsImV4cCI6MjA4MjkwOTE4NX0.e78lphH3WlRtWP0M9egyvFCLNVW9rgJiOBy9-ZZC9Ao';
+  const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
   return { url, key };
 }
 
