@@ -25,7 +25,8 @@
       "package": "app.rork.kollective-boh"
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "bundler": "metro",
+      "output": "static"
     },
     "plugins": [
       [
