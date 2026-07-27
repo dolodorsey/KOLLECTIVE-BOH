@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { LayoutDashboard, Building2, Users, User, Zap, Sparkles } from "lucide-react-native";
+import { LayoutDashboard, Building2, Users, User, Zap, Sparkles, ClipboardCheck } from "lucide-react-native";
 import React from "react";
 
 export default function OwnerLayout() {
@@ -22,6 +22,13 @@ export default function OwnerLayout() {
         options={{
           title: "Command Center",
           tabBarIcon: ({ color }) => <LayoutDashboard color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="operations"
+        options={{
+          title: "Operations",
+          tabBarIcon: ({ color }) => <ClipboardCheck color={color} size={24} />,
         }}
       />
       <Tabs.Screen
