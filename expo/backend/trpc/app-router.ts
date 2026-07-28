@@ -10,6 +10,8 @@ import { activityRouter } from "./routes/activity";
 import { cultureRouter } from "./routes/culture";
 import { profilesRouter } from "./routes/profiles";
 import { locationsRouter } from "./routes/locations";
+import { tasksRouter } from "./routes/tasks";
+import { rosterRouter } from "./routes/roster";
 
 export const appRouter = createTRPCRouter({
   example: exampleRouter,
@@ -23,6 +25,8 @@ export const appRouter = createTRPCRouter({
   culture: cultureRouter,
   profiles: profilesRouter,
   locations: locationsRouter,
+  tasks: tasksRouter,
+  roster: rosterRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -51,3 +51,45 @@ keeps the BOH surface obvious to anyone reading the database.
 earlier schema generation. The real RLS lives inline in `supabase-schema.sql`,
 which is complete: all 9 tables have RLS enabled and every one has policies,
 on a 4-role model (`owner`/`admin`/`manager`/`staff`). Verified — no gaps.
+
+---
+
+## Auth binding (added 2026-07-28)
+
+`boh.org_members` gained `auth_user_id`, `login_emails[]`, and `first_login_at`.
+22 of 23 members carry at least one login email, harvested from `team_members`.
+
+`boh.current_member()` resolves the caller in this order:
+1. `auth.uid()` matched against `auth_user_id`
+2. On first login, `auth.users.email` matched against `login_emails[]` — the
+   binding is written back automatically, so each person self-links once
+3. `p_actor` name, **service-role/server-side only**
+
+All three write functions now resolve identity through it. An authenticated
+user who is not on the roster gets `not on the BOH roster` — a real
+authorization boundary, not name-string attribution.
+
+### Roster permissions
+
+| Role | Who | Can |
+|------|-----|-----|
+| `owner` | Dr. Dorsey | everything, including lifecycle changes |
+| `admin` | JL, Nya, Sharky | lifecycle changes, focus, tasks |
+| `manager` | Brittany | focus, tasks |
+| `staff` | 18 others | tasks **only for their assigned brands** |
+
+### RLS
+Enabled on all three `boh` tables, 4 policies. Roster, entity settings, and
+organizations are readable only by people who resolve to a roster record;
+members may update their own row and no one else's.
+
+## Client wiring
+
+- `lib/supabase.ts` exports `getBoh()` (a second client on `db: { schema: 'boh' }`,
+  same session) and `getCurrentMember()`
+- `entities` route reads `boh.entities` (129 rows) instead of the empty
+  `entities` table, and drops the broken `owner:users(...)` join
+- New `entities.settings` returns an entity's operating profile
+- New `tasks` router reads `boh.tasks` and writes via `boh.create_task`;
+  policy rejections surface as errors instead of silent no-ops
+- New `roster` router: `me`, `list`, `divisions`

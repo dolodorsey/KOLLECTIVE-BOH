@@ -28,6 +28,7 @@ export function isSupabaseConfigured(): boolean {
 export const SUPABASE_CONFIG_OK = true;
 
 let supabaseInstance: SupabaseClient | null = null;
+let bohInstance: SupabaseClient | null = null;
 let lastUrl: string = '';
 let lastKey: string = '';
 
@@ -57,6 +58,20 @@ export function getSupabase(): SupabaseClient {
         detectSessionInUrl: Platform.OS === 'web',
       },
     });
+
+    // Same session, scoped to the `boh` schema in the gateway project.
+    // That schema maps this app onto live enterprise data — 129 entities,
+    // 2,885 agents, the real task queue — instead of the empty tables the
+    // app used to read. See BOH-DATA-INTEGRATION.md.
+    bohInstance = createClient(url, key, {
+      auth: {
+        storage: storageAdapter,
+        autoRefreshToken: true,
+        persistSession: Platform.OS !== 'web',
+        detectSessionInUrl: Platform.OS === 'web',
+      },
+      db: { schema: 'boh' },
+    });
     
     lastUrl = url;
     lastKey = key;
@@ -65,6 +80,25 @@ export function getSupabase(): SupabaseClient {
   }
 
   return supabaseInstance;
+}
+
+/** Client scoped to the `boh` schema (live enterprise data). */
+export function getBoh(): SupabaseClient {
+  getSupabase();
+  if (!bohInstance) {
+    throw new Error('BOH client not initialised — check Supabase configuration.');
+  }
+  return bohInstance;
+}
+
+/** The signed-in user's BOH roster record, or null if they are not on it. */
+export async function getCurrentMember() {
+  const { data, error } = await getSupabase().rpc('current_member');
+  if (error) {
+    console.error('[BOH] current_member failed:', error.message);
+    return null;
+  }
+  return data ?? null;
 }
 
 export const supabase = {
