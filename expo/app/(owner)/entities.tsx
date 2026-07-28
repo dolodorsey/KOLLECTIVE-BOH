@@ -4,7 +4,7 @@ import { Search } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/auth-context';
 import { trpc } from '@/lib/trpc';
-import { computeHealth, SIGNAL_LABEL, LIFECYCLES, lifecycleLabel } from '@/src/utils/health';
+import { computeHealth, SIGNAL_LABEL, LIFECYCLES, lifecycleLabel, type EntitySignal } from '@/src/utils/health';
 
 export default function EntitiesScreen() {
   const { activeOrgId } = useAuth();
@@ -16,10 +16,9 @@ export default function EntitiesScreen() {
     status: filterStatus,
   });
 
-  const filteredEntities = (entities || []).map((e: any) => ({
-    ...e,
-    health: computeHealth(e),
-  }));
+  const filteredEntities: (Record<string, any> & { health: EntitySignal })[] = (entities || []).map(
+    (e: any) => ({ ...e, health: computeHealth(e) })
+  );
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);

@@ -134,3 +134,32 @@ imports them, and root `app/` is the superset (it has `operations.tsx`, they do
 not). Both removed: 115 files.
 
 That means this repo carried **three copies** of the app. Two are now gone.
+
+---
+
+## Build verification (2026-07-28)
+
+Dependencies installed (1,037 packages) and the branch compiled for real rather
+than reasoned about.
+
+**`npx tsc --noEmit`: 9 errors → 0.**
+
+| Error | Origin | Fix |
+|-------|--------|-----|
+| `entities.tsx` — indexing `Record<EntitySignal,string>` with `any` | this branch | typed the mapped result |
+| `lib/supabase.ts` — `SupabaseClient<…,'boh',…>` not assignable to the public-schema type | this branch | widened the generic on `bohInstance` / `getBoh()` |
+| `BrandTile.tsx` — `width: "undefined%"` when `taskCompletion` is undefined | **pre-existing** | clamped to `0–100` |
+| `HeroCommandStrip.tsx` — web-only `outlineStyle:'none'` not in `TextStyle` | **pre-existing** | cast via `StyleProp<TextStyle>` |
+| `push-notifications.ts` ×5 — imports `expo-device`, `expo-notifications` (neither installed) and `./supabase` (wrong path) | **pre-existing** | removed |
+
+`push-notifications.ts` was orphaned — nothing imported it, and its relative
+import pointed at a file that does not exist at that path. It has been removed
+rather than patched. Push support should be reintroduced deliberately when
+`kollective_app_push_tokens` is actually wired; git preserves the original.
+
+**`npx expo export -p web`: succeeded.** 2,631 modules, 3.78 MB bundle, output
+in `dist/` — matching `outputDirectory` in `vercel.json`. `dist/` is gitignored.
+
+`installCommand` changed from `bun install` to `npm install --legacy-peer-deps`,
+which is the path actually verified here. The dependency tree needs the legacy
+peer resolver; a plain install fails.

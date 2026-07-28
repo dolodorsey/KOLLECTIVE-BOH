@@ -28,7 +28,8 @@ export function isSupabaseConfigured(): boolean {
 export const SUPABASE_CONFIG_OK = true;
 
 let supabaseInstance: SupabaseClient | null = null;
-let bohInstance: SupabaseClient | null = null;
+// The boh client carries a different schema generic than the public one.
+let bohInstance: SupabaseClient<any, any, any> | null = null;
 let lastUrl: string = '';
 let lastKey: string = '';
 
@@ -83,7 +84,7 @@ export function getSupabase(): SupabaseClient {
 }
 
 /** Client scoped to the `boh` schema (live enterprise data). */
-export function getBoh(): SupabaseClient {
+export function getBoh(): SupabaseClient<any, any, any> {
   getSupabase();
   if (!bohInstance) {
     throw new Error('BOH client not initialised — check Supabase configuration.');

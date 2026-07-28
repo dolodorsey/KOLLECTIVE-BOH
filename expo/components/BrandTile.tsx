@@ -52,7 +52,7 @@ const BrandTile: React.FC<BrandTileProps> = ({ brand }) => {
           <View 
             style={[
               styles.progressFill, 
-              { width: `${brand.taskCompletion}%`, backgroundColor: brand.color }
+              { width: `${Math.max(0, Math.min(100, Number(brand.taskCompletion) || 0))}%` as const, backgroundColor: brand.color }
             ]} 
           />
         </View>

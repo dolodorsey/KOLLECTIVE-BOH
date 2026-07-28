@@ -7,6 +7,8 @@ import {
   TextInput,
   Image,
   Platform,
+  StyleProp,
+  TextStyle,
 } from 'react-native';
 import {
   Search,
@@ -89,7 +91,7 @@ const HeroCommandStrip: React.FC = () => {
       <View style={[styles.searchSection, isSearchFocused && styles.searchFocused]}>
         <Search size={20} color={isSearchFocused ? '#FFD700' : '#aaa'} />
         <TextInput
-          style={styles.searchInput}
+          style={styles.searchInput as StyleProp<TextStyle>}
           placeholder="Search entities, documents, tasks, team members..."
           placeholderTextColor="#666"
           value={searchQuery}
