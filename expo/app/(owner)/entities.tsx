@@ -4,7 +4,7 @@ import { Search } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/auth-context';
 import { trpc } from '@/lib/trpc';
-import { computeHealth } from '@/src/utils/health';
+import { computeHealth, SIGNAL_LABEL, LIFECYCLES, lifecycleLabel } from '@/src/utils/health';
 
 export default function EntitiesScreen() {
   const { activeOrgId } = useAuth();
@@ -47,7 +47,7 @@ export default function EntitiesScreen() {
               />
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-              {['all', 'active', 'inactive', 'archived'].map((status) => (
+              {LIFECYCLES.map((status) => (
                 <TouchableOpacity
                   key={status}
                   style={[
@@ -60,7 +60,7 @@ export default function EntitiesScreen() {
                     styles.filterChipText,
                     filterStatus === status && styles.filterChipTextActive,
                   ]}>
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    {lifecycleLabel(status)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -87,26 +87,37 @@ export default function EntitiesScreen() {
                     <View style={styles.badges}>
                       <View style={[
                         styles.healthBadge,
-                        entity.health === 'healthy' && styles.healthHealthy,
-                        entity.health === 'watch' && styles.healthWatch,
-                        entity.health === 'down' && styles.healthDown,
-                        entity.health === 'paused' && styles.healthPaused,
+                        entity.health === 'live' && styles.healthHealthy,
+                        entity.health === 'needs_focus' && styles.healthWatch,
+                        entity.health === 'launching' && styles.healthWatch,
+                        entity.health === 'building' && styles.healthWatch,
+                        entity.health === 'seasonal' && styles.healthPaused,
+                        entity.health === 'portfolio' && styles.healthPaused,
                       ]}>
-                        <Text style={styles.healthText}>{entity.health}</Text>
+                        <Text style={styles.healthText}>{SIGNAL_LABEL[entity.health]}</Text>
                       </View>
-                      <View style={[
-                        styles.statusBadge,
-                        entity.status === 'active' && styles.statusActive,
-                        entity.status === 'inactive' && styles.statusInactive,
-                      ]}>
-                        <Text style={styles.statusText}>{entity.status}</Text>
+                      <View style={styles.statusBadge}>
+                        <Text style={styles.statusText}>
+                          {entity.status_label || lifecycleLabel(entity.status || '')}
+                        </Text>
                       </View>
                     </View>
                   </View>
+
+                  {entity.current_focus ? (
+                    <Text style={styles.entityFocus} numberOfLines={2}>{entity.current_focus}</Text>
+                  ) : null}
+
                   <View style={styles.entityMeta}>
-                    <Text style={styles.entityType}>{entity.type}</Text>
-                    <Text style={styles.entityDate}>{formatDate(entity.created_at)}</Text>
+                    <Text style={styles.entityType}>{entity.category || 'Uncategorised'}</Text>
+                    {entity.division_name ? (
+                      <Text style={styles.entityDivision}>{entity.division_name}</Text>
+                    ) : null}
                   </View>
+
+                  {entity.city_scope ? (
+                    <Text style={styles.entityCity}>{entity.city_scope}</Text>
+                  ) : null}
                 </View>
               ))}
             </View>
@@ -118,6 +129,21 @@ export default function EntitiesScreen() {
 }
 
 const styles = StyleSheet.create({
+  entityFocus: {
+    color: '#BBB',
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 6,
+  },
+  entityDivision: {
+    color: '#888',
+    fontSize: 12,
+  },
+  entityCity: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 4,
+  },
   container: {
     flex: 1,
     backgroundColor: '#121212',

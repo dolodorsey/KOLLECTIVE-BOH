@@ -93,3 +93,44 @@ members may update their own row and no one else's.
 - New `tasks` router reads `boh.tasks` and writes via `boh.create_task`;
   policy rejections surface as errors instead of silent no-ops
 - New `roster` router: `me`, `list`, `divisions`
+
+---
+
+## Screens (2026-07-28)
+
+The data layer was live but the screens still rendered the old shapes.
+
+**`app/(owner)/_layout.tsx` — role-aware tabs.** Every signed-in user previously
+saw all seven owner tabs. Now driven by `roster.me.boh_role`: owner/admin get
+all seven, manager loses People, staff see only Command Center, Entities and
+Profile. Eighteen of twenty-three members are staff.
+
+**`app/(owner)/entities.tsx`** — filter chips were `all / active / inactive /
+archived`; only `active` exists. Two of the four filtered to nothing and
+`portfolio` (83 entities, the largest group) was unreachable. Chips now use the
+real lifecycle set. Cards show `category` (the old code read `entity.type`,
+which does not exist), division, current focus and city scope.
+
+**`src/utils/health.ts`** — `computeHealth` read `alerts_open`,
+`failed_runs_24h` and `last_activity_at`, none of which exist on the entity
+record, so **every entity resolved to "healthy"**. Rewritten to derive from
+lifecycle, with a `needs_focus` signal for live entities that have no stated
+current focus — the one case actually worth surfacing.
+
+**`app/(owner)/people.tsx`** — was a placeholder reading "Assembling the
+squad...". Now renders the real 23-person roster grouped by permission tier.
+
+**`app/(team)/tasks.tsx`** — was a placeholder reading "Ready to execute the
+vision...". Now loads the signed-in member's assigned tasks from the live
+queue, with priority colours, blocker reasons, pull-to-refresh, and an explicit
+"not on the BOH roster" state for authenticated users with no roster record.
+
+## Duplicate source removed
+
+`BOH-PART1/` (70 files) and `BOH-PART2/` (45 files) were a second, older copy of
+the whole app sitting inside `expo/` — the same class of artifact as the
+`* 2/` folders removed earlier, just without the space in the name. Nothing
+imports them, and root `app/` is the superset (it has `operations.tsx`, they do
+not). Both removed: 115 files.
+
+That means this repo carried **three copies** of the app. Two are now gone.
