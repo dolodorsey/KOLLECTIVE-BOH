@@ -7,24 +7,24 @@ import type { AppRouter } from "@/backend/trpc/app-router";
 export const trpc = createTRPCReact<AppRouter>();
 
 const getBaseUrl = () => {
-  const url = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
+  // Web (Vercel): the API is served from this same origin at /api — no cross-domain hop.
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+
+  // Native builds: point at the deployed Vercel origin.
+  const url = process.env.EXPO_PUBLIC_API_URL;
 
   if (!url) {
-    console.error('❌ [tRPC] EXPO_PUBLIC_RORK_API_BASE_URL is not set');
     throw new Error(
-      "Rork did not set EXPO_PUBLIC_RORK_API_BASE_URL, please use support",
+      "EXPO_PUBLIC_API_URL is not set. Set it to the deployed BOH origin (e.g. https://thekollectivegroup.com).",
     );
   }
 
-  if (url.startsWith('http://')) {
-    console.warn('⚠️ [tRPC] API URL uses HTTP instead of HTTPS:', url);
+  if (url.startsWith("http://")) {
+    console.warn("[tRPC] API URL uses HTTP instead of HTTPS:", url);
   }
 
-  if (url.includes('localhost')) {
-    console.warn('⚠️ [tRPC] API URL uses localhost - this will not work on physical devices');
-  }
-
-  console.log('🔗 [tRPC] Base URL configured:', url);
   return url;
 };
 

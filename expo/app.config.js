@@ -17,14 +17,14 @@ export default ({ config }) => ({
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: 'app.rork.kollective-os-dashboard'
+    bundleIdentifier: 'com.kollective.boh'
   },
   android: {
     adaptiveIcon: {
       foregroundImage: './assets/images/adaptive-icon.png',
       backgroundColor: '#ffffff'
     },
-    package: 'app.rork.kollective-os-dashboard'
+    package: 'com.kollective.boh'
   },
   web: {
     favicon: './assets/images/favicon.png'
@@ -33,7 +33,7 @@ export default ({ config }) => ({
     [
       'expo-router',
       {
-        origin: 'https://rork.com/'
+        origin: 'https://thekollectivegroup.com/'
       }
     ]
   ],
@@ -48,16 +48,8 @@ export default ({ config }) => ({
     // API Configuration
     EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
     
-    // Webhook Configuration
-    EXPO_PUBLIC_WEBHOOK_URL: process.env.EXPO_PUBLIC_WEBHOOK_URL,
-    EXPO_PUBLIC_WEBHOOK_PATH: process.env.EXPO_PUBLIC_WEBHOOK_PATH,
-    
-    // Rork Configuration (automatically provided)
-    EXPO_PUBLIC_RORK_DB_ENDPOINT: process.env.EXPO_PUBLIC_RORK_DB_ENDPOINT,
-    EXPO_PUBLIC_RORK_DB_NAMESPACE: process.env.EXPO_PUBLIC_RORK_DB_NAMESPACE,
-    EXPO_PUBLIC_RORK_DB_TOKEN: process.env.EXPO_PUBLIC_RORK_DB_TOKEN,
-    EXPO_PUBLIC_RORK_API_BASE_URL: process.env.EXPO_PUBLIC_RORK_API_BASE_URL,
-    EXPO_PUBLIC_TOOLKIT_URL: process.env.EXPO_PUBLIC_TOOLKIT_URL,
+    // Automation (Supabase Edge Functions — replaces n8n)
+    EXPO_PUBLIC_AUTOMATION_URL: process.env.EXPO_PUBLIC_AUTOMATION_URL,
     EXPO_PUBLIC_PROJECT_ID: process.env.EXPO_PUBLIC_PROJECT_ID,
     EXPO_PUBLIC_TEAM_ID: process.env.EXPO_PUBLIC_TEAM_ID,
   }

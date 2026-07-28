@@ -1,4 +1,13 @@
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'https://kollective-api--DRDORS.replit.app';
+// The API is served from this same Vercel project at /api.
+// Native builds fall back to EXPO_PUBLIC_API_URL (the deployed BOH origin).
+const API_BASE_URL =
+  (typeof window !== 'undefined' && window.location?.origin) ||
+  process.env.EXPO_PUBLIC_API_URL ||
+  '';
+
+if (!API_BASE_URL) {
+  console.warn('[API] No base URL resolved. Set EXPO_PUBLIC_API_URL for native builds.');
+}
 
 if (API_BASE_URL.startsWith('http://')) {
   console.warn('⚠️ [API] Using HTTP instead of HTTPS. iOS will block these requests:', API_BASE_URL);

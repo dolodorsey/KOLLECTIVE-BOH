@@ -1,12 +1,13 @@
 {
-  "name": "expo-app",
+  "name": "kollective-boh",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "bunx rork start -p sp280tftfv08utbl0t86n --tunnel",
-    "start-web": "bunx rork start -p sp280tftfv08utbl0t86n --web --tunnel",
-    "start-web-dev": "DEBUG=expo* bunx rork start -p sp280tftfv08utbl0t86n --web --tunnel",
-    "vercel-build": "npx expo export -p web"
+    "dev": "expo start",
+    "dev:web": "expo start --web",
+    "build:web": "npx expo export -p web",
+    "vercel-build": "npx expo export -p web",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@ai-sdk/react": "^2.0.88",
@@ -14,7 +15,6 @@
     "@hono/trpc-server": "^0.4.1",
     "@nkzw/create-context-hook": "^1.1.0",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@rork-ai/toolkit-sdk": "0.2.51",
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@supabase/supabase-js": "^2.89.0",
     "@tanstack/eslint-plugin-query": "^5.91.2",

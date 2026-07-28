@@ -1,17 +1,25 @@
 -- ============================================================
--- N8N WORKFLOW CONFIGURATION FOR KOLLECTIVE
--- Integrates with existing n8n instance at drdorsey.app.n8n.cloud
+-- AUTOMATION JOB CONFIGURATION FOR KOLLECTIVE BOH
+-- ============================================================
+-- REWRITTEN 2026-07-28. This file previously registered webhooks against
+-- drdorsey.app.n8n.cloud, which is (a) a banned platform and (b) dead (404).
+--
+-- Every endpoint below now targets a Supabase Edge Function on the KHG
+-- gateway. Deploy the function before activating its row, or the entry
+-- will register a URL that 404s exactly like the n8n ones did.
+--
+--   Pattern:  https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-<job>
+--   Register: every job also gets a row in workflows_registry
+--             with runtime = 'edge_function'.
 -- ============================================================
 
--- First, insert webhook registry entries for all KOLLECTIVE workflows
-
-INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, status, metadata) VALUES
+INSERT INTO webhook_registry (workflow_name, endpoint_url, brand, channel, status, metadata) VALUES
 
 -- ============================================================
 -- DR. DORSEY CORE WORKFLOWS
 -- ============================================================
 ('Dr. Dorsey Workflow - Core Router', 
- 'https://drdorsey.app.n8n.cloud/webhook/45cd6ead-84fa-458a-a165-7e96e53e3179',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-core-router',
  'KOLLECTIVE', 'unified', 'active',
  jsonb_build_object(
    'description', 'Main communication router for all KOLLECTIVE brands',
@@ -23,7 +31,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
 -- CASPER GROUP WORKFLOWS (Restaurant Operations)
 -- ============================================================
 ('ANGEL WINGS - Order Processing',
- 'https://drdorsey.app.n8n.cloud/webhook/casper-angel-wings-orders',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-casper-angel-wings-orders',
  'ANGEL WINGS', 'orders', 'active',
  jsonb_build_object(
    'description', 'Processes online orders and sends to kitchen',
@@ -32,7 +40,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('PASTA BISH - Reservation System',
- 'https://drdorsey.app.n8n.cloud/webhook/casper-pasta-bish-reservations',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-casper-pasta-bish-reservations',
  'PASTA BISH', 'reservations', 'active',
  jsonb_build_object(
    'description', 'Manages table reservations via OpenTable',
@@ -41,7 +49,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('CASPER GROUP - Inventory Alert',
- 'https://drdorsey.app.n8n.cloud/webhook/casper-inventory-alert',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-casper-inventory-alert',
  'CASPER GROUP', 'inventory', 'active',
  jsonb_build_object(
    'description', 'Low inventory alerts across all brands',
@@ -50,7 +58,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('CASPER GROUP - Daily Sales Report',
- 'https://drdorsey.app.n8n.cloud/webhook/casper-daily-sales',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-casper-daily-sales',
  'CASPER GROUP', 'reporting', 'active',
  jsonb_build_object(
    'description', 'Automated daily sales rollup',
@@ -62,7 +70,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
 -- HUGLIFE WORKFLOWS (Event Management)
 -- ============================================================
 ('HUGLIFE - Event Registration',
- 'https://drdorsey.app.n8n.cloud/webhook/huglife-event-registration',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-huglife-event-registration',
  'HUGLIFE', 'registrations', 'active',
  jsonb_build_object(
    'description', 'Processes event ticket purchases',
@@ -71,7 +79,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('ESPRESSO - Attendee Check-In',
- 'https://drdorsey.app.n8n.cloud/webhook/huglife-espresso-checkin',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-huglife-espresso-checkin',
  'ESPRESSO', 'checkin', 'active',
  jsonb_build_object(
    'description', 'QR code check-in for ESPRESSO events',
@@ -79,7 +87,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('HUGLIFE - Post-Event Survey',
- 'https://drdorsey.app.n8n.cloud/webhook/huglife-post-event-survey',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-huglife-post-event-survey',
  'HUGLIFE', 'feedback', 'active',
  jsonb_build_object(
    'description', 'Sends automated post-event surveys',
@@ -88,7 +96,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('HUGLIFE - VIP Guest Management',
- 'https://drdorsey.app.n8n.cloud/webhook/huglife-vip-management',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-huglife-vip-management',
  'HUGLIFE', 'vip', 'active',
  jsonb_build_object(
    'description', 'Manages VIP guest lists and bottle service',
@@ -100,7 +108,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
 -- UMBRELLA GROUP WORKFLOWS (Service Operations)
 -- ============================================================
 ('UMBRELLA AUTO - Service Request',
- 'https://drdorsey.app.n8n.cloud/webhook/umbrella-auto-service',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-umbrella-auto-service',
  'UMBRELLA AUTO EXCHANGE', 'service_requests', 'active',
  jsonb_build_object(
    'description', 'Routes auto service requests to providers',
@@ -109,7 +117,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('UMBRELLA REALTY - Lead Capture',
- 'https://drdorsey.app.n8n.cloud/webhook/umbrella-realty-leads',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-umbrella-realty-leads',
  'UMBRELLA REALTY GROUP', 'leads', 'active',
  jsonb_build_object(
    'description', 'Captures and enriches real estate leads',
@@ -118,7 +126,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('UMBRELLA ACCOUNTING - Client Onboarding',
- 'https://drdorsey.app.n8n.cloud/webhook/umbrella-accounting-onboard',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-umbrella-accounting-onboard',
  'UMBRELLA ACCOUNTING', 'onboarding', 'active',
  jsonb_build_object(
    'description', 'Automates new client onboarding process',
@@ -130,7 +138,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
 -- THE INNER CIRCLE WORKFLOWS (App Integrations)
 -- ============================================================
 ('GOOD TIMES - Venue Submission',
- 'https://drdorsey.app.n8n.cloud/webhook/goodtimes-venue-submission',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-goodtimes-venue-submission',
  'GOOD TIMES', 'venues', 'active',
  jsonb_build_object(
    'description', 'Processes new venue submissions for nightlife platform',
@@ -139,7 +147,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('ROADSIDE - Emergency Dispatch',
- 'https://drdorsey.app.n8n.cloud/webhook/roadside-emergency-dispatch',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-roadside-emergency-dispatch',
  'ROADSIDE', 'emergency', 'active',
  jsonb_build_object(
    'description', 'Routes emergency roadside assistance requests',
@@ -152,7 +160,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
 -- UNIFIED MESSAGING WORKFLOWS
 -- ============================================================
 ('KOLLECTIVE - Unified Inbox',
- 'https://drdorsey.app.n8n.cloud/webhook/kollective-unified-inbox',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-kollective-unified-inbox',
  'KOLLECTIVE', 'inbox', 'active',
  jsonb_build_object(
    'description', 'Centralized inbox for all brand communications',
@@ -162,7 +170,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('KOLLECTIVE - Broadcast Message',
- 'https://drdorsey.app.n8n.cloud/webhook/kollective-broadcast',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-kollective-broadcast',
  'KOLLECTIVE', 'broadcast', 'active',
  jsonb_build_object(
    'description', 'Send messages across all channels and brands',
@@ -175,7 +183,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
 -- ANALYTICS & REPORTING WORKFLOWS
 -- ============================================================
 ('KOLLECTIVE - Weekly Analytics',
- 'https://drdorsey.app.n8n.cloud/webhook/kollective-weekly-analytics',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-kollective-weekly-analytics',
  'KOLLECTIVE', 'analytics', 'active',
  jsonb_build_object(
    'description', 'Automated weekly performance report',
@@ -185,7 +193,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('KOLLECTIVE - Real-Time Dashboard',
- 'https://drdorsey.app.n8n.cloud/webhook/kollective-realtime-metrics',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-kollective-realtime-metrics',
  'KOLLECTIVE', 'realtime', 'active',
  jsonb_build_object(
    'description', 'Pushes real-time metrics to mobile dashboard',
@@ -197,7 +205,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
 -- AUTOMATION WORKFLOWS
 -- ============================================================
 ('KOLLECTIVE - Staff Attendance Tracker',
- 'https://drdorsey.app.n8n.cloud/webhook/kollective-attendance',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-kollective-attendance',
  'KOLLECTIVE', 'hr', 'active',
  jsonb_build_object(
    'description', 'Tracks staff check-in/check-out across locations',
@@ -206,7 +214,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
  )),
 
 ('KOLLECTIVE - Social Media Auto-Post',
- 'https://drdorsey.app.n8n.cloud/webhook/kollective-social-autopost',
+ 'https://dzlmtvodpyhetvektfuo.supabase.co/functions/v1/khg-kollective-social-autopost',
  'KOLLECTIVE', 'social', 'active',
  jsonb_build_object(
    'description', 'Scheduled social media posting for all brands',
@@ -214,7 +222,7 @@ INSERT INTO webhook_registry (workflow_name, n8n_endpoint, brand, channel, statu
    'ai_caption_generation', true
  ))
 
-ON CONFLICT (workflow_name, n8n_endpoint) DO UPDATE SET
+ON CONFLICT (workflow_name, endpoint_url) DO UPDATE SET
   status = EXCLUDED.status,
   metadata = EXCLUDED.metadata,
   updated_at = now();
@@ -254,7 +262,7 @@ SELECT
   workflow_name,
   brand,
   channel,
-  n8n_endpoint,
+  endpoint_url,
   metadata->>'description' as description
 FROM webhook_registry
 WHERE status = 'active'

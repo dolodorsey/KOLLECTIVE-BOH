@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 function getEnvVars() {
-  const url = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://wfkohcwxxsrhcxhepfql.supabase.co';
+  const url = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
   const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
   return { url, key };
 }

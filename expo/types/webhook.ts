@@ -16,7 +16,7 @@ export interface BrandConfiguration {
 export interface WebhookRegistry {
   id: string;
   workflow_name: string;
-  n8n_endpoint: string;
+  endpoint_url: string;
   brand: string | null;
   channel: string | null;
   status: 'active' | 'inactive' | 'testing';
@@ -39,7 +39,7 @@ export interface WorkflowExecution {
 
 export interface CreateWebhookInput {
   workflow_name: string;
-  n8n_endpoint: string;
+  endpoint_url: string;
   brand?: string;
   channel?: string;
   status?: 'active' | 'inactive' | 'testing';

@@ -61,7 +61,7 @@ export const aoCoreRouter = createTRPCRouter({
       console.log('📝 Execution logged:', execution.id);
 
       try {
-        const response = await fetch(webhook.n8n_endpoint, {
+        const response = await fetch(webhook.endpoint_url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ export const aoCoreRouter = createTRPCRouter({
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('❌ n8n workflow failed:', errorText);
+          console.error('❌ automation job failed:', errorText);
 
           await ctx.supabase
             .from('workflow_executions')

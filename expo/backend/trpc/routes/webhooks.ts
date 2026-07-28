@@ -6,7 +6,7 @@ export const webhooksRouter = createTRPCRouter({
     .input(
       z.object({
         workflow_name: z.string(),
-        n8n_endpoint: z.string().url(),
+        endpoint_url: z.string().url(),
         brand: z.string().optional(),
         channel: z.string().optional(),
         status: z.enum(['active', 'inactive', 'testing']).optional(),
@@ -18,7 +18,7 @@ export const webhooksRouter = createTRPCRouter({
         .from('webhook_registry')
         .insert({
           workflow_name: input.workflow_name,
-          n8n_endpoint: input.n8n_endpoint,
+          endpoint_url: input.endpoint_url,
           brand: input.brand,
           channel: input.channel,
           status: input.status || 'active',
@@ -90,7 +90,7 @@ export const webhooksRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().uuid(),
-        n8n_endpoint: z.string().url().optional(),
+        endpoint_url: z.string().url().optional(),
         status: z.enum(['active', 'inactive', 'testing']).optional(),
         metadata: z.any().optional(),
       })
