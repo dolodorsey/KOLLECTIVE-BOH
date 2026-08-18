@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,149 +12,112 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useBrands } from '@/hooks/workflows-context';
-import { useExecuteWorkflow } from '@/hooks/ao-core-context';
-import { Mail, MessageSquare, Send, Sparkles } from 'lucide-react-native';
+import { trpc } from '@/lib/trpc';
+import { Mail, MessageSquare, Send, Sparkles, ShieldCheck } from 'lucide-react-native';
 
-type ChannelType = 'sms' | 'email' | 'dm';
+type ChannelType = 'email' | 'sms';
+type StreamType = 'marketing' | 'transactional';
 
 export default function ComposeScreen() {
-  const [selectedBrand, setSelectedBrand] = useState<string>('');
+  const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedChannel, setSelectedChannel] = useState<ChannelType>('email');
-  const [recipient, setRecipient] = useState<string>('');
-  const [subject, setSubject] = useState<string>('');
-  const [message, setMessage] = useState<string>('');
+  const [stream, setStream] = useState<StreamType>('marketing');
+  const [recipient, setRecipient] = useState('');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
 
-  const { data: brands, isLoading: brandsLoading } = useBrands();
-  const executeWorkflow = useExecuteWorkflow();
+  const { data: senders, isLoading: sendersLoading } = trpc.communications.senders.useQuery();
+  const sendEmail = trpc.communications.sendEmail.useMutation();
+  const sendSms = trpc.communications.sendSms.useMutation();
+
+  const brandKeys = useMemo(
+    () => Array.from(new Set((senders || []).map((sender: any) => sender.brand_key))).sort(),
+    [senders]
+  );
+
+  const senderFor = (brandKey: string, channel: ChannelType, streamType: StreamType) =>
+    (senders || []).find(
+      (sender: any) =>
+        sender.brand_key === brandKey &&
+        sender.channel === channel &&
+        sender.stream === streamType
+    );
+
+  const activeSender: any = senderFor(selectedBrand, selectedChannel, stream);
+  const senderReady = Boolean(
+    activeSender?.verified &&
+    activeSender?.sending_enabled &&
+    activeSender?.connection_status === 'connected'
+  );
+  const isSending = sendEmail.isPending || sendSms.isPending;
 
   const handleSend = async () => {
-    if (!selectedBrand) {
-      Alert.alert('Selection Required', 'Please select a brand to continue');
-      return;
-    }
-
-    if (!recipient.trim()) {
-      Alert.alert('Recipient Required', 'Please enter a recipient');
-      return;
-    }
-
-    if (!message.trim()) {
-      Alert.alert('Message Required', 'Please enter a message');
-      return;
-    }
-
-    const workflowName = `send-${selectedChannel}`;
-
-    const payload = {
-      brand: selectedBrand,
-      channel: selectedChannel,
-      recipient: recipient.trim(),
-      subject: selectedChannel === 'email' ? subject.trim() : undefined,
-      message: message.trim(),
-      timestamp: new Date().toISOString(),
-    };
+    if (!selectedBrand) return Alert.alert('Brand Required', 'Select the exact sender brand.');
+    if (!senderReady) return Alert.alert('Sender Not Ready', 'This exact brand/channel/stream is not connected and enabled.');
+    if (!recipient.trim()) return Alert.alert('Recipient Required', 'Enter a recipient.');
+    if (!message.trim()) return Alert.alert('Message Required', 'Enter a message.');
+    if (selectedChannel === 'email' && !subject.trim()) return Alert.alert('Subject Required', 'Enter an email subject.');
 
     try {
-      await executeWorkflow.mutateAsync({
-        workflow_name: workflowName,
-        payload,
-        brand: selectedBrand,
-      });
+      if (selectedChannel === 'email') {
+        await sendEmail.mutateAsync({
+          brand_key: selectedBrand,
+          to: recipient.trim(),
+          subject: subject.trim(),
+          body: message.trim(),
+          stream,
+        });
+      } else {
+        await sendSms.mutateAsync({
+          brand_key: selectedBrand,
+          to: recipient.trim(),
+          body: message.trim(),
+          stream,
+        });
+      }
 
-      Alert.alert(
-        'Vision Executed',
-        `Message sent successfully via ${selectedChannel.toUpperCase()}`,
-        [
-          {
-            text: 'Continue',
-            onPress: () => {
-              setRecipient('');
-              setSubject('');
-              setMessage('');
-            },
-          },
-        ]
-      );
+      Alert.alert('Sent', `Message accepted by the direct ${activeSender?.provider || selectedChannel} sender.`);
+      setRecipient('');
+      setSubject('');
+      setMessage('');
     } catch (error: any) {
-      Alert.alert(
-        'Recalibrating the blueprint...',
-        error.message || 'Failed to send message. Please try again.'
-      );
-    }
-  };
-
-  const selectedBrandData = brands?.find((b) => b.brand_key === selectedBrand);
-
-  const getChannelPlaceholder = () => {
-    switch (selectedChannel) {
-      case 'sms':
-        return '+1 (555) 123-4567';
-      case 'email':
-        return 'recipient@example.com';
-      case 'dm':
-        return '@username';
-      default:
-        return 'Enter recipient';
-    }
-  };
-
-  const getChannelIcon = (channel: ChannelType) => {
-    switch (channel) {
-      case 'sms':
-        return MessageSquare;
-      case 'email':
-        return Mail;
-      case 'dm':
-        return Send;
+      Alert.alert('Send Blocked', error?.message || 'The current sender rail rejected this message.');
     }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <Sparkles color="#FFD700" size={28} />
-            <Text style={styles.headerTitle}>Compose Message</Text>
+            <Text style={styles.headerTitle}>Direct Compose</Text>
           </View>
-          <Text style={styles.headerSubtitle}>
-            Deploy communication with precision
-          </Text>
+          <Text style={styles.headerSubtitle}>Exact sender · direct provider · compliance gates</Text>
         </View>
 
         <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.notice}>
+            <ShieldCheck color="#00FF88" size={18} />
+            <Text style={styles.noticeText}>
+              Marketing sends require brand-specific consent and suppression checks. Transactional is for legitimate service/relationship messages only. Instagram DM uses the separate IG engagement queue.
+            </Text>
+          </View>
+
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>SELECT BRAND</Text>
-            {brandsLoading ? (
-              <ActivityIndicator color="#FFD700" style={styles.loader} />
+            <Text style={styles.sectionLabel}>SENDER BRAND</Text>
+            {sendersLoading ? (
+              <ActivityIndicator color="#FFD700" />
             ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.brandList}
-              >
-                {brands?.map((brand) => (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.brandList}>
+                {brandKeys.map((brandKey) => (
                   <TouchableOpacity
-                    key={brand.id}
-                    style={[
-                      styles.brandButton,
-                      selectedBrand === brand.brand_key &&
-                        styles.brandButtonActive,
-                    ]}
-                    onPress={() => setSelectedBrand(brand.brand_key)}
+                    key={brandKey}
+                    style={[styles.brandButton, selectedBrand === brandKey && styles.brandButtonActive]}
+                    onPress={() => setSelectedBrand(brandKey)}
                   >
-                    <Text
-                      style={[
-                        styles.brandButtonText,
-                        selectedBrand === brand.brand_key &&
-                          styles.brandButtonTextActive,
-                      ]}
-                    >
-                      {brand.brand_display_name}
+                    <Text style={[styles.brandButtonText, selectedBrand === brandKey && styles.brandButtonTextActive]}>
+                      {brandKey}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -162,55 +125,26 @@ export default function ComposeScreen() {
             )}
           </View>
 
-          {selectedBrand && (
+          {selectedBrand ? (
             <>
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>SELECT CHANNEL</Text>
-                <View style={styles.channelRow}>
-                  {(['sms', 'email', 'dm'] as ChannelType[]).map((channel) => {
-                    const isEnabled =
-                      selectedBrandData?.[`${channel}_enabled`] ?? false;
-                    const Icon = getChannelIcon(channel);
-
+                <Text style={styles.sectionLabel}>CHANNEL</Text>
+                <View style={styles.row}>
+                  {(['email', 'sms'] as ChannelType[]).map((channel) => {
+                    const candidate: any = senderFor(selectedBrand, channel, stream);
+                    const ready = Boolean(candidate?.verified && candidate?.sending_enabled && candidate?.connection_status === 'connected');
+                    const Icon = channel === 'email' ? Mail : MessageSquare;
                     return (
                       <TouchableOpacity
                         key={channel}
-                        style={[
-                          styles.channelButton,
-                          selectedChannel === channel &&
-                            styles.channelButtonActive,
-                          !isEnabled && styles.channelButtonDisabled,
-                        ]}
-                        onPress={() =>
-                          isEnabled && setSelectedChannel(channel)
-                        }
-                        disabled={!isEnabled}
+                        style={[styles.optionButton, selectedChannel === channel && styles.optionButtonActive, !ready && styles.optionButtonDisabled]}
+                        onPress={() => ready && setSelectedChannel(channel)}
+                        disabled={!ready}
                       >
-                        <Icon
-                          color={
-                            selectedChannel === channel
-                              ? '#000'
-                              : isEnabled
-                              ? '#FFD700'
-                              : '#444'
-                          }
-                          size={20}
-                        />
-                        <Text
-                          style={[
-                            styles.channelButtonText,
-                            selectedChannel === channel &&
-                              styles.channelButtonTextActive,
-                            !isEnabled && styles.channelButtonTextDisabled,
-                          ]}
-                        >
+                        <Icon color={selectedChannel === channel ? '#000' : ready ? '#FFD700' : '#555'} size={19} />
+                        <Text style={[styles.optionText, selectedChannel === channel && styles.optionTextActive, !ready && styles.optionTextDisabled]}>
                           {channel.toUpperCase()}
                         </Text>
-                        {!isEnabled && (
-                          <View style={styles.disabledBadge}>
-                            <Text style={styles.disabledBadgeText}>OFF</Text>
-                          </View>
-                        )}
                       </TouchableOpacity>
                     );
                   })}
@@ -218,38 +152,50 @@ export default function ComposeScreen() {
               </View>
 
               <View style={styles.section}>
+                <Text style={styles.sectionLabel}>MESSAGE STREAM</Text>
+                <View style={styles.row}>
+                  {(['marketing', 'transactional'] as StreamType[]).map((item) => (
+                    <TouchableOpacity
+                      key={item}
+                      style={[styles.optionButton, stream === item && styles.optionButtonActive]}
+                      onPress={() => setStream(item)}
+                    >
+                      <Text style={[styles.optionText, stream === item && styles.optionTextActive]}>{item.toUpperCase()}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <Text style={[styles.readiness, { color: senderReady ? '#00FF88' : '#FF8C00' }]}>
+                  {senderReady
+                    ? `READY · ${activeSender.provider}${activeSender.from_address ? ` · ${activeSender.from_address}` : ''}`
+                    : `NOT READY · ${activeSender?.connection_status || 'missing sender profile'}`}
+                </Text>
+              </View>
+
+              <View style={styles.section}>
                 <Text style={styles.sectionLabel}>RECIPIENT</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder={getChannelPlaceholder()}
+                  placeholder={selectedChannel === 'email' ? 'recipient@example.com' : '+14045551234'}
                   placeholderTextColor="#666"
                   value={recipient}
                   onChangeText={setRecipient}
                   autoCapitalize="none"
-                  keyboardType={
-                    selectedChannel === 'email' ? 'email-address' : 'default'
-                  }
+                  keyboardType={selectedChannel === 'email' ? 'email-address' : 'phone-pad'}
                 />
               </View>
 
-              {selectedChannel === 'email' && (
+              {selectedChannel === 'email' ? (
                 <View style={styles.section}>
                   <Text style={styles.sectionLabel}>SUBJECT</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter email subject"
-                    placeholderTextColor="#666"
-                    value={subject}
-                    onChangeText={setSubject}
-                  />
+                  <TextInput style={styles.input} placeholder="Email subject" placeholderTextColor="#666" value={subject} onChangeText={setSubject} />
                 </View>
-              )}
+              ) : null}
 
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>MESSAGE</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
-                  placeholder="Craft your message..."
+                  placeholder="Write the message…"
                   placeholderTextColor="#666"
                   value={message}
                   onChangeText={setMessage}
@@ -260,24 +206,14 @@ export default function ComposeScreen() {
               </View>
 
               <TouchableOpacity
-                style={[
-                  styles.sendButton,
-                  executeWorkflow.isPending && styles.sendButtonDisabled,
-                ]}
+                style={[styles.sendButton, (!senderReady || isSending) && styles.sendButtonDisabled]}
                 onPress={handleSend}
-                disabled={executeWorkflow.isPending}
+                disabled={!senderReady || isSending}
               >
-                {executeWorkflow.isPending ? (
-                  <ActivityIndicator color="#000" />
-                ) : (
-                  <>
-                    <Send color="#000" size={20} />
-                    <Text style={styles.sendButtonText}>DEPLOY MESSAGE</Text>
-                  </>
-                )}
+                {isSending ? <ActivityIndicator color="#000" /> : <><Send color="#000" size={20} /><Text style={styles.sendButtonText}>SEND DIRECT</Text></>}
               </TouchableOpacity>
             </>
-          )}
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -285,160 +221,33 @@ export default function ComposeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0A0A',
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-    backgroundColor: '#121212',
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#FFD700',
-    fontStyle: 'italic',
-  },
-  content: {
-    flex: 1,
-    paddingTop: 20,
-  },
-  section: {
-    marginBottom: 24,
-    paddingHorizontal: 20,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFD700',
-    marginBottom: 12,
-    letterSpacing: 1,
-  },
-  loader: {
-    alignSelf: 'flex-start',
-    marginVertical: 8,
-  },
-  brandList: {
-    gap: 12,
-  },
-  brandButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  brandButtonActive: {
-    backgroundColor: '#FFD700',
-    borderColor: '#FFD700',
-  },
-  brandButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#999',
-  },
-  brandButtonTextActive: {
-    color: '#000',
-  },
-  channelRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  channelButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  channelButtonActive: {
-    backgroundColor: '#FFD700',
-    borderColor: '#FFD700',
-  },
-  channelButtonDisabled: {
-    opacity: 0.4,
-  },
-  channelButtonText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#999',
-  },
-  channelButtonTextActive: {
-    color: '#000',
-  },
-  channelButtonTextDisabled: {
-    color: '#444',
-  },
-  disabledBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#FF4444',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  disabledBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  input: {
-    backgroundColor: '#1A1A1A',
-    borderWidth: 1,
-    borderColor: '#333',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
-    color: '#FFFFFF',
-  },
-  textArea: {
-    minHeight: 120,
-    paddingTop: 14,
-  },
-  sendButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    marginHorizontal: 20,
-    marginTop: 12,
-    marginBottom: 32,
-    paddingVertical: 18,
-    backgroundColor: '#FFD700',
-    borderRadius: 12,
-  },
-  sendButtonDisabled: {
-    opacity: 0.6,
-  },
-  sendButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#000',
-    letterSpacing: 1,
-  },
+  container: { flex: 1, backgroundColor: '#0A0A0A' },
+  keyboardView: { flex: 1 },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, backgroundColor: '#121212', borderBottomWidth: 1, borderBottomColor: '#333' },
+  headerTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
+  headerTitle: { fontSize: 24, fontWeight: '700', color: '#FFFFFF' },
+  headerSubtitle: { fontSize: 14, color: '#FFD700' },
+  content: { flex: 1, paddingTop: 18 },
+  notice: { marginHorizontal: 20, marginBottom: 22, padding: 14, flexDirection: 'row', gap: 10, backgroundColor: '#102018', borderRadius: 10, borderWidth: 1, borderColor: '#285A3E' },
+  noticeText: { flex: 1, color: '#BFD9C8', fontSize: 12, lineHeight: 18 },
+  section: { marginBottom: 22, paddingHorizontal: 20 },
+  sectionLabel: { fontSize: 12, fontWeight: '700', color: '#FFD700', marginBottom: 11, letterSpacing: 1 },
+  brandList: { gap: 10 },
+  brandButton: { paddingHorizontal: 15, paddingVertical: 10, borderRadius: 18, backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333' },
+  brandButtonActive: { backgroundColor: '#FFD700', borderColor: '#FFD700' },
+  brandButtonText: { color: '#AAA', fontSize: 12, fontWeight: '700' },
+  brandButtonTextActive: { color: '#000' },
+  row: { flexDirection: 'row', gap: 10 },
+  optionButton: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 11, borderRadius: 10, backgroundColor: '#171717', borderWidth: 1, borderColor: '#333' },
+  optionButtonActive: { backgroundColor: '#FFD700', borderColor: '#FFD700' },
+  optionButtonDisabled: { opacity: 0.45 },
+  optionText: { color: '#CCC', fontSize: 12, fontWeight: '800' },
+  optionTextActive: { color: '#000' },
+  optionTextDisabled: { color: '#666' },
+  readiness: { marginTop: 10, fontSize: 11, fontWeight: '700' },
+  input: { backgroundColor: '#151515', borderWidth: 1, borderColor: '#333', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, color: '#FFF', fontSize: 15 },
+  textArea: { minHeight: 150 },
+  sendButton: { marginHorizontal: 20, marginBottom: 40, paddingVertical: 15, borderRadius: 10, backgroundColor: '#FFD700', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  sendButtonDisabled: { opacity: 0.45 },
+  sendButtonText: { color: '#000', fontSize: 14, fontWeight: '900' },
 });
