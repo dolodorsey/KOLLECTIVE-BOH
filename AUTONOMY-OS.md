@@ -61,7 +61,8 @@ Authenticated dispatcher:
 4. Entity GM Agents
 5. Event Commanders where applicable
 6. Entity specialist agents: Finance, Growth, Revenue, Operations, Compliance, Creative, Data, People
-7. Platform and Security Watchdogs
+7. Advanced Growth Fleet: Marketing Strategy, Social Media, Engagement, Outreach, Sponsorship, Grants, Ambassador/Influencer, Lead Intelligence, Growth Data, Marketing Automation
+8. Platform and Security Watchdogs
 
 Agents may coordinate shared systems, but may not silently merge independent entity data or reporting.
 
@@ -75,6 +76,59 @@ Active jobs:
 - `khg-mac-maintenance` — daily
 
 Recurring enterprise operations are stored in `scheduled_operations`; do not rely on humans remembering to run them.
+
+## Advanced Growth OS
+
+Marketing and growth are operated as a measurable entity-isolated system, not a collection of disconnected posts or outreach lists.
+
+Canonical Growth OS tables:
+- `growth_programs`
+- `growth_audience_segments`
+- `growth_content_operations`
+- `growth_social_engagement_targets`
+- `growth_relationships`
+- `growth_sponsor_opportunities`
+- `growth_grant_opportunities`
+- `growth_ambassador_programs`
+- `growth_ambassador_members`
+- `growth_signal_events`
+- `growth_data_usage_registry`
+- `growth_attribution_touchpoints`
+- `growth_experiments`
+- `growth_automation_playbooks`
+- `growth_automation_runs`
+- `growth_capability_profiles`
+- `growth_source_performance`
+- `growth_pipeline_slas`
+- `growth_daily_scorecards`
+
+Command views:
+- `v_growth_lead_command`
+- `v_growth_relationship_command`
+- `v_growth_source_economics`
+- `v_growth_entity_command_center`
+
+Every operating entity has a `growth-engine:<entity_key>` objective and an always-on growth program. Capability profiles decide whether sponsors, grants, ambassadors/influencers and affiliate systems are applicable so the scheduler does not blindly create irrelevant work.
+
+### Growth attack cadence
+- marketing strategy — daily
+- social programming — daily
+- strategic engagement — morning, afternoon and evening
+- qualified outreach — daily
+- sponsor pipeline — daily where applicable
+- grant pipeline — daily where applicable
+- ambassador/influencer pipeline — daily where applicable
+- lead/intent sourcing — every 3 hours
+- data/attribution audit — every 6 hours
+- growth automation QA — every 6 hours
+
+### Growth data rule
+Every dataset must declare source type, allowed and prohibited purposes, consent/contact-use rules, retention, sharing, enrichment and cross-entity permissions before automation can rely on it. Cross-entity person-level use is denied by default.
+
+### Growth automation standard
+All playbooks follow: trigger → entity/data-rights validation → normalize → dedupe/idempotency → permitted enrichment → score/route → action gate → result write → evidence → retry/dead-letter → escalation.
+
+Automation is not complete until successful runs, failure handling, evidence and no-dead-end routing are proven.
 
 ## Action Guardrails
 
