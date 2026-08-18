@@ -1,17 +1,23 @@
 import createContextHook from '@nkzw/create-context-hook';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/auth-context';
-import { Brand } from '@/types/brand';
+import type { Brand } from '@/types/brand';
 
-type Entity = {
-  id: string;
-  name: string;
-  entity_type: string;
-  status: string;
-  meta: any;
-  created_at: string;
-};
+function mapDirectoryRow(row: any): Brand {
+  return {
+    id: row.id,
+    name: row.entity_name,
+    description: [row.division, row.entity_type].filter(Boolean).join(' · '),
+    created_at: row.created_at,
+    status:
+      row.current_blocker || Number(row.operational_readiness || 0) < 50
+        ? 'bottleneck'
+        : Number(row.operational_readiness || 0) >= 80
+        ? 'good'
+        : undefined,
+  };
+}
 
 export const [BrandsContext, useBrands] = createContextHook(() => {
   const { activeOrgId, orgRole, entityMemberships } = useAuth();
@@ -20,8 +26,15 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBrands = async () => {
+  const assignedEntityIds = useMemo(
+    () => entityMemberships.map((membership) => membership.entity_id),
+    [entityMemberships]
+  );
+
+  const fetchBrands = useCallback(async () => {
     if (!activeOrgId) {
+      setBrands([]);
+      setAllBrands([]);
       setIsLoading(false);
       return;
     }
@@ -30,60 +43,44 @@ export const [BrandsContext, useBrands] = createContextHook(() => {
       setIsLoading(true);
       setError(null);
 
-      console.log('🏢 Fetching brands/entities for role:', orgRole);
-
+      // Current source of truth. The legacy generic `entities` relation is no
+      // longer part of the BOH client data path.
       let query = supabase
-        .from('entities')
-        .select('*')
-        .eq('org_id', activeOrgId)
-        .eq('entity_type', 'brand')
-        .eq('status', 'active');
+        .from('enterprise_directory_records')
+        .select(
+          'id,entity_key,entity_name,division,entity_type,status,priority,current_blocker,operational_readiness,created_at'
+        )
+        .eq('status', 'active')
+        .order('entity_name', { ascending: true });
 
       if (orgRole === 'staff' || orgRole === 'manager') {
-        const entityIds = entityMemberships.map(em => em.entity_id);
-        if (entityIds.length > 0) {
-          query = query.in('id', entityIds);
-          console.log('🏢 Staff/Manager: filtering by entity access:', entityIds);
-        } else {
-          console.log('⚠️ Staff/Manager: no entity access');
+        if (!assignedEntityIds.length) {
           setBrands([]);
           setAllBrands([]);
-          setIsLoading(false);
           return;
         }
-      } else {
-        console.log('🏢 Owner/Admin: showing all org entities');
+        query = query.in('id', assignedEntityIds);
       }
 
-      const { data: entities, error: entitiesError } = await query.order('name', { ascending: true });
+      const { data, error: queryError } = await query;
+      if (queryError) throw queryError;
 
-      if (entitiesError) {
-        setError(entitiesError.message);
-        return;
-      }
-
-      const mappedBrands: Brand[] = (entities || []).map((entity: Entity) => ({
-        id: entity.id,
-        name: entity.name,
-        description: entity.meta?.description || '',
-        created_at: entity.created_at,
-      }));
-
-      console.log('✅ Brands/Entities loaded:', mappedBrands.length);
-      setBrands(mappedBrands);
-      setAllBrands(mappedBrands);
+      const mapped = (data || []).map(mapDirectoryRow);
+      setBrands(mapped);
+      setAllBrands(mapped);
     } catch (err: any) {
-      console.error('❌ Brands fetch error:', err);
-      setError(err.message || 'Failed to fetch brands');
+      console.error('Enterprise directory fetch failed:', err);
+      setError(err.message || 'Failed to fetch enterprise entities');
+      setBrands([]);
+      setAllBrands([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeOrgId, orgRole, assignedEntityIds]);
 
   useEffect(() => {
     fetchBrands();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeOrgId, orgRole]);
+  }, [fetchBrands]);
 
   return {
     brands,
