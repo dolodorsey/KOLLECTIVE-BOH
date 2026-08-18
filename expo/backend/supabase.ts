@@ -1,19 +1,38 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://wfkohcwxxsrhcxhepfql.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indma29oY3d4eHNyaGN4aGVwZnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NDk2MjYsImV4cCI6MjA1MTQyNTYyNn0.fXRLof3bExNH-YRiPo3TqhwyY-C2dGZ4dmuW1xIVqnY';
-
-let supabaseInstance: SupabaseClient | null = null;
-
-export function getBackendSupabase(): SupabaseClient {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
-    console.log('🔧 [Backend] Supabase client created');
+function requiredEnv(name: string, fallbackName?: string): string {
+  const value = process.env[name] || (fallbackName ? process.env[fallbackName] : undefined);
+  if (!value) {
+    throw new Error(`Missing required backend environment variable: ${name}`);
   }
-  return supabaseInstance;
+  return value;
+}
+
+/**
+ * Create a request-scoped Supabase client using the publishable/anon client key.
+ *
+ * The caller JWT is forwarded as Authorization so Row Level Security remains the
+ * authorization boundary. Service-role fallback and hardcoded project keys are
+ * intentionally retired from the BOH tRPC data plane.
+ */
+export function getBackendSupabase(accessToken?: string): SupabaseClient {
+  const supabaseUrl = requiredEnv('SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_URL');
+  const publishableKey = requiredEnv('SUPABASE_ANON_KEY', 'EXPO_PUBLIC_SUPABASE_ANON_KEY');
+
+  return createClient(supabaseUrl, publishableKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+    ...(accessToken
+      ? {
+          global: {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          },
+        }
+      : {}),
+  });
 }
