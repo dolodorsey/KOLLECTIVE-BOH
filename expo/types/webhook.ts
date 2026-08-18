@@ -2,60 +2,70 @@ export interface BrandConfiguration {
   id: string;
   brand_key: string;
   brand_display_name: string;
-  ghl_location_id: string | null;
   email_from: string | null;
   instagram_account_id: string | null;
   sms_enabled: boolean;
   email_enabled: boolean;
   dm_enabled: boolean;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
 
-export interface WebhookRegistry {
+export type DirectIntegrationStatus =
+  | 'connected'
+  | 'needs_verification'
+  | 'degraded'
+  | 'disabled'
+  | 'archived';
+
+export interface DirectIntegration {
   id: string;
-  workflow_name: string;
-  n8n_endpoint: string;
-  brand: string | null;
-  channel: string | null;
-  status: 'active' | 'inactive' | 'testing';
-  metadata: Record<string, any>;
+  integration_key: string;
+  provider: string;
+  display_name: string;
+  enterprise_entity_id: string | null;
+  auth_mode: 'api_key' | 'oauth' | 'service_account' | 'webhook_secret' | 'database' | 'none';
+  secret_ref: string | null;
+  endpoint_url: string | null;
+  capabilities: string[];
+  status: DirectIntegrationStatus;
+  last_verified_at: string | null;
+  last_success_at: string | null;
+  last_error: string | null;
+  metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
 
-export interface WorkflowExecution {
+export interface DirectIntegrationRun {
   id: string;
-  workflow_id: string;
-  user_id: string | null;
-  input_payload: Record<string, any>;
-  output_payload: Record<string, any>;
-  status: 'pending' | 'success' | 'failed' | 'timeout';
-  execution_time_ms: number | null;
+  integration_id: string | null;
+  enterprise_entity_id: string | null;
+  action_key: string;
+  status: 'queued' | 'running' | 'succeeded' | 'failed' | 'skipped';
+  request_ref: string | null;
+  result_summary: string | null;
+  evidence: Record<string, unknown>;
   error_message: string | null;
-  created_at: string;
+  started_at: string;
+  completed_at: string | null;
+  metadata: Record<string, unknown>;
 }
 
-export interface CreateWebhookInput {
-  workflow_name: string;
-  n8n_endpoint: string;
-  brand?: string;
-  channel?: string;
-  status?: 'active' | 'inactive' | 'testing';
-  metadata?: Record<string, any>;
-}
-
-export interface ExecuteWorkflowInput {
-  workflow_name: string;
-  payload: Record<string, any>;
-  brand?: string;
-}
-
-export interface WorkflowExecutionResult {
-  execution_id: string;
-  status: 'pending' | 'success' | 'failed' | 'timeout';
-  output_payload?: Record<string, any>;
-  error_message?: string;
-  execution_time_ms?: number;
+export interface GoogleSheetBackend {
+  id: string;
+  sheet_key: string;
+  spreadsheet_id: string;
+  title: string;
+  purpose: string;
+  authority_scope: string;
+  sync_direction: 'source' | 'mirror' | 'bidirectional';
+  status: 'connected' | 'needs_verification' | 'stale' | 'error' | 'disabled' | 'archived';
+  tab_schema: Record<string, unknown>;
+  last_pull_at: string | null;
+  last_push_at: string | null;
+  last_verified_at: string | null;
+  last_error: string | null;
+  metadata: Record<string, unknown>;
 }
