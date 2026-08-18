@@ -24,6 +24,7 @@ type EntityMember = {
   entity_id: string;
   user_id: string;
   role: string;
+  access_level?: string;
 };
 
 export const [UserContext, useUser] = createContextHook(() => {
@@ -35,13 +36,11 @@ export const [UserContext, useUser] = createContextHook(() => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load user profile, org memberships, and entity access
   const fetchUserData = async (authUser: SupabaseUser) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Fetch user profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -56,7 +55,6 @@ export const [UserContext, useUser] = createContextHook(() => {
 
       setProfile(profileData);
 
-      // Fetch org memberships
       const { data: orgMembers, error: orgError } = await supabase
         .from('org_members')
         .select('*')
@@ -67,25 +65,33 @@ export const [UserContext, useUser] = createContextHook(() => {
         console.error('Org members error:', orgError);
       } else {
         setOrgMemberships(orgMembers || []);
-        // Set first active org as default
         if (orgMembers && orgMembers.length > 0) {
           setActiveOrgId(orgMembers[0].org_id);
         }
       }
 
-      // Fetch entity memberships (entity-level access control)
-      const { data: entityMembers, error: entityError } = await supabase
-        .from('entity_members')
-        .select('*')
-        .eq('user_id', authUser.id);
+      // Canonical entity-level access source. The legacy entity_members
+      // relation is retired from all current BOH app data paths.
+      const { data: assignments, error: assignmentError } = await supabase
+        .from('company_team_assignments')
+        .select('entity_id,user_id,company_role,access_level,status')
+        .eq('user_id', authUser.id)
+        .eq('status', 'active');
 
-      if (entityError) {
-        console.error('Entity members error:', entityError);
+      if (assignmentError) {
+        console.error('Company assignments error:', assignmentError);
+        setEntityMemberships([]);
       } else {
-        setEntityMemberships(entityMembers || []);
+        setEntityMemberships(
+          (assignments || []).map((assignment: any) => ({
+            entity_id: assignment.entity_id,
+            user_id: assignment.user_id,
+            role: assignment.company_role,
+            access_level: assignment.access_level,
+          }))
+        );
       }
 
-      // Map to User type
       const userData: User = {
         id: authUser.id,
         email: authUser.email || profileData.email,
@@ -106,7 +112,6 @@ export const [UserContext, useUser] = createContextHook(() => {
   };
 
   useEffect(() => {
-    // Check current session
     supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session?.user) {
         fetchUserData(session.user);
@@ -115,7 +120,6 @@ export const [UserContext, useUser] = createContextHook(() => {
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event: string, session: Session | null) => {
         if (session?.user) {
