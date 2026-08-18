@@ -1,7 +1,8 @@
-import React from "react";
-export type OrgRole = 'owner' | 'admin' | 'manager' | 'staff';
+import React from 'react';
 
+export type OrgRole = 'owner' | 'admin' | 'manager' | 'staff';
 export type EntityPermission = 'view' | 'edit' | 'manage';
+export type CompanyAccessLevel = 'owner' | 'manager' | 'approver' | 'operator' | string;
 
 export interface OrgMembership {
   org_id: string;
@@ -11,10 +12,15 @@ export interface OrgMembership {
   created_at?: string;
 }
 
+/**
+ * Compatibility name retained for UI callers. The live source is now
+ * `company_team_assignments`, not the legacy `entity_members` table.
+ */
 export interface EntityMembership {
   entity_id: string;
   user_id: string;
   role: string;
+  access_level?: CompanyAccessLevel;
   permissions?: EntityPermission[];
   created_at?: string;
 }
