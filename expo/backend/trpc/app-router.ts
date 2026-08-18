@@ -1,6 +1,5 @@
 import { createTRPCRouter } from './create-context';
 import { exampleRouter } from './routes/example';
-import { brandsRouter } from './routes/brands';
 import { communicationsRouter } from './routes/communications';
 import { dashboardRouter } from './routes/dashboard';
 import { entitiesRouter } from './routes/entities';
@@ -12,7 +11,6 @@ import { locationsRouter } from './routes/locations';
 
 export const appRouter = createTRPCRouter({
   example: exampleRouter,
-  brands: brandsRouter,
   communications: communicationsRouter,
   dashboard: dashboardRouter,
   entities: entitiesRouter,
