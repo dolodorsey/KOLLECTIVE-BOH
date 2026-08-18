@@ -10,32 +10,22 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { trpc } from '@/lib/trpc';
-import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertCircle,
-  Filter,
-  Zap,
-} from 'lucide-react-native';
+import { CheckCircle, XCircle, Clock, AlertCircle, Filter, Zap } from 'lucide-react-native';
 
-type StatusFilter = 'all' | 'pending' | 'success' | 'failed' | 'timeout';
+type StatusFilter = 'all' | 'pending' | 'running' | 'completed' | 'skipped' | 'failed';
 
-export default function WorkflowsScreen() {
+export default function ExecutionsScreen() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const { data: runs, isLoading: runsLoading, refetch } = trpc.workflows.runs.useQuery();
-  const { data: defs, isLoading: defsLoading } = trpc.workflows.definitions.useQuery();
+  const { data: runs, isLoading: runsLoading, refetch } = trpc.executions.runs.useQuery();
+  const { data: definitions, isLoading: definitionsLoading } = trpc.executions.definitions.useQuery();
 
-  const workflowRuns = runs || [];
-  const workflowDefinitions = defs || [];
-  const failedRuns = workflowRuns.filter((r: any) => r.status === 'failed');
-  const isLoading = runsLoading || defsLoading;
-
-  const executions = workflowRuns.filter((w: any) => 
-    statusFilter === 'all' ? true : w.status === statusFilter
+  const executionRuns = runs || [];
+  const executions = executionRuns.filter((run: any) =>
+    statusFilter === 'all' ? true : run.status === statusFilter
   );
+  const isLoading = runsLoading || definitionsLoading;
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -45,58 +35,42 @@ export default function WorkflowsScreen() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'success':
-        return <CheckCircle color="#00FF00" size={20} />;
+      case 'completed':
+        return <CheckCircle color="#00FF88" size={20} />;
       case 'failed':
         return <XCircle color="#FF4444" size={20} />;
-      case 'pending':
-        return <Clock color="#FFD700" size={20} />;
-      case 'timeout':
+      case 'skipped':
         return <AlertCircle color="#FF8C00" size={20} />;
+      case 'running':
+        return <Zap color="#4DA3FF" size={20} />;
       default:
-        return <Clock color="#999" size={20} />;
+        return <Clock color="#FFD700" size={20} />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'success':
-        return '#00FF00';
-      case 'failed':
-        return '#FF4444';
-      case 'pending':
-        return '#FFD700';
-      case 'timeout':
-        return '#FF8C00';
-      default:
-        return '#999';
+      case 'completed': return '#00FF88';
+      case 'failed': return '#FF4444';
+      case 'skipped': return '#FF8C00';
+      case 'running': return '#4DA3FF';
+      default: return '#FFD700';
     }
   };
 
-  const formatDuration = (ms: number | null) => {
-    if (!ms) return 'N/A';
-    if (ms < 1000) return `${ms}ms`;
-    return `${(ms / 1000).toFixed(2)}s`;
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-    return date.toLocaleDateString();
+  const formatDate = (value?: string | null) => {
+    if (!value) return 'N/A';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 'N/A' : date.toLocaleString();
   };
 
   const filters: { key: StatusFilter; label: string }[] = [
     { key: 'all', label: 'All' },
-    { key: 'success', label: 'Success' },
     { key: 'pending', label: 'Pending' },
+    { key: 'running', label: 'Running' },
+    { key: 'completed', label: 'Completed' },
+    { key: 'skipped', label: 'Skipped' },
     { key: 'failed', label: 'Failed' },
-    { key: 'timeout', label: 'Timeout' },
   ];
 
   return (
@@ -104,34 +78,21 @@ export default function WorkflowsScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <Zap color="#FFD700" size={28} />
-          <Text style={styles.headerTitle}>Workflow Executions</Text>
+          <Text style={styles.headerTitle}>Execution Queue</Text>
         </View>
         <Text style={styles.headerSubtitle}>
-          Real-time automation intelligence
+          {definitions?.length || 0} live channel plans · direct BOH execution
         </Text>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterContainer}
-        contentContainerStyle={styles.filterContent}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer} contentContainerStyle={styles.filterContent}>
         {filters.map((filter) => (
           <TouchableOpacity
             key={filter.key}
-            style={[
-              styles.filterButton,
-              statusFilter === filter.key && styles.filterButtonActive,
-            ]}
+            style={[styles.filterButton, statusFilter === filter.key && styles.filterButtonActive]}
             onPress={() => setStatusFilter(filter.key)}
           >
-            <Text
-              style={[
-                styles.filterText,
-                statusFilter === filter.key && styles.filterTextActive,
-              ]}
-            >
+            <Text style={[styles.filterText, statusFilter === filter.key && styles.filterTextActive]}>
               {filter.label}
             </Text>
           </TouchableOpacity>
@@ -141,80 +102,54 @@ export default function WorkflowsScreen() {
       {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FFD700" />
-          <Text style={styles.loadingText}>Processing the vision...</Text>
+          <Text style={styles.loadingText}>Loading current execution state…</Text>
         </View>
       ) : (
         <ScrollView
           style={styles.content}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor="#FFD700"
-            />
-          }
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FFD700" />}
         >
-          {executions && executions.length > 0 ? (
+          {executions.length ? (
             executions.map((execution: any) => (
               <View key={execution.id} style={styles.executionCard}>
                 <View style={styles.executionHeader}>
                   <View style={styles.executionTitleRow}>
                     {getStatusIcon(execution.status)}
-                    <Text style={styles.executionWorkflow}>
-                      {execution.workflow_name || 'Unknown'}
-                    </Text>
+                    <View style={styles.titleBlock}>
+                      <Text style={styles.executionTitle}>{execution.execution_name || 'Untitled execution'}</Text>
+                      <Text style={styles.entityText}>
+                        {execution.entity?.entity_name || 'Enterprise'} · {execution.channel || 'channel'}
+                      </Text>
+                    </View>
                   </View>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      {
-                        backgroundColor: `${getStatusColor(execution.status)}22`,
-                        borderColor: getStatusColor(execution.status),
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.statusText,
-                        { color: getStatusColor(execution.status) },
-                      ]}
-                    >
-                      {execution.status?.toUpperCase() || 'UNKNOWN'}
+                  <View style={[styles.statusBadge, { borderColor: getStatusColor(execution.status) }]}> 
+                    <Text style={[styles.statusText, { color: getStatusColor(execution.status) }]}>
+                      {String(execution.status || 'pending').toUpperCase()}
                     </Text>
                   </View>
                 </View>
 
                 <View style={styles.executionStats}>
                   <View style={styles.stat}>
-                    <Text style={styles.statLabel}>Duration</Text>
-                    <Text style={styles.statValue}>
-                      {formatDuration(execution.duration_ms)}
-                    </Text>
+                    <Text style={styles.statLabel}>Scheduled</Text>
+                    <Text style={styles.statValue}>{formatDate(execution.scheduled_at)}</Text>
                   </View>
                   <View style={styles.stat}>
-                    <Text style={styles.statLabel}>Started</Text>
-                    <Text style={styles.statValue}>
-                      {execution.started_at ? formatDate(execution.started_at) : 'N/A'}
-                    </Text>
+                    <Text style={styles.statLabel}>Approval</Text>
+                    <Text style={styles.statValue}>{execution.approval_status || 'N/A'}</Text>
                   </View>
-                  {execution.completed_at && (
-                    <View style={styles.stat}>
-                      <Text style={styles.statLabel}>Completed</Text>
-                      <Text style={styles.statValue}>
-                        {formatDate(execution.completed_at)}
-                      </Text>
-                    </View>
-                  )}
                 </View>
+
+                {execution.result_summary ? (
+                  <Text style={styles.resultText}>{execution.result_summary}</Text>
+                ) : null}
               </View>
             ))
           ) : (
             <View style={styles.emptyContainer}>
               <Filter color="#666" size={48} />
               <Text style={styles.emptyText}>No executions found</Text>
-              <Text style={styles.emptySubtext}>
-                Workflows will appear here once executed
-              </Text>
+              <Text style={styles.emptySubtext}>Current BOH channel-plan executions will appear here.</Text>
             </View>
           )}
         </ScrollView>
@@ -224,170 +159,34 @@ export default function WorkflowsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0A0A',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-    backgroundColor: '#121212',
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#FFD700',
-    fontStyle: 'italic',
-  },
-  filterContainer: {
-    backgroundColor: '#121212',
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  filterContent: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    gap: 12,
-  },
-  filterButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: '#1A1A1A',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  filterButtonActive: {
-    backgroundColor: '#FFD700',
-    borderColor: '#FFD700',
-  },
-  filterText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#999',
-  },
-  filterTextActive: {
-    color: '#000',
-  },
-  content: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 16,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#FFD700',
-    fontStyle: 'italic',
-  },
-  executionCard: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    padding: 16,
-    backgroundColor: '#121212',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  executionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  executionTitleRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  executionWorkflow: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    flex: 1,
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  executionMeta: {
-    gap: 4,
-    marginBottom: 12,
-  },
-  metaText: {
-    fontSize: 13,
-    color: '#999',
-  },
-  executionStats: {
-    flexDirection: 'row',
-    gap: 24,
-  },
-  stat: {
-    flex: 1,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: '#666',
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFD700',
-  },
-  errorContainer: {
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: '#2A1515',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#FF4444',
-  },
-  errorText: {
-    fontSize: 13,
-    color: '#FF8888',
-    lineHeight: 18,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#444',
-  },
+  container: { flex: 1, backgroundColor: '#0A0A0A' },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, backgroundColor: '#121212', borderBottomWidth: 1, borderBottomColor: '#333' },
+  headerTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
+  headerTitle: { fontSize: 24, fontWeight: '700', color: '#FFFFFF' },
+  headerSubtitle: { fontSize: 14, color: '#FFD700' },
+  filterContainer: { backgroundColor: '#121212', borderBottomWidth: 1, borderBottomColor: '#333', maxHeight: 70 },
+  filterContent: { paddingHorizontal: 20, paddingVertical: 14, gap: 10 },
+  filterButton: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20, backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333' },
+  filterButtonActive: { backgroundColor: '#FFD700', borderColor: '#FFD700' },
+  filterText: { fontSize: 13, fontWeight: '600', color: '#999' },
+  filterTextActive: { color: '#000' },
+  content: { flex: 1 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16 },
+  loadingText: { fontSize: 16, color: '#FFD700' },
+  executionCard: { marginHorizontal: 20, marginTop: 16, padding: 16, backgroundColor: '#121212', borderRadius: 12, borderWidth: 1, borderColor: '#333' },
+  executionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14, gap: 10 },
+  executionTitleRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  titleBlock: { flex: 1 },
+  executionTitle: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+  entityText: { marginTop: 4, fontSize: 12, color: '#999' },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, borderWidth: 1 },
+  statusText: { fontSize: 10, fontWeight: '800' },
+  executionStats: { flexDirection: 'row', gap: 16 },
+  stat: { flex: 1 },
+  statLabel: { fontSize: 10, color: '#666', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
+  statValue: { fontSize: 13, color: '#DDD' },
+  resultText: { marginTop: 12, color: '#BBB', fontSize: 13, lineHeight: 18 },
+  emptyContainer: { alignItems: 'center', paddingVertical: 80, paddingHorizontal: 30 },
+  emptyText: { marginTop: 16, fontSize: 18, fontWeight: '700', color: '#FFF' },
+  emptySubtext: { marginTop: 8, textAlign: 'center', color: '#777', lineHeight: 20 },
 });
