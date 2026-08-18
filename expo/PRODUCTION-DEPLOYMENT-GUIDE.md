@@ -1,216 +1,77 @@
-# Webhook Infrastructure - Production Deployment Guide
+# KOLLECTIVE BOH Production Deployment — Current Architecture
 
-## 🚀 System Status: LIVE AND ACTIVE
+## Source of truth
 
-### Production Endpoints
+The BOH application uses KOLLECTIVE BOH Supabase directly for authenticated client data, with RLS protecting client-accessible tables/views. Privileged operations use specific approved Supabase RPCs and Edge Functions.
 
-#### n8n Webhook Handler (Active)
-**Production URL:** `https://drdorsey.app.n8n.cloud/webhook/45cd6ead-84fa-458a-a165-7e96e53e3179`
-- Method: POST
-- Status: ✅ Active
-- Logs to: workflow_executions table in Supabase
+The following deployment architecture is retired:
+- n8n webhook registry/router
+- `webhook_registry` / `workflow_executions` tables
+- generic n8n webhook endpoint configuration
+- the legacy Replit `EXPO_PUBLIC_API_URL`
+- generic external workflow execution as the BOH data plane
 
-#### Supabase Database
-**Project URL:** `https://wfkohcwxxsrhcxhepfql.supabase.co`
-- Tables: webhook_registry, workflow_executions
-- Auth: Service role configured in n8n
-- Status: ✅ Production ready
+## Client configuration
 
-### Quick Start - Using the Webhook API
-
-#### 1. Register a New Webhook (via tRPC)
-
-```typescript
-import { useRegisterWebhook } from '@/hooks/webhooks-context';
-
-const { mutate: registerWebhook } = useRegisterWebhook();
-
-registerWebhook({
-  workflow_name: 'send-sms',
-  n8n_endpoint: 'https://drdorsey.app.n8n.cloud/webhook/45cd6ead-84fa-458a-a165-7e96e53e3179',
-  brand: 'thepinkypromiseatl',
-  channel: 'sms',
-  metadata: {
-    description: 'SMS notification webhook',
-    triggers: ['order_placed', 'order_shipped']
-  }
-});
-```
-
-#### 2. Query Webhooks
-
-```typescript
-import { useWebhooks } from '@/hooks/webhooks-context';
-
-// Get all active webhooks for a brand
-const { data: webhooks, isLoading } = useWebhooks('thepinkypromiseatl', 'active');
-
-// webhooks will contain array of webhook registrations
-```
-
-#### 3. View Execution Logs
-
-```typescript
-import { useWorkflowExecutions } from '@/hooks/webhooks-context';
-
-const { data: executions } = useWorkflowExecutions({
-  brand: 'thepinkypromiseatl',
-  status: 'active'
-});
-```
-
-### Testing the Webhook
-
-#### Send Test POST Request
+Required public client configuration:
 
 ```bash
-curl -X POST https://drdorsey.app.n8n.cloud/webhook/45cd6ead-84fa-458a-a165-7e96e53e3179 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "brand": "thepinkypromiseatl",
-    "channel": "sms",
-    "event": "order_placed",
-    "data": {
-      "order_id": "12345",
-      "customer": "John Doe"
-    }
-  }'
+EXPO_PUBLIC_SUPABASE_URL=https://wfkohcwxxsrhcxhepfql.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<publishable client key>
 ```
 
-#### Expected Response
-```json
-{
-  "success": true,
-  "execution_id": "uuid-here"
-}
+Never place a service-role key in the Expo client.
+
+## Production data flow
+
+```text
+Expo / web BOH client
+  -> Supabase Auth
+  -> RLS-protected BOH tables/views
+  -> specific RPC / Edge Function for privileged operations
+  -> direct provider APIs only through secure server-side functions when required
 ```
 
-### Database Schema
+## Deployment checklist
 
-#### webhook_registry Table
-```sql
-CREATE TABLE webhook_registry (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  workflow_name TEXT NOT NULL,
-  n8n_endpoint TEXT NOT NULL,
-  brand TEXT NOT NULL,
-  channel TEXT NOT NULL,
-  status TEXT DEFAULT 'active',
-  metadata JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+1. Confirm the app builds against the current `expo/` root only.
+2. Confirm no retired merge-snapshot directories are used.
+3. Verify client Supabase URL/publishable key.
+4. Verify authentication and BOH membership access.
+5. Run security advisors before schema changes are considered complete.
+6. Verify Edge Functions individually; do not create generic service-role proxy endpoints.
+7. Confirm RLS on all client-reachable tables.
+8. Confirm environment examples contain no n8n/Replit production dependency.
+9. Search current source for retired names before release.
+
+## Verification searches
+
+```bash
+grep -R "n8n\|drdorsey.app.n8n.cloud\|kollective-api.*replit\|webhook_registry\|workflow_executions" . \
+  --exclude-dir=node_modules
 ```
 
-#### workflow_executions Table
-```sql
-CREATE TABLE workflow_executions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  webhook_id UUID REFERENCES webhook_registry(id),
-  n8n_endpoint TEXT,
-  brand TEXT,
-  channel TEXT,
-  status TEXT DEFAULT 'active',
-  metadata JSONB,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
+Any hit in current executable code requires review. Historical Git commits may still contain retired references; current `main` is authoritative.
 
-### Available tRPC Routes
+## Security rules
 
-All routes accessible via `/api/trpc/webhooks.*`:
+- Client: publishable Supabase credentials only.
+- Server: service-role/provider secrets only in server-side secret stores.
+- Use narrow RPCs/Edge Functions with explicit authorization.
+- Keep brand/entity attribution in KOLLECTIVE BOH; do not route multi-brand state through a generic external workflow.
+- Do not rely on completion reports or old implementation docs as production truth.
 
-1. **registerWebhook**
-   - Input: workflow_name, n8n_endpoint, brand, channel, metadata?
-   - Output: Created webhook object
+## Operational monitoring
 
-2. **updateWebhook**  
-   - Input: id, updates object
-   - Output: Updated webhook object
+Monitor the actual live components:
+- Supabase database/RLS/security advisors
+- active Edge Functions
+- pg_cron jobs
+- app/deployment logs
+- GitHub CI/build checks
+- direct provider health where a provider is genuinely used
 
-3. **deleteWebhook**
-   - Input: id
-   - Output: Success boolean (soft delete - sets status='inactive')
-
-4. **getExecutions**
-   - Input: filters (brand?, channel?, status?)
-   - Output: Array of execution records
-
-### Monitoring & Debugging
-
-#### Check n8n Executions
-1. Go to: https://drdorsey.app.n8n.cloud/workflow/WtgOWdP5VSVhESZO
-2. Click "Executions" tab
-3. View real-time webhook execution logs
-
-#### Query Supabase Directly
-```sql
--- Recent webhook executions
-SELECT * FROM workflow_executions 
-ORDER BY created_at DESC 
-LIMIT 10;
-
--- Active webhooks by brand
-SELECT * FROM webhook_registry 
-WHERE brand = 'thepinkypromiseatl' 
-AND status = 'active';
-```
-
-### Security Considerations
-
-⚠️ **Production Recommendations:**
-1. Add HMAC signature verification to webhooks
-2. Implement rate limiting (e.g., 100 requests/minute per brand)
-3. Add IP whitelisting for sensitive webhooks
-4. Enable Supabase RLS policies
-5. Rotate service role keys regularly
-
-### Troubleshooting
-
-#### Webhook Not Triggering
-1. Verify workflow is Active in n8n
-2. Check n8n execution logs for errors
-3. Verify POST request format matches expected schema
-4. Check Supabase for inserted records
-
-#### Data Not Appearing
-1. Verify Supabase credentials in n8n
-2. Check table permissions (RLS policies)
-3. Review n8n node configuration
-4. Check workflow_executions table directly
-
-### Next Steps
-
-1. **Build Frontend Dashboard:**
-   - Create `/app/webhooks` page
-   - Use existing hooks: useWebhooks(), useWorkflowExecutions()
-   - Display real-time execution logs
-   - Add webhook management UI
-
-2. **Add Security:**
-   - Implement HMAC verification
-   - Add rate limiting middleware
-   - Configure IP whitelisting
-
-3. **Enhanced Monitoring:**
-   - Set up alerts for failed executions
-   - Add performance metrics
-   - Create dashboard for execution statistics
-
-### Support Resources
-
-**Documentation:**
-- WEBHOOK-INFRASTRUCTURE.md - Complete architecture
-- IMPLEMENTATION-SUMMARY.md - Implementation details  
-- FINAL-COMPLETION-REPORT.md - Project status
-
-**Dashboard URLs:**
-- n8n: https://drdorsey.app.n8n.cloud
-- Supabase: https://supabase.com/dashboard/project/wfkohcwxxsrhcxhepfql
-- GitHub: https://github.com/dolodorsey/KOLLECTIVE-BOH
+There is no n8n dashboard requirement in the current BOH architecture.
 
 ---
-**Status:** ✅ Production Ready
-**Last Updated:** January 4, 2026, 4:00 AM EST
-**Webhook Endpoint:** Active and receiving requests
+**Status:** Direct-first production architecture
