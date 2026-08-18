@@ -1,0 +1,64 @@
+name: BOH Current Architecture
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: expo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: TypeScript check
+        run: bun x tsc --noEmit
+      - name: Reject retired runtime methods
+        run: |
+          set -euo pipefail
+          retired_paths=(
+            "src/services/n8nClient.ts"
+            "backend/trpc/routes/ao-core.ts"
+            "backend/trpc/routes/webhooks.ts"
+            "backend/trpc/routes/workflows.ts"
+            "hooks/ao-core-context.ts"
+            "lib/api.ts"
+            "N8N-WORKFLOWS-SETUP.sql"
+            "supabase-schema.sql"
+            "seed-data.sql"
+            "rls-policies.sql"
+            "supabase-seed-simple.sql"
+          )
+          for path in "${retired_paths[@]}"; do
+            if [ -e "$path" ]; then
+              echo "Retired artifact returned: $path"
+              exit 1
+            fi
+          done
+          if grep -R -n -E 'drdorsey\.app\.n8n\.cloud|kollective-api.*replit|EXPO_PUBLIC_N8N_WEBHOOK_URL|EXPO_PUBLIC_WEBHOOK_URL' \
+              app backend hooks lib src components app.config.js env.example \
+              --exclude-dir=node_modules 2>/dev/null; then
+            echo "Retired n8n/Replit runtime reference found"
+            exit 1
+          fi
+          if grep -R -n 'SUPABASE_SERVICE_ROLE_KEY' app hooks lib components app.config.js env.example 2>/dev/null; then
+            echo "Service-role credential reference found in client-side surface"
+            exit 1
+          fi
+      - name: Verify direct architecture files
+        run: |
+          test -f backend/trpc/routes/communications.ts
+          test -f backend/trpc/routes/entities.ts
+          test -f backend/trpc/routes/executions.ts
+          test -f backend/trpc/routes/dashboard.ts
