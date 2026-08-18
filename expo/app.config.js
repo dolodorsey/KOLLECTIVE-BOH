@@ -41,18 +41,11 @@ export default ({ config }) => ({
     typedRoutes: true
   },
   extra: {
-    // Supabase Configuration
+    // Current direct BOH data plane.
     EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
     EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-    
-    // API Configuration
-    EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
-    
-    // Webhook Configuration
-    EXPO_PUBLIC_WEBHOOK_URL: process.env.EXPO_PUBLIC_WEBHOOK_URL,
-    EXPO_PUBLIC_WEBHOOK_PATH: process.env.EXPO_PUBLIC_WEBHOOK_PATH,
-    
-    // Rork Configuration (automatically provided)
+
+    // Rork build/runtime values when provided by the platform.
     EXPO_PUBLIC_RORK_DB_ENDPOINT: process.env.EXPO_PUBLIC_RORK_DB_ENDPOINT,
     EXPO_PUBLIC_RORK_DB_NAMESPACE: process.env.EXPO_PUBLIC_RORK_DB_NAMESPACE,
     EXPO_PUBLIC_RORK_DB_TOKEN: process.env.EXPO_PUBLIC_RORK_DB_TOKEN,
