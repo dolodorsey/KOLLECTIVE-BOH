@@ -74,7 +74,13 @@ jobs:
           grep -q "enterprise_directory_intelligence" backend/trpc/routes/dashboard.ts
           grep -q "stale_entities_count" backend/trpc/routes/dashboard.ts
           grep -q "high_attention_entities_count" backend/trpc/routes/dashboard.ts
-          if grep -q "order('entity_name'" backend/trpc/routes/entities.ts; then
-            echo "Alphabetical-first enterprise ranking returned"
-            exit 1
-          fi
+          python3 - <<'PY'
+          from pathlib import Path
+          text=Path('backend/trpc/routes/entities.ts').read_text()
+          attention=text.find(".order('attention_score'")
+          name=text.find(".order('entity_name'")
+          if attention < 0:
+              raise SystemExit('Missing attention-score ordering')
+          if name >= 0 and name < attention:
+              raise SystemExit('Alphabetical enterprise ranking appears before attention score')
+          PY
