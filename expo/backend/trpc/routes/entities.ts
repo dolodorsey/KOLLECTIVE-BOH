@@ -27,16 +27,21 @@ export const entitiesRouter = createTRPCRouter({
       }
 
       let query = ctx.supabase
-        .from('enterprise_directory_records')
+        .from('enterprise_directory_intelligence')
         .select(
-          'id,entity_key,entity_name,division,entity_type,status,priority,primary_poc,current_blocker,next_action,brand_readiness,operational_readiness,revenue_readiness,technical_readiness,created_at,updated_at'
+          'id,entity_key,entity_name,division,entity_type,status,priority,primary_poc,current_blocker,next_action,brand_readiness,operational_readiness,revenue_readiness,technical_readiness,failed_runs_24h,open_runs,last_activity_at,freshness_status,attention_score,created_at,updated_at'
         );
 
       if (allowedEntityIds) query = query.in('id', allowedEntityIds);
       if (input?.status && input.status !== 'all') query = query.eq('status', input.status);
       if (input?.search) query = query.ilike('entity_name', `%${input.search}%`);
 
-      const { data, error } = await query.order('entity_name', { ascending: true });
+      // Enterprise execution should surface what needs attention, not alphabetical order.
+      // Name is only a deterministic tie-breaker after live risk/freshness intelligence.
+      const { data, error } = await query
+        .order('attention_score', { ascending: false })
+        .order('last_activity_at', { ascending: true, nullsFirst: true })
+        .order('entity_name', { ascending: true });
       if (error) throw new Error(error.message);
 
       return (data || []).map((entity: any) => ({
@@ -54,11 +59,12 @@ export const entitiesRouter = createTRPCRouter({
         operational_readiness: entity.operational_readiness,
         revenue_readiness: entity.revenue_readiness,
         technical_readiness: entity.technical_readiness,
-        // Health compatibility fields are derived from current enterprise state,
-        // not the retired workflow/alert shadow schema.
         alerts_open: entity.current_blocker ? 1 : 0,
-        failed_runs_24h: 0,
-        last_activity_at: entity.updated_at,
+        failed_runs_24h: entity.failed_runs_24h || 0,
+        open_runs: entity.open_runs || 0,
+        freshness_status: entity.freshness_status || 'unknown',
+        attention_score: entity.attention_score || 0,
+        last_activity_at: entity.last_activity_at || entity.updated_at,
         created_at: entity.created_at,
         updated_at: entity.updated_at,
       }));
