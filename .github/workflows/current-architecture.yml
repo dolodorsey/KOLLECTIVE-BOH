@@ -62,3 +62,17 @@ jobs:
           test -f backend/trpc/routes/entities.ts
           test -f backend/trpc/routes/executions.ts
           test -f backend/trpc/routes/dashboard.ts
+      - name: Verify enterprise intelligence contract
+        run: |
+          set -euo pipefail
+          grep -q "enterprise_directory_intelligence" backend/trpc/routes/entities.ts
+          grep -q "attention_score" backend/trpc/routes/entities.ts
+          grep -q "freshness_status" backend/trpc/routes/entities.ts
+          grep -q "failed_runs_24h" backend/trpc/routes/entities.ts
+          grep -q "enterprise_directory_intelligence" backend/trpc/routes/dashboard.ts
+          grep -q "stale_entities_count" backend/trpc/routes/dashboard.ts
+          grep -q "high_attention_entities_count" backend/trpc/routes/dashboard.ts
+          if grep -q "order('entity_name'" backend/trpc/routes/entities.ts; then
+            echo "Alphabetical-first enterprise ranking returned"
+            exit 1
+          fi
