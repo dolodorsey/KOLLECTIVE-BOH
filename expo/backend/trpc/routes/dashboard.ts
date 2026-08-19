@@ -18,6 +18,8 @@ export const dashboardRouter = createTRPCRouter({
           active_entities_count: 0,
           active_entities_delta_7d: 0,
           alerts_open_count: 0,
+          stale_entities_count: 0,
+          high_attention_entities_count: 0,
           workflow_runs_today_count: 0,
           workflow_failures_today_count: 0,
           tasks_open_count: 0,
@@ -33,14 +35,16 @@ export const dashboardRouter = createTRPCRouter({
     const todayIso = today.toISOString();
 
     let entityQuery = ctx.supabase
-      .from('enterprise_directory_records')
-      .select('id,status,current_blocker,created_at', { count: 'exact' })
+      .from('enterprise_directory_intelligence')
+      .select('id,status,current_blocker,created_at,freshness_status,attention_score', { count: 'exact' })
       .eq('status', 'active');
     if (allowedEntityIds) entityQuery = entityQuery.in('id', allowedEntityIds);
     const { data: activeEntities, count: entitiesCount, error: entityError } = await entityQuery;
     if (entityError) throw new Error(entityError.message);
 
     const blockers = (activeEntities || []).filter((entity: any) => Boolean(entity.current_blocker)).length;
+    const staleEntities = (activeEntities || []).filter((entity: any) => entity.freshness_status === 'stale').length;
+    const highAttentionEntities = (activeEntities || []).filter((entity: any) => Number(entity.attention_score || 0) >= 60).length;
     const newActive7d = (activeEntities || []).filter(
       (entity: any) => entity.created_at && entity.created_at >= weekAgo
     ).length;
@@ -75,14 +79,19 @@ export const dashboardRouter = createTRPCRouter({
     return {
       active_entities_count: entitiesCount || 0,
       active_entities_delta_7d: newActive7d,
-      // The old alerts.status shadow query is retired. Current blockers are the
-      // actionable enterprise alert signal until legacy alerts are migrated.
       alerts_open_count: blockers,
+      stale_entities_count: staleEntities,
+      high_attention_entities_count: highAttentionEntities,
       workflow_runs_today_count: (executions || []).length,
       workflow_failures_today_count: failedToday,
       tasks_open_count: openExecutionCount || 0,
       team_online_count: distinctTeam,
-      system_health: failedToday > 0 ? ('critical' as const) : blockers > 0 ? ('watch' as const) : ('ok' as const),
+      system_health:
+        failedToday > 0 || highAttentionEntities > 0
+          ? ('critical' as const)
+          : blockers > 0 || staleEntities > 0
+            ? ('watch' as const)
+            : ('ok' as const),
       completed_today_count: completedToday,
     };
   }),
