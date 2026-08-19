@@ -33,6 +33,8 @@ jobs:
             "backend/trpc/routes/webhooks.ts"
             "backend/trpc/routes/workflows.ts"
             "hooks/ao-core-context.ts"
+            "hooks/webhooks-context.ts"
+            "push-notifications.ts"
             "lib/api.ts"
             "N8N-WORKFLOWS-SETUP.sql"
             "supabase-schema.sql"
