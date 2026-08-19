@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  Platform,
 } from 'react-native';
 import {
   Search,
@@ -39,18 +38,18 @@ const HeroCommandStrip: React.FC = () => {
   };
 
   const getBrandColor = () => {
-    if (userBrands.length === 1) return userBrands[0].color;
-    return '#FFD700'; // Default gold for multi-brand or HQ
+    if (userBrands.length === 1) return userBrands[0].color ?? '#FFD700';
+    return '#FFD700';
   };
 
-  const getProjectCount = () => {
-    // This would be calculated from actual project data
-    return Math.floor(Math.random() * 8) + 2; // Mock: 2-9 projects
-  };
+  const entityScopeLabel = userBrands.length === 1
+    ? userBrands[0].name
+    : userBrands.length > 1
+      ? `${userBrands.length} assigned entities`
+      : 'your enterprise workspace';
 
   return (
     <View style={styles.container}>
-      {/* Dynamic Greeting & Role Recognition */}
       <View style={styles.greetingSection}>
         <View style={styles.userInfo}>
           <TouchableOpacity 
@@ -68,24 +67,18 @@ const HeroCommandStrip: React.FC = () => {
               {getGreeting()}, {user?.name}.
             </Text>
             <Text style={styles.roleDescription}>
-              You are leading {getProjectCount()} projects across{' '}
-              {userBrands.length === 1 
-                ? userBrands[0].name 
-                : `${userBrands.length} entities`
-              } today.
+              Enterprise view for {entityScopeLabel}.
             </Text>
           </View>
         </View>
       </View>
 
-      {/* Quote of the Day */}
       <View style={styles.quoteSection}>
         <Quote size={16} color="#FFD700" />
         <Text style={styles.quoteText}>{todayQuote}</Text>
         <Sparkles size={16} color="#FFD700" />
       </View>
 
-      {/* Global Search Command */}
       <View style={[styles.searchSection, isSearchFocused && styles.searchFocused]}>
         <Search size={20} color={isSearchFocused ? '#FFD700' : '#aaa'} />
         <TextInput
@@ -191,11 +184,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     marginLeft: 12,
-    ...Platform.select({
-      web: {
-        outlineStyle: 'none',
-      },
-    }),
   },
   clearButton: {
     width: 24,

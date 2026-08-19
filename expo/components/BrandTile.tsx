@@ -13,9 +13,10 @@ const BrandTile: React.FC<BrandTileProps> = ({ brand }) => {
 
   const status = brand.status ?? 'good';
   const statusColor = STATUS_COLORS[status as keyof typeof STATUS_COLORS];
+  const taskCompletion = Math.max(0, Math.min(100, brand.taskCompletion ?? 0));
+  const brandColor = brand.color ?? '#FFD700';
   
   const handlePress = () => {
-    // In a real app, this would navigate to the brand dashboard
     console.log(`Navigate to ${brand.name} dashboard`);
   };
   
@@ -27,22 +28,22 @@ const BrandTile: React.FC<BrandTileProps> = ({ brand }) => {
     >
       <View style={styles.header}>
         <Text style={styles.mascot}>{brand.mascot}</Text>
-        <Text style={[styles.name, { color: brand.color }]}>{brand.name}</Text>
+        <Text style={[styles.name, { color: brandColor }]}>{brand.name}</Text>
       </View>
       
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{brand.taskCompletion}%</Text>
+          <Text style={styles.statValue}>{taskCompletion}%</Text>
           <Text style={styles.statLabel}>Tasks</Text>
         </View>
         
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{brand.activeAgents}</Text>
+          <Text style={styles.statValue}>{brand.activeAgents ?? 0}</Text>
           <Text style={styles.statLabel}>Agents</Text>
         </View>
         
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{brand.recentUploads}</Text>
+          <Text style={styles.statValue}>{brand.recentUploads ?? 0}</Text>
           <Text style={styles.statLabel}>Uploads</Text>
         </View>
       </View>
@@ -52,13 +53,13 @@ const BrandTile: React.FC<BrandTileProps> = ({ brand }) => {
           <View 
             style={[
               styles.progressFill, 
-              { width: `${brand.taskCompletion}%`, backgroundColor: brand.color }
+              { width: `${taskCompletion}%`, backgroundColor: brandColor }
             ]} 
           />
         </View>
       </View>
       
-      <TouchableOpacity style={[styles.accessButton, { backgroundColor: brand.color }]}>
+      <TouchableOpacity style={[styles.accessButton, { backgroundColor: brandColor }]}>
         <Text style={styles.accessButtonText}>Access</Text>
       </TouchableOpacity>
     </TouchableOpacity>
