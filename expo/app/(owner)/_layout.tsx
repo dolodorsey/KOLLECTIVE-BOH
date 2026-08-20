@@ -1,71 +1,33 @@
 import { Tabs } from "expo-router";
-import { LayoutDashboard, Building2, Users, User, Zap, Sparkles, ClipboardCheck } from "lucide-react-native";
+import { Home, ListChecks, CalendarDays, BellRing, MoreHorizontal } from "lucide-react-native";
 import React from "react";
+
+const GOLD = '#E0A700';
 
 export default function OwnerLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#FFD700',
+        tabBarActiveTintColor: GOLD,
+        tabBarInactiveTintColor: '#7E7A72',
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#121212',
-          borderTopColor: '#333',
+          backgroundColor: '#0B0B0B',
+          borderTopColor: '#25231F',
+          height: 76,
+          paddingTop: 8,
+          paddingBottom: 10,
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-        }
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
       }}
     >
-      <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: "Command Center",
-          tabBarIcon: ({ color }) => <LayoutDashboard color={color} size={24} />,
-        }}
-      />
-      <Tabs.Screen
-        name="operations"
-        options={{
-          title: "Operations",
-          tabBarIcon: ({ color }) => <ClipboardCheck color={color} size={24} />,
-        }}
-      />
-      <Tabs.Screen
-        name="entities"
-        options={{
-          title: "Entities",
-          tabBarIcon: ({ color }) => <Building2 color={color} size={24} />,
-        }}
-      />
-      <Tabs.Screen
-        name="people"
-        options={{
-          title: "People",
-          tabBarIcon: ({ color }) => <Users color={color} size={24} />,
-        }}
-      />
-      <Tabs.Screen
-        name="workflows"
-        options={{
-          title: "Workflows",
-          tabBarIcon: ({ color }) => <Zap color={color} size={24} />,
-        }}
-      />
-      <Tabs.Screen
-        name="compose"
-        options={{
-          title: "Compose",
-          tabBarIcon: ({ color }) => <Sparkles color={color} size={24} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => <User color={color} size={24} />,
-        }}
-      />
+      <Tabs.Screen name="dashboard" options={{ title: "Home", tabBarIcon: ({ color }) => <Home color={color} size={22} /> }} />
+      <Tabs.Screen name="operations" options={{ title: "Execute", tabBarIcon: ({ color }) => <ListChecks color={color} size={22} /> }} />
+      <Tabs.Screen name="workflows" options={{ title: "Calendar", tabBarIcon: ({ color }) => <CalendarDays color={color} size={22} /> }} />
+      <Tabs.Screen name="compose" options={{ title: "Actions", tabBarIcon: ({ color }) => <BellRing color={color} size={22} /> }} />
+      <Tabs.Screen name="entities" options={{ title: "More", tabBarIcon: ({ color }) => <MoreHorizontal color={color} size={22} /> }} />
+      <Tabs.Screen name="people" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }
