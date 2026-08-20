@@ -23,11 +23,14 @@ export default function OwnerLayout() {
     >
       <Tabs.Screen name="dashboard" options={{ title: "Home", tabBarIcon: ({ color }) => <Home color={color} size={22} /> }} />
       <Tabs.Screen name="operations" options={{ title: "Execute", tabBarIcon: ({ color }) => <ListChecks color={color} size={22} /> }} />
-      <Tabs.Screen name="workflows" options={{ title: "Calendar", tabBarIcon: ({ color }) => <CalendarDays color={color} size={22} /> }} />
-      <Tabs.Screen name="compose" options={{ title: "Actions", tabBarIcon: ({ color }) => <BellRing color={color} size={22} /> }} />
-      <Tabs.Screen name="entities" options={{ title: "More", tabBarIcon: ({ color }) => <MoreHorizontal color={color} size={22} /> }} />
+      <Tabs.Screen name="calendar" options={{ title: "Calendar", tabBarIcon: ({ color }) => <CalendarDays color={color} size={22} /> }} />
+      <Tabs.Screen name="actions" options={{ title: "Actions", tabBarIcon: ({ color }) => <BellRing color={color} size={22} /> }} />
+      <Tabs.Screen name="more" options={{ title: "More", tabBarIcon: ({ color }) => <MoreHorizontal color={color} size={22} /> }} />
+      <Tabs.Screen name="entities" options={{ href: null }} />
       <Tabs.Screen name="people" options={{ href: null }} />
       <Tabs.Screen name="profile" options={{ href: null }} />
+      <Tabs.Screen name="workflows" options={{ href: null }} />
+      <Tabs.Screen name="compose" options={{ href: null }} />
     </Tabs>
   );
 }
