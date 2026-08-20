@@ -1,293 +1,47 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
-import { Search } from 'lucide-react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@/hooks/auth-context';
-import { trpc } from '@/lib/trpc';
-import { computeHealth } from '@/src/utils/health';
+import { Search, Building2, ChevronRight } from 'lucide-react-native';
+import { supabase } from '../../lib/supabase';
 
-export default function EntitiesScreen() {
-  const { activeOrgId } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+const GOLD='#E0A700', BG='#0A0A0A', CARD='#141414', BORDER='#28251F';
+type Row={id:string;entity_name:string;division:string|null;entity_type:string|null;status:string;priority:string|null;primary_poc:string|null;current_blocker:string|null;next_action:string|null;brand_readiness:number|null;operational_readiness:number|null;revenue_readiness:number|null;technical_readiness:number|null};
 
-  const { data: entities, isLoading } = trpc.entities.list.useQuery({
-    search: searchQuery,
-    status: filterStatus,
-  });
+export default function EntitiesScreen(){
+  const [loading,setLoading]=useState(true);
+  const [rows,setRows]=useState<Row[]>([]);
+  const [search,setSearch]=useState('');
+  const [division,setDivision]=useState('All');
 
-  const filteredEntities = (entities || []).map((e: any) => ({
-    ...e,
-    health: computeHealth(e),
-  }));
+  async function load(){
+    setLoading(true);
+    const {data}=await supabase.from('enterprise_directory_records').select('id,entity_name,division,entity_type,status,priority,primary_poc,current_blocker,next_action,brand_readiness,operational_readiness,revenue_readiness,technical_readiness').order('entity_name');
+    setRows((data||[]) as Row[]); setLoading(false);
+  }
+  useEffect(()=>{load()},[]);
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
+  const divisions=useMemo(()=>['All',...Array.from(new Set(rows.map(r=>r.division).filter(Boolean) as string[])).sort()], [rows]);
+  const filtered=useMemo(()=>rows.filter(r=>{
+    const q=search.trim().toLowerCase();
+    return (division==='All'||r.division===division) && (!q||JSON.stringify(r).toLowerCase().includes(q));
+  }),[rows,search,division]);
+  const score=(r:Row)=>Math.round([r.brand_readiness,r.operational_readiness,r.revenue_readiness,r.technical_readiness].map(v=>v??0).reduce((a,b)=>a+b,0)/4);
+  const active=rows.filter(r=>['operating','active','live'].includes((r.status||'').toLowerCase()));
+  const atRisk=rows.filter(r=>!!r.current_blocker || ['blocked','at_risk'].includes((r.status||'').toLowerCase()));
 
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView style={styles.scrollView}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Entities</Text>
-            <Text style={styles.subtitle}>Manage your brands and ventures</Text>
-          </View>
-
-          <View style={styles.searchContainer}>
-            <View style={styles.searchInputWrapper}>
-              <Search size={18} color="#666" />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search entities..."
-                placeholderTextColor="#666"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
-              {['all', 'active', 'inactive', 'archived'].map((status) => (
-                <TouchableOpacity
-                  key={status}
-                  style={[
-                    styles.filterChip,
-                    filterStatus === status && styles.filterChipActive,
-                  ]}
-                  onPress={() => setFilterStatus(status)}
-                >
-                  <Text style={[
-                    styles.filterChipText,
-                    filterStatus === status && styles.filterChipTextActive,
-                  ]}>
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#FFD700" />
-            </View>
-          ) : filteredEntities.length === 0 ? (
-            <View style={styles.content}>
-              <Text style={styles.emptyText}>No entities yet</Text>
-              <Text style={styles.emptySubtext}>
-                Entity management for org {activeOrgId?.slice(0, 8)}
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.listContainer}>
-              {filteredEntities.map((entity) => (
-                <View key={entity.id} style={styles.entityCard}>
-                  <View style={styles.entityHeader}>
-                    <Text style={styles.entityName}>{entity.name}</Text>
-                    <View style={styles.badges}>
-                      <View style={[
-                        styles.healthBadge,
-                        entity.health === 'healthy' && styles.healthHealthy,
-                        entity.health === 'watch' && styles.healthWatch,
-                        entity.health === 'down' && styles.healthDown,
-                        entity.health === 'paused' && styles.healthPaused,
-                      ]}>
-                        <Text style={styles.healthText}>{entity.health}</Text>
-                      </View>
-                      <View style={[
-                        styles.statusBadge,
-                        entity.status === 'active' && styles.statusActive,
-                        entity.status === 'inactive' && styles.statusInactive,
-                      ]}>
-                        <Text style={styles.statusText}>{entity.status}</Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.entityMeta}>
-                    <Text style={styles.entityType}>{entity.type}</Text>
-                    <Text style={styles.entityDate}>{formatDate(entity.created_at)}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          )}
-        </ScrollView>
-      </SafeAreaView>
-    </View>
-  );
+  return <View style={styles.screen}><SafeAreaView style={{flex:1}} edges={['top']}><ScrollView refreshControl={<RefreshControl refreshing={loading} onRefresh={load} tintColor={GOLD}/>} contentContainerStyle={styles.content}>
+    <Text style={styles.eyebrow}>KOLLECTIVE DIRECTORY</Text><Text style={styles.title}>Companies</Text><Text style={styles.subtitle}>Browse the enterprise by division, operating status and readiness.</Text>
+    <View style={styles.metrics}><Metric value={rows.length} label="COMPANIES"/><Metric value={active.length} label="ACTIVE"/><Metric value={atRisk.length} label="AT RISK"/></View>
+    <View style={styles.search}><Search color="#777168" size={18}/><TextInput value={search} onChangeText={setSearch} placeholder="Search companies or divisions" placeholderTextColor="#6F6A61" style={styles.searchInput}/></View>
+    <Text style={styles.sectionTitle}>BROWSE BY DIVISION</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.divisions}>{divisions.map(d=><TouchableOpacity key={d} onPress={()=>setDivision(d)} style={[styles.divisionChip,division===d&&styles.divisionActive]}><Text style={[styles.divisionText,division===d&&styles.divisionTextActive]}>{d}</Text></TouchableOpacity>)}</ScrollView>
+    {loading&&!rows.length?<ActivityIndicator color={GOLD} size="large" style={{marginTop:50}}/>:<>
+      <Text style={styles.sectionTitle}>ACTIVE NOW</Text><View style={styles.compactGrid}>{active.slice(0,6).map(r=><View key={r.id} style={styles.compact}><Text style={styles.compactName} numberOfLines={1}>{r.entity_name}</Text><Text style={styles.compactMeta}>{r.division||r.entity_type||'Enterprise'}</Text><View style={styles.progress}><View style={[styles.progressFill,{width:`${Math.max(3,score(r))}%` as any}]}/></View><Text style={styles.health}>{score(r)}% READY</Text></View>)}</View>
+      <View style={styles.headingRow}><Text style={styles.sectionTitle}>ALL COMPANIES · {filtered.length}</Text></View>
+      {filtered.map(r=><View key={r.id} style={styles.card}><View style={styles.cardTop}><View style={styles.iconBox}><Building2 color={GOLD} size={18}/></View><View style={{flex:1}}><Text style={styles.cardTitle}>{r.entity_name}</Text><Text style={styles.meta}>{r.division||'Unassigned'} · {r.primary_poc||'POC needed'}</Text></View><Text style={styles.score}>{score(r)}%</Text><ChevronRight color="#665F55" size={18}/></View><View style={styles.progress}><View style={[styles.progressFill,{width:`${Math.max(3,score(r))}%` as any}]}/></View><View style={styles.statusRow}><Text style={styles.status}>{r.status||'needs setup'}</Text>{!!r.current_blocker&&<Text style={styles.risk}>BLOCKED</Text>}</View><Text style={styles.next}>Next: {r.next_action||'Add next action'}</Text></View>)}
+    </>}
+  </ScrollView></SafeAreaView></View>
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-  safeArea: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    padding: 24,
-    paddingBottom: 16,
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#222',
-  },
-  searchInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#fff',
-    fontSize: 15,
-    paddingVertical: 12,
-    marginLeft: 8,
-  },
-  filterRow: {
-    flexDirection: 'row',
-  },
-  filterChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#1a1a1a',
-    marginRight: 8,
-  },
-  filterChipActive: {
-    backgroundColor: '#FFD700',
-  },
-  filterChipText: {
-    fontSize: 13,
-    color: '#999',
-    fontWeight: '500',
-  },
-  filterChipTextActive: {
-    color: '#000',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#FFD700',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#999',
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    minHeight: 400,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#555',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 48,
-  },
-  listContainer: {
-    padding: 16,
-    gap: 12,
-  },
-  entityCard: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
-  },
-  entityHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  entityName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-    flex: 1,
-  },
-  badges: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  healthBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: '#333',
-  },
-  healthHealthy: {
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
-  },
-  healthWatch: {
-    backgroundColor: 'rgba(255, 193, 7, 0.2)',
-  },
-  healthDown: {
-    backgroundColor: 'rgba(244, 67, 54, 0.2)',
-  },
-  healthPaused: {
-    backgroundColor: 'rgba(158, 158, 158, 0.2)',
-  },
-  healthText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#fff',
-    textTransform: 'capitalize',
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: '#333',
-  },
-  statusActive: {
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
-  },
-  statusInactive: {
-    backgroundColor: 'rgba(158, 158, 158, 0.2)',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#999',
-    textTransform: 'capitalize',
-  },
-  entityMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  entityType: {
-    fontSize: 14,
-    color: '#FFD700',
-    textTransform: 'capitalize',
-  },
-  entityDate: {
-    fontSize: 12,
-    color: '#666',
-  },
-});
+function Metric({value,label}:{value:number;label:string}){return <View style={styles.metric}><Text style={styles.metricValue}>{value}</Text><Text style={styles.metricLabel}>{label}</Text></View>}
+
+const styles=StyleSheet.create({screen:{flex:1,backgroundColor:BG},content:{padding:18,paddingBottom:110},eyebrow:{color:GOLD,fontWeight:'800',letterSpacing:2,fontSize:12},title:{color:'#fff',fontSize:40,fontWeight:'900',marginTop:3},subtitle:{color:'#999287',fontSize:15,lineHeight:22,marginTop:5,maxWidth:340},metrics:{flexDirection:'row',gap:8,marginTop:18},metric:{flex:1,backgroundColor:CARD,borderWidth:1,borderColor:BORDER,borderRadius:15,padding:12},metricValue:{color:'#fff',fontSize:24,fontWeight:'900'},metricLabel:{color:'#8D877D',fontSize:10,fontWeight:'800',marginTop:3},search:{height:48,marginTop:12,backgroundColor:CARD,borderWidth:1,borderColor:BORDER,borderRadius:15,flexDirection:'row',alignItems:'center',paddingHorizontal:13,gap:9},searchInput:{flex:1,color:'#fff',fontSize:14},sectionTitle:{color:GOLD,fontWeight:'900',fontSize:12,letterSpacing:1.5,marginTop:20,marginBottom:9},divisions:{gap:8,paddingBottom:2},divisionChip:{paddingHorizontal:13,paddingVertical:9,borderRadius:16,borderWidth:1,borderColor:BORDER,backgroundColor:CARD},divisionActive:{backgroundColor:'#F4EFE4'},divisionText:{color:'#9A948B',fontWeight:'800',fontSize:11},divisionTextActive:{color:'#0A0A0A'},compactGrid:{flexDirection:'row',flexWrap:'wrap',gap:8},compact:{width:'48.7%',backgroundColor:'#F1EDE5',borderRadius:15,padding:12},compactName:{color:'#151515',fontWeight:'900',fontSize:14},compactMeta:{color:'#756E65',fontSize:11,marginTop:3},health:{color:'#5E574F',fontWeight:'800',fontSize:10,marginTop:6},headingRow:{flexDirection:'row',justifyContent:'space-between'},card:{backgroundColor:CARD,borderWidth:1,borderColor:BORDER,borderRadius:17,padding:14,marginBottom:10},cardTop:{flexDirection:'row',alignItems:'center',gap:10},iconBox:{width:35,height:35,borderRadius:11,backgroundColor:'#1F1D19',alignItems:'center',justifyContent:'center'},cardTitle:{color:'#fff',fontWeight:'900',fontSize:15},meta:{color:'#8D877D',fontSize:12,marginTop:2},score:{color:GOLD,fontWeight:'900',fontSize:17},progress:{height:5,backgroundColor:'#302D28',borderRadius:4,marginTop:11,overflow:'hidden'},progressFill:{height:5,backgroundColor:GOLD,borderRadius:4},statusRow:{flexDirection:'row',gap:8,alignItems:'center',marginTop:10},status:{color:'#B8B0A4',fontSize:11,fontWeight:'800',textTransform:'uppercase'},risk:{color:'#EF6666',fontSize:10,fontWeight:'900'},next:{color:'#8D877D',fontSize:12,marginTop:7}})
