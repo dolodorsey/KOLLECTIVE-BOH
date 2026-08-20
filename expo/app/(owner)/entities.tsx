@@ -25,7 +25,7 @@ export default function EntitiesScreen(){
     const q=search.trim().toLowerCase();
     return (division==='All'||r.division===division) && (!q||JSON.stringify(r).toLowerCase().includes(q));
   }),[rows,search,division]);
-  const score=(r:Row)=>Math.round([r.brand_readiness,r.operational_readiness,r.revenue_readiness,r.technical_readiness].reduce((a,b)=>a+(b||0),0)/4);
+  const score=(r:Row)=>Math.round([r.brand_readiness,r.operational_readiness,r.revenue_readiness,r.technical_readiness].map(v=>v??0).reduce((a,b)=>a+b,0)/4);
   const active=rows.filter(r=>['operating','active','live'].includes((r.status||'').toLowerCase()));
   const atRisk=rows.filter(r=>!!r.current_blocker || ['blocked','at_risk'].includes((r.status||'').toLowerCase()));
 
