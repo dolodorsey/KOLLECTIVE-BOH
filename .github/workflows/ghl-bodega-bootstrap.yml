@@ -1,0 +1,69 @@
+name: GHL Bodega Bootstrap
+
+on:
+  push:
+    paths:
+      - '.github/workflows/ghl-bodega-bootstrap.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GHL_TOKEN: ${{ secrets.GHL_PRIVATE_INTEGRATION_TOKEN }}
+      GHL_API: https://services.leadconnectorhq.com
+    steps:
+      - name: Verify secret exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${GHL_TOKEN:-}" ]; then
+            echo "RESULT secret_missing=true"
+            exit 2
+          fi
+          echo "RESULT secret_missing=false"
+
+      - name: Resolve or create BODEGA location
+        id: location
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth=(-H "Authorization: Bearer ${GHL_TOKEN}" -H "Version: 2021-07-28" -H "Accept: application/json" -H "Content-Type: application/json")
+          search_json=$(curl -sS --fail-with-body "${auth[@]}" "${GHL_API}/locations/search?limit=100&skip=0")
+          location_id=$(echo "$search_json" | jq -r '(.locations // .data // []) | map(select((.name // "") | ascii_downcase == "bodega")) | .[0].id // empty')
+          if [ -z "$location_id" ]; then
+            payload='{"name":"BODEGA","address":"649 11th Street NW","city":"Atlanta","state":"GA","country":"US","postalCode":"30318","timezone":"America/New_York"}'
+            create_json=$(curl -sS --fail-with-body -X POST "${auth[@]}" -d "$payload" "${GHL_API}/locations/")
+            location_id=$(echo "$create_json" | jq -r '(.location.id // .id // empty)')
+          fi
+          if [ -z "$location_id" ]; then
+            echo "RESULT location_missing=true"
+            exit 3
+          fi
+          echo "location_id=$location_id" >> "$GITHUB_OUTPUT"
+          echo "RESULT bodega_location_id=$location_id"
+
+      - name: Resolve or create Festival Tour Schedule calendar
+        id: calendar
+        shell: bash
+        run: |
+          set -euo pipefail
+          location_id='${{ steps.location.outputs.location_id }}'
+          auth=(-H "Authorization: Bearer ${GHL_TOKEN}" -H "Version: v3" -H "Accept: application/json" -H "Content-Type: application/json")
+          calendars_json=$(curl -sS --fail-with-body "${auth[@]}" "${GHL_API}/calendars/?locationId=${location_id}")
+          calendar_id=$(echo "$calendars_json" | jq -r '(.calendars // .data // []) | map(select((.name // "") | ascii_downcase == "festival tour schedule")) | .[0].id // empty')
+          if [ -z "$calendar_id" ]; then
+            payload=$(jq -nc --arg lid "$location_id" '{isActive:true,locationId:$lid,name:"Festival Tour Schedule",description:"BODEGA festival tour stops, load-ins, travel, activation/service windows and strike schedule.",slug:"bodega-festival-tour",widgetSlug:"bodega-festival-tour",calendarType:"event",widgetType:"default",eventTitle:"{{contact.name}} — Festival Tour",eventColor:"#FFB878",slotDuration:60,slotDurationUnit:"mins",slotInterval:60,slotIntervalUnit:"mins",appointmentPerSlot:1,appointmentPerDay:50,allowReschedule:true,allowCancellation:true}')
+            create_json=$(curl -sS --fail-with-body -X POST "${auth[@]}" -d "$payload" "${GHL_API}/calendars/")
+            calendar_id=$(echo "$create_json" | jq -r '(.calendar.id // .id // empty)')
+          fi
+          if [ -z "$calendar_id" ]; then
+            echo "RESULT calendar_missing=true"
+            exit 4
+          fi
+          echo "RESULT festival_calendar_id=$calendar_id"
+          echo "RESULT bootstrap_complete=true"
