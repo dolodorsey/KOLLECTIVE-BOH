@@ -1,304 +1,234 @@
-# Post-Scope Native CRM Deployment Runbook — 2026-09-03
+# Native CRM Deployment + Burn-In Runbook — 2026-09-03
 
 ## Purpose
 
-This is the execution procedure for the 26 active non-beverage entities after the two missing HighLevel Private Integration permissions are added.
+The post-scope native deployment is complete. This runbook now defines the verified completed state and the remaining controlled production-burn-in procedure for the 26 active non-beverage entities.
 
-Do not use this runbook for beverage entities or excluded concert/event scopes.
+Strict entity isolation remains law: exact entity/location PIT, exact location ID, entity-owned data and routing. Never substitute another entity's credential/location.
 
-The operating law is strict entity isolation. Every API call must use the exact entity/location PIT and exact location ID. Never substitute another brand's credential or location.
+## Phase 0 — Native Deployment Baseline — COMPLETE
 
-## Current Prerequisites
+Verified complete:
 
-Already complete:
+- 26/26 GHL locations mapped
+- 26/26 exact per-location PITs validated
+- 26/26 `pipelines.create` authorized and proven
+- 26/26 Conversation AI manage/write authorized and proven
+- 260/260 CRM control fields provisioned
+- 288/288 entity/core/program tags provisioned
+- 599/599 native pipelines accounted for with GHL IDs
+  - 598 created
+  - 1 idempotent `already_exists` canary
+  - 0 failures
+- 184/184 native agents have GHL IDs
+- 184/184 native agents remain `OFF`
+- 78/78 canonical routes remain `draft`
+- real outbound/autonomous activation = 0
 
-- 26 / 26 entity GHL locations mapped
-- 26 / 26 exact per-location PITs validated for core CRM
-- 260 / 260 CRM control fields provisioned
-- 288 / 288 entity/core/program tags provisioned
-- 599 canonical pipeline definitions complete
-- 599 native pipeline deployment queue rows generated with exact location IDs and ordered stage payloads
-- 184 canonical messaging agents complete
-- 89 native agents already mirrored in `OFF` mode across 12 entities
-- 95 native-agent rows waiting across 14 entities
-- 78 canonical routes remain `draft`
-- 0 autonomous programs
+Completed pipeline waves:
 
-External permissions still required:
+- Wave 1: 195/195
+- Wave 2: 147/147
+- Wave 3: 151/151
+- Wave 4: 106/106
 
-1. `pipelines.create` on all 26 entity Private Integrations.
-2. Conversation AI agent-management permission on the 14 scope-blocked entity Private Integrations.
+Do not rerun deployment merely because an old status file or dashboard still says blocked. Native IDs/receipts are the evidence source.
 
-Editing permissions does not by itself authorize production activation.
+## Deployment Idempotency / Reconciliation Rules
 
-## Phase 1 — Prove Permission, Do Not Guess
+For any future repair/reconciliation:
 
-For each entity/capability, issue the existing deliberately invalid-body probe.
+1. Confirm exact entity key and GHL location ID.
+2. Confirm exact per-location PIT.
+3. List existing native pipelines first.
+4. Match by exact canonical name.
+5. If exact name exists, retain/store its native ID; do not create a duplicate.
+6. Never use another brand's PIT to recover a failed entity.
+7. Never touch unresolved duplicate STUSH/On Call locations without explicit architecture approval.
+8. Never activate agents as part of infrastructure repair.
 
-Record the result through:
+Temporary cross-project deployment bridges used during the 599-pipeline rollout are disabled and must not be reactivated for ordinary operations.
 
-`public.crm_record_ghl_scope_probe(entity_key, capability, http_status, response_excerpt, metadata)`
+## Phase 1 — Sender Gates
 
-Accepted authorization proof:
-
-- HTTP 400 or 422 only
-
-Rejected / non-authorizing outcomes:
-
-- 401 / 403 → scope blocked
-- 404 → endpoint/route problem; do not authorize
-- 5xx → provider problem; do not authorize
-- 2xx → invalid probe behaved unexpectedly; do not authorize and investigate
-- any other result → indeterminate; keep blocked
-
-Never flip a scope flag manually because someone says the permission was changed in the UI. The endpoint probe is the deployment gate.
-
-## Phase 2 — Pipeline Queue Release
-
-Source tables:
-
-- `public.crm_ghl_entity_runtime_map`
-- `public.crm_ghl_pipeline_deployment_queue`
-- `public.v_crm_ghl_pipeline_deployment_dashboard`
-- `public.v_crm_ghl_scope_probe_status`
-
-The scope-probe recorder releases pipeline queue rows only for the entity whose valid 400/422 probe was recorded.
-
-Before any POST:
-
-1. Confirm exact entity key.
-2. Confirm exact GHL location ID from `crm_ghl_entity_runtime_map`.
-3. Confirm credential strategy is `per_location_pit` and status is `pit_validated`.
-4. Confirm queue row status is `queued`.
-5. Check the live GHL location for an existing pipeline with the exact canonical name.
-6. If exact name exists, store its native ID and mark `already_exists`; do not create a duplicate.
-7. If not found, POST the row's `desired_payload` using that entity's exact PIT.
-8. Store native pipeline ID, HTTP status, attempt count and timestamp.
-9. On non-success, keep error details and do not silently retry forever.
-
-Idempotency key is deterministic from exact location ID + canonical pipeline name.
-
-## Phase 3 — Controlled Pipeline Waves
-
-Never fire all 599 as one blind batch.
-
-### Wave 1 — 195
-
-Deploy first. Verify after the wave:
-
-- exact-name uniqueness
-- no cross-location creation
-- stage names and order match canonical `stage_spec`
-- no duplicate pipelines
-- native IDs saved for every success/already-existing object
-- zero open queue rows without an explicit status/error
-
-Only proceed after Wave 1 is clean.
-
-### Wave 2 — 147
-
-Use the same checks.
-
-### Wave 3 — 151
-
-Use the same checks.
-
-### Wave 4 — 106
-
-Use the same checks.
-
-Total: 599.
-
-A failed entity does not justify using another entity's PIT. Isolate the failure and continue only where entity-local verification passes.
-
-## Phase 4 — Mirror Remaining Conversation AI Agents
-
-Scope-blocked entities:
+External messaging remains blocked for the following 12 until a real production sender is independently verified:
 
 - BARE
-- BODEGA
-- Brand Studio
-- Clean Cut Landscaping
-- Consultations
-- Courses
-- Frequency Productions
-- Hakuna Matata
-- Halloween General
-- Halloween Women
-- Halloween Sexy Women
-- Mission 365
-- Synergy Sounds
-- Umbrella Auto Exchange
-
-After a valid Conversation AI permission probe, run the existing service-only function for the matching brand key:
-
-`public.crm_mirror_ghl_brand_agents(brand_key)`
-
-Expected remaining total: 95 native agents.
-
-Hard verification after each brand:
-
-- returned HighLevel agent IDs saved in Supabase
-- native mode is `OFF`
-- agent count equals expected count for that brand
-- no cross-brand location mismatch
-- no failed rows left labeled merely `pending`
-
-Do not turn native agents ON as part of this phase.
-
-## Phase 5 — Sender Gates
-
-External messaging remains blocked for any fallback sender.
-
-Current fallback entities:
-
-- BARE
-- Clean Cut Landscaping
-- Consultations
-- Courses
-- Frequency Productions
-- Hakuna Matata
-- Halloween General
-- Halloween Women
-- Halloween Sexy Women
 - Help 911
+- Clean Cut Landscaping
+- Consultations
+- Courses
+- Frequency Productions
+- Hakuna Matata
+- Halloween General
+- Halloween Women
+- Halloween Sexy Women
 - Mission 365
 - Synergy Sounds
 
-Source:
+Sender-ready requires:
 
-- `public.crm_sender_remediation_queue`
-- `public.v_crm_sender_activation_gates`
+- verified owned domain
+- real mailbox exists and is accessible
+- MX configured
+- SPF configured/verified
+- DKIM configured/verified
+- DMARC configured
+- reply routing verified
+- controlled outbound send verified
 
-Help 911 already has:
+Known corrections:
 
-- owned domain `help911.help`
-- recorded address `dialhelp911@gmail.com`
-- planned `support@help911.help`
-- planned `partners@help911.help`
-- planned `claims@help911.help`
+- BARE: do not use `bare-essentials.shop` as a verified owned domain; Claude's audit found NXDOMAIN/unregistered state.
+- Help 911: `help911.help` is owned/live, but mail configuration is not complete.
+- Do not invent `hello@...`/`info@...` addresses.
+- Do not use `vercel.app` aliases as mail domains.
 
-Those planned mailboxes must be created/connected and verified for SPF/DKIM/DMARC or equivalent provider authentication, reply routing and test-send behavior before sender-map activation.
+Track completion in GitHub Issue #9 and `public.crm_sender_remediation_queue`.
 
-For the other 11, resolve a real owned brand mailbox. Do not invent an address from a domain name.
+## Phase 2 — Audience / Consent Gate
 
-## Phase 6 — Audience / Consent Gate
+Infrastructure readiness is not contact eligibility.
 
-Infrastructure readiness is not marketing consent.
+Before any contact enters a live sequence:
 
-Before a real audience enters any outbound sequence:
+- verify entity ownership/source
+- verify lawful basis/channel consent appropriate to the program
+- honor DNC, STOP, unsubscribe and suppression state
+- prevent cross-brand database use
+- verify sender/reply-to belongs to the same entity
+- preserve source/campaign attribution
 
-- validate entity ownership of the contact
-- validate contact source
-- validate channel consent / lawful contact basis appropriate to the program
-- honor DNC / STOP / unsubscribe / suppression state
-- ensure the contact is not being pulled from another entity's database
-- ensure sender/reply-to matches the same entity
-- preserve source and campaign attribution
+Record evidence in `public.crm_program_audience_receipts`.
 
-Any failure blocks that contact, not the guardrail.
+A zero-eligible receipt is a valid blocker and must not be overridden merely to start a pilot.
 
-## Phase 7 — First Controlled Burn-In
+## Phase 3 — First Controlled Burn-In
 
-Initial candidate order:
+Initial 11 candidate programs:
 
 1. STUSH — welcome
-2. STUSH — post-purchase
-3. STUSH — abandoned cart
-4. Good Times — reservations / experiences
-5. Good Times — user acquisition
-6. Good Times — marketing nurture
+2. STUSH — post_purchase
+3. STUSH — cart_recovery
+4. Good Times — reservations_experiences
+5. Good Times — user_acquisition
+6. Good Times — marketing_nurture
 7. MAGA Merchandise — welcome
-8. MAGA Merchandise — post-purchase
-9. MAGA Merchandise — abandoned cart
-10. Sole Exchange — impact updates
+8. MAGA Merchandise — post_purchase
+9. MAGA Merchandise — cart_recovery
+10. Sole Exchange — impact_updates
 11. Sole Exchange — volunteers
 
-Source:
+Current verified audience state:
 
-- `public.crm_program_activation_plan`
-- `public.v_crm_first_burnin_queue`
+- 11/11 audience receipts recorded
+- eligible audience = 0
+- pilot-ready = 0
+- audience-gated = 11
+- infrastructure blockers = 0
 
-Burn-in rules:
+Do not create fake audiences to make the gate green.
+
+When legitimate eligible audiences exist, burn-in rules are:
 
 - native agents remain `OFF`
 - canonical routes remain `draft`
-- human review remains required
-- audience consent/eligibility is validated before real send
-- small initial batch only; the activation control specifies maximum initial real batch where permitted
-- DNC violations must remain 0
-- cross-brand violations must remain 0
-- unsafe claims must remain 0
+- human review required
+- start with a small controlled batch
+- DNC/STOP violations = 0
+- cross-brand violations = 0
+- unsafe/invented claims = 0
 - sender/reply behavior must pass
 - every exception has a human owner
 
-Do not broaden to the rest of the 158 programs merely because the first cohort works.
+Only after the first cohort is verified should broader activation be considered.
 
-## Phase 8 — Programs That Stay Human-Gated
+## Phase 4 — Programs That Stay Human-Gated
 
-Infrastructure completion does not remove manual-control policy for:
+Do not auto-activate:
 
 - Help 911 sensitive service/client flows
 - Mind Studio sensitive flows
-- legal or medical/clinical scenarios
-- crisis/emergency scenarios
+- legal/medical/clinical/crisis scenarios
 - capital/investor communications
 - custom contractual/financial terms
 - high-value negotiations
-- complaints/refunds requiring discretion
-- unknown facts or requests that require approval
+- complaints/refunds requiring judgment
+- unknown facts requiring approval
 
-Never let an AI agent invent pricing, approval, contract terms, inventory, policy, outcome or guarantee.
+AI must never invent pricing, approvals, contracts, inventory, policies, outcomes or guarantees.
 
-## Phase 9 — ClickUp Execution Binding
+## Phase 5 — ClickUp Execution Binding
 
-Shared infrastructure actions belong in the central enterprise execution area, not entity boards.
+Central enterprise destination:
 
-Required central tasks:
+- workspace `90141551653`
+- space `90147280109`
 
-1. `GHL | Add pipelines.create to 26 PITs`
-2. `GHL | Add Conversation AI management scope to 14 PITs`
-3. `CRM | Native pipeline + agent deployment after scopes`
-4. `CRM | Production activation Wave 1`
+Four enterprise actions are staged in BOH. Native deployment is already marked complete. Sender work and burn-in remain current. ClickUp write endpoints are platform-rate-limited, so do not duplicate tasks into entity workspaces to bypass the limit.
 
-A ClickUp connector write-rate limit was observed. Do not duplicate these tasks elsewhere just to bypass the platform limit.
+Once writes unlock:
 
-## Executive Verification
+1. create/use the central Enterprise Systems CRM/GHL/Messaging OS list
+2. flush only the staged real actions
+3. mark native-deployment action completed rather than creating redundant work
+4. preserve entity-specific operational execution in each entity's own workspace/space
 
-Use:
+## Phase 6 — End-to-End Burn-In Verification
 
-`public.crm_activation_executive_summary()`
+For every live pilot path verify:
 
-Current pre-remediation baseline:
+`source → Supabase → correct entity → correct GHL subaccount → correct native pipeline/stage → owner/PM → messaging decision → ClickUp handoff where applicable`
 
-- 26 entities
-- 26 core CRM ready
-- 26 pipeline-scope blocked
-- 599 pipeline definitions waiting
-- 14 Conversation-AI-scope blocked
-- 95 native agents remaining
-- 12 sender-blocked entities
-- 158 messaging programs
-- 11 first burn-in candidates
-- 0 autonomous programs
-- 0 real outbound activated by this control plane
+Verify:
 
-Production readiness is achieved by reducing verified blockers through evidence, not by manually changing dashboard labels.
+- exact entity mapping
+- correct native pipeline ID
+- correct owner and PM
+- sender identity
+- consent/suppression state
+- agent remains OFF unless a later separately approved activation occurs
+- route remains controlled
+- attribution retained
+- no cross-brand access
+
+## Current Activation Matrix
+
+Across 158 programs:
+
+- 70 `ready_for_internal_burnin`
+- 65 `blocked_sender_identity`
+- 12 `manual_only`
+- 11 `blocked_audience_eligibility`
+- 0 pipeline-infrastructure blockers
+- 0 native-agent-infrastructure blockers
+
+No unrestricted external outbound or autonomous program is active.
 
 ## Stop Conditions
 
-Stop deployment immediately for the affected entity if any of these occur:
+Stop the affected entity/program if any of these occur:
 
 - credential/location mismatch
-- cross-brand data or credential use
+- cross-brand data/credential use
 - duplicate native pipeline creation
-- invalid probe returns an unexpected 2xx
-- HighLevel 401/403 after claimed scope remediation
-- agent created anywhere except the matching entity location
-- native agent mode not OFF during build/burn-in
+- agent appears outside matching entity location
+- native agent mode changes from OFF during build/burn-in without explicit approval
 - sender identity cannot be verified
-- suppression/DNC failure
+- DNC/suppression failure
 - unexpected outbound send
 - material legal/medical/safety escalation not routed to a human
+- production audience lacks verified eligibility evidence
 
-Keep the entity blocked, log the exception and fix the root cause. Do not weaken the guardrail to make the status green.
+Fix the root cause; do not weaken the gate.
+
+## Known Architecture Exceptions
+
+- STUSH canonical `2rlQ89TGyca6NZaFugHN`; duplicate `iMnrTkqOiutj7ayQMeFT` untouched.
+- On Call canonical `TPGXRZ0h4ClKDbQFu5ew`; duplicate `TPyMj9PwUj9WRkAt4v0Y` untouched.
+- MAGA Merchandise remains mapped to `OR94o2hKNXj1tIopbmuw` pending any future dedicated-location decision.
+- `8dQDGCzUtKCVK9laectZ` remains excluded because of identity/blacklist mismatch.
+
+## Beverage Scope
+
+Not included in this runbook: BEVCO INTL., Infinity Water, Pronto, ORA, XXX Vodka, Privè Vodka, Noir, Otini, Tempo, Casa Cantina, Island Water.
