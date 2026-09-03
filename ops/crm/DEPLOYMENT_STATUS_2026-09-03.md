@@ -2,7 +2,9 @@
 
 ## Current Verified Position
 
-The 26 active non-beverage entities now have complete basic HighLevel location/PIT/core-CRM readiness. The remaining HighLevel blockers are no longer missing accounts or generic IAM: they are two specific native-object permissions.
+The 26 active non-beverage entities have complete basic HighLevel location/PIT/core-CRM readiness. The remaining native HighLevel blockers are two specific object-management permissions plus sender-readiness for a subset of brands.
+
+**Credential architecture:** exact per-location PITs stored in Supabase and used only for the matching entity/location. No agency-level credential is required or assumed for this deployment, and credentials are never cross-used between brands.
 
 ### Enterprise CRM foundation
 
@@ -12,8 +14,9 @@ The 26 active non-beverage entities now have complete basic HighLevel location/P
 - 289 required department assignments
 - 25 reusable department pipeline templates
 - 599 active entity pipeline definitions
-- 599 / 599 pipeline definitions have owner-role coverage
+- 599 / 599 have owner-role coverage
 - 599 / 599 have PM-role coverage
+- 599 / 599 have stage, workflow, SLA and handoff specifications
 - 32 Wave 1 entity-specific pipeline-to-messaging bindings
 
 Canonical BOH tables:
@@ -22,42 +25,33 @@ Canonical BOH tables:
 - `public.crm_entity_department_matrix`
 - `public.crm_entity_pipeline_manifest`
 
+Pipeline deployment waves:
+
+- Wave 1 — 195 definitions
+- Wave 2 — 147 definitions
+- Wave 3 — 151 definitions
+- Wave 4 — 106 definitions
+- Total — 599
+
 ## GHL Location / PIT Reconciliation — Complete for Core CRM
 
 - 26 / 26 active entities have a mapped GHL location.
 - 26 / 26 have a matching entity/location PIT in Supabase.
 - 26 / 26 pass core contact/conversation/CRM authentication.
-- 26 / 26 can perform the custom-field/tag writes used by this operating system.
+- 26 / 26 support the custom-field/tag writes used by this operating system.
 
-The operating architecture remains per-entity/per-location even though an agency credential also exists. Entity automation does not cross-use credentials.
-
-### Newly created/mapped or PIT-repaired locations
-
-- BARE — `GrP82FcIfLmZZYM4CLo1`
-- BODEGA — `MhjDux8DfQuIgZOs6bb4`
-- Brand Studio — `vNSvkuoyfU31H6L2bPcj`
-- Clean Cut Landscaping — `PNGsYICyiZcRQIfwbXVD`
-- Consultations — `UvskhCIb0elwrGX2M7qi`
-- Courses — `ZqGXVAJYb0ETyNLxykf1`
-- Frequency Productions — `Zm9L9yJnfEqIyUNlMmRh`
-- Hakuna Matata — `my3t8XWT680gA5UWpoda`
-- Halloween General — `Xl00ZeWTpZmay17o74Sw`
-- Halloween Women — `llEyWx8E3AoBgvNBThkk`
-- Halloween Sexy Women — `6WJTNsGNIcyo5HB2MoI2`
-- Mission 365 — `k0qCyTaLEJaIazRML7hs`
-- Synergy Sounds — `vHT7U9MIunt8Tl13nurI`
-- Umbrella Auto Exchange — `dBHdPA05U62NuOD4K5oo`
+The active CRM runtime source of truth is now `public.crm_ghl_entity_runtime_map` in KOLLECTIVE BOH. It deliberately supersedes stale credential-strategy metadata in older broad mapping tables without rewriting historical records.
 
 ## Native GHL Capability Audit
 
-A safe endpoint-level authorization probe was run for all 26 current PITs. Invalid payloads were used so no test agents or pipelines were created.
+Safe invalid-body endpoint probes were used so no test agents or pipelines were created.
 
 ### Conversation AI management
 
 - 12 / 26 PITs are authorized for native Conversation AI agent management.
 - 89 native entity-owned agents are already deployed across those 12 locations in `OFF` mode.
-- 14 / 26 newly provisioned/mapped PITs return HTTP 401 on `POST /conversation-ai/agents` and therefore require the Conversation AI agent-management/write permission.
-- 95 native agent rows are explicitly marked `scope_blocked` until that permission is added.
+- 14 / 26 valid PITs return HTTP 401 on `POST /conversation-ai/agents` and require Conversation AI agent-management/write permission.
+- 95 native agent rows remain explicitly `scope_blocked`.
 
 Blocked 14:
 
@@ -78,29 +72,69 @@ Blocked 14:
 
 ### Native pipeline creation
 
-- 0 / 26 current PITs are authorized for `POST /opportunities/pipelines`.
-- All 26 need `pipelines.create` added to their existing Private Integration permissions.
-- All 599 active BOH pipeline definitions are marked `blocked_pipeline_create_scope` until this permission is present.
+- 0 / 26 current PITs authorize `POST /opportunities/pipelines`.
+- All 26 require granular `pipelines.create` on the existing entity Private Integration.
+- All 599 active BOH pipeline definitions are `blocked_pipeline_create_scope` until this permission is proven.
 
-The pipeline specs themselves are complete and retain stage, funnel, workflow, SLA, handoff, KPI, owner-role and PM-role configuration.
+No token rotation is required merely to edit the Private Integration permission set unless HighLevel itself requires it.
 
 ## Native CRM Configuration — Completed
 
-The 26 locations now have a common entity-safe CRM control layer:
+The 26 locations have the common entity-safe CRM control layer:
 
 - 260 / 260 required opportunity fields ready
 - 288 / 288 required core/program tags ready
 - 0 field errors
 - 0 tag errors
 
-Generic control registries in MCP Gateway:
+## Native Pipeline Deployment Queue — Built
 
-- `public.crm_ghl_field_map`
-- `public.crm_ghl_tag_map`
+Migration: `crm_ghl_runtime_map_and_pipeline_queue`
 
-Provisioner:
+New BOH assets:
 
-- `public.crm_provision_ghl_fields_tags(brand_key)`
+- `public.crm_ghl_entity_runtime_map`
+- `public.crm_ghl_pipeline_deployment_queue`
+- `public.crm_rebuild_ghl_pipeline_deployment_queue()`
+- `public.v_crm_ghl_pipeline_deployment_dashboard`
+
+The queue materializes every active canonical pipeline with:
+
+- exact entity GHL location ID
+- exact pipeline name
+- ordered stage payload derived from canonical `stage_spec`
+- deployment wave
+- deterministic idempotency key
+- owner-role and PM-role metadata
+- native pipeline ID/status placeholders
+- retry/error/audit fields
+
+Verified queue result:
+
+- 599 / 599 active pipeline rows materialized
+- 599 / 599 blocked only by pipeline-create scope
+- 0 missing mappings/specs
+- 0 queued prematurely
+- 0 native pipelines falsely marked deployed
+
+## Safe Scope Release Gate — Installed
+
+Migration: `crm_safe_scope_probe_and_queue_release`
+
+New BOH assets:
+
+- `public.crm_ghl_scope_probe_log`
+- `public.crm_record_ghl_scope_probe(...)`
+- `public.v_crm_ghl_scope_probe_status`
+
+The gate only treats HTTP **400 or 422** from an intentionally invalid-body probe as proof that authentication/authorization reached HighLevel payload validation.
+
+- 401/403 → remains `scope_blocked`
+- 404 → not authorized
+- 5xx → not authorized
+- unexpected 2xx from invalid probe → treated as unsafe and does **not** authorize
+
+A successful pipeline scope probe releases only that entity's queued rows; it does not activate messaging or agents.
 
 ## Messaging OS — Verified
 
@@ -110,8 +144,7 @@ Provisioner:
 - 184 canonical conversation agents
 - 26 data guards
 - 78 active canonical draft routes
-- 20 live source/event triggers
-- 26 sender mappings
+- 26 explicit sender mappings
 
 QA remains clean:
 
@@ -126,33 +159,82 @@ QA remains clean:
 ## Sender / Activation Readiness
 
 - 14 / 26 entities currently have dedicated/non-fallback sender rows.
-- 12 / 26 are explicitly using Kollective fallback and need a dedicated brand sender before unrestricted production outbound.
-- Live audience/consent review is still required before any real outbound activation.
-- No real outbound campaign has been activated in this pass.
+- 12 / 26 are explicitly on Kollective fallback and are blocked from unrestricted external activation.
+- Help 911 already has owned domain `help911.help`, recorded address `dialhelp911@gmail.com`, and planned mailboxes `support@help911.help`, `partners@help911.help`, `claims@help911.help`; those mailboxes still require creation/connection and DNS/auth verification before switch-over.
+- The other 11 fallback entities currently have no verified dedicated sender identity in the canonical sender/domain/mailbox records.
 
-## Go-Live Readiness Control Plane
+New MCP Gateway assets:
 
-New internal MCP Gateway assets:
+- `public.crm_sender_remediation_queue`
+- `public.crm_rebuild_sender_remediation_queue()`
+- `public.v_crm_sender_activation_gates`
 
-- `public.crm_ghl_capability_audit`
-- `public.crm_entity_go_live_readiness`
-- `public.crm_probe_ghl_config_write_scopes(...)`
-- `public.crm_refresh_entity_go_live_readiness()`
+No unverified `hello@...` address is invented or treated as production-ready.
 
-Current summary:
+## Program Activation Control — Built
 
-- Core CRM ready: 26 / 26
-- Standard field sets ready: 26 / 26
-- Native AI fully mirrored: 12 / 26
-- Native pipeline-create scope ready: 0 / 26
-- Dedicated/non-fallback sender rows: 14 / 26
-- Outbound: gated
+New MCP Gateway assets:
+
+- `public.crm_program_activation_plan`
+- `public.crm_rebuild_program_activation_plan()`
+- `public.v_crm_activation_exception_dashboard`
+
+All 158 messaging programs are classified by risk and infrastructure readiness.
+
+Current split:
+
+- 82 low risk
+- 13 medium risk
+- 51 high risk
+- 12 restricted
+- 12 manual-only
+- 11 first controlled burn-in candidates after infrastructure gates clear
+
+First burn-in candidate order:
+
+1. STUSH — welcome
+2. STUSH — post-purchase
+3. STUSH — abandoned cart
+4. Good Times — reservations / experiences
+5. Good Times — user acquisition
+6. Good Times — marketing nurture
+7. MAGA Merchandise — welcome
+8. MAGA Merchandise — post-purchase
+9. MAGA Merchandise — abandoned cart
+10. Sole Exchange — impact updates
+11. Sole Exchange — volunteers
+
+All 11 are still blocked by native pipeline scope today. They are candidates for controlled internal burn-in after infrastructure remediation, **not permission to send now**.
+
+Help 911, Mind Studio, capital/investor flows and other restricted/manual programs remain human-gated regardless of infrastructure readiness.
+
+## Executive Exception Control
+
+New MCP Gateway assets:
+
+- `public.crm_execution_blockers`
+- `public.crm_activation_executive_summary()`
+- `public.v_crm_first_burnin_queue`
+
+Verified executive summary:
+
+- entities: 26
+- core CRM ready: 26
+- pipeline-scope-blocked entities: 26
+- pipeline definitions waiting: 599
+- Conversation-AI-scope-blocked entities: 14
+- native agents remaining: 95
+- sender-blocked entities: 12
+- messaging programs: 158
+- first burn-in candidates: 11
+- live autonomous programs: 0
+- real outbound activated by this control plane: false
 
 ## ClickUp Execution Binding
 
-A central Enterprise Systems → CRM/GHL/Messaging OS execution area was selected for the shared infrastructure work. The first ClickUp write attempt returned a platform `429 RATE_LIMIT_REACHED`, so no duplicate folders/tasks were created elsewhere.
+The central enterprise execution area is the correct destination for shared CRM/GHL work. The ClickUp connector returned a hard platform write-rate-limit window, so no duplicate folders/tasks were created in entity workspaces.
 
-Planned central action objects remain deliberately limited to real execution items:
+Four central execution actions remain defined:
 
 1. `GHL | Add pipelines.create to 26 PITs`
 2. `GHL | Add Conversation AI management scope to 14 PITs`
@@ -161,27 +243,20 @@ Planned central action objects remain deliberately limited to real execution ite
 
 ## Security
 
-The Supabase security advisor was run after the new control-plane migrations. No new material advisor warning was identified as being caused by the newly created service-only CRM tables/functions. Existing project-wide legacy security-advisor debt remains and should be handled as a separate hardening pass.
+Supabase security advisors were run after the new migrations. The new control tables use the internal service-only pattern: RLS enabled, public/anon/authenticated access revoked, service-role access retained, and SECURITY DEFINER functions use a fixed search path with public execution revoked.
 
-## Known Architecture Exceptions
+Advisor warnings/errors elsewhere in the legacy projects predate this work and should be handled in a separate hardening pass; no material new security blocker was introduced by these CRM migrations.
 
-Do not resolve these by merging data automatically:
+## Immediate Remaining External Actions
 
-- STUSH duplicate: canonical `2rlQ89TGyca6NZaFugHN` vs duplicate `iMnrTkqOiutj7ayQMeFT`.
-- On Call duplicate: canonical `TPGXRZ0h4ClKDbQFu5ew` vs duplicate `TPyMj9PwUj9WRkAt4v0Y`.
-- MAGA Merchandise shares `OR94o2hKNXj1tIopbmuw`; dedicated-location separation remains a deliberate architecture decision.
-- `8dQDGCzUtKCVK9laectZ` has a Supabase/HighLevel identity mismatch and must not receive Kollective traffic until ownership is resolved.
-
-## Immediate Remaining Actions
-
-1. Add `pipelines.create` to all 26 current per-location PITs.
+1. In HighLevel Private Integrations, add `pipelines.create` to all 26 existing entity PIT permission sets.
 2. Add Conversation AI agent-management permission to the 14 blocked PITs.
-3. Re-probe authorization; successful invalid-body probes should return validation errors rather than 401.
+3. Re-run safe invalid-body probes and record them through `public.crm_record_ghl_scope_probe(...)`.
 4. Mirror the remaining 95 native agents in `OFF` mode.
-5. Deploy the 599 native pipeline objects in controlled waves from the existing BOH specs.
-6. Resolve the 12 dedicated sender gaps and live audience consent/eligibility.
-7. Complete ClickUp execution bindings when write capacity is available.
-8. Run controlled Wave 1 production burn-in before any broader automation activation.
+5. Release/deploy native pipelines by wave from `public.crm_ghl_pipeline_deployment_queue` with idempotent exact-name checks.
+6. Resolve the 12 dedicated sender gates and validate real audience consent/eligibility.
+7. Complete the central ClickUp execution binding when the connector limit clears.
+8. Run only the controlled burn-in cohort before considering broader automation.
 
 ## Beverage Scope
 
@@ -191,4 +266,5 @@ Beverages remain out of this pass: BEVCO INTL., Infinity Water, Pronto, ORA, XXX
 
 - Canonical department/pipeline architecture: `ops/crm/ACTIVE_ENTITY_DEPARTMENT_CRM_MANIFEST_2026-09-03.md`
 - Messaging OS deployment/audit: `ops/crm/MESSAGING_OS_DEPLOYMENT_2026-09-03.md`
+- Post-scope deployment runbook: `ops/crm/POST_SCOPE_NATIVE_DEPLOYMENT_RUNBOOK_2026-09-03.md`
 - HighLevel permission remediation: GitHub issue #8
