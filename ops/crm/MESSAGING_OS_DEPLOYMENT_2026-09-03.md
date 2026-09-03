@@ -2,103 +2,63 @@
 
 ## Scope
 
-This deployment record covers the 26 active non-beverage entities in the current CRM/Messaging OS scope. Beverage entities remain intentionally excluded from this pass.
+This record covers the 26 active non-beverage entities in the current CRM/Messaging OS pass. The beverage portfolio remains intentionally excluded.
 
-The operating rule is strict entity isolation: every entity owns its own messaging programs, sender identity, conversation router, specialist agents, data guard, channel routes, pipeline bindings, source triggers, CRM records, and native HighLevel objects where an exact entity/location credential is available.
+The operating rule remains strict entity isolation: each entity owns its own GHL location, PIT/private integration, CRM records, fields/tags, messaging programs, sender identity, router, specialist agents, data guard, channel routes, pipeline definitions, source triggers, and execution handoffs.
 
-## Canonical Messaging OS State
+## Canonical Messaging OS — Verified
 
 - 26 active brand profiles
 - 158 entity-specific messaging programs
-- 632 preprogrammed email sequence steps (4 per program)
-- 184 active canonical conversation agents
-  - 158 specialist agents
-  - 26 entity conversation routers
-- 26 entity data guards in the managed-agent registry
-- 78 active channel routes: email + SMS + Instagram for every entity
-- 32 Wave 1 CRM pipeline-to-messaging bindings
-- 20 live source-table/event triggers
-- 26 explicit entity sender mappings
+- 632 preprogrammed email sequence steps
+- 184 canonical conversation agents
+  - 158 specialists
+  - 26 entity routers
+- 26 entity data guards
+- 78 active canonical channel routes: email + SMS + Instagram
+- 32 Wave 1 pipeline-to-messaging bindings
+- 20 live source/event triggers
+- 26 explicit sender mappings
 
-All canonical routes are `draft` gated. No canonical route is active in an autonomous mode.
+All 78 canonical routes remain `draft`. Outbound dispatch remains gated. No canonical agent/route was moved into autonomous production during this pass.
 
-## Messaging Program Model
+## GHL Infrastructure Handoff — Reconciled
 
-Every program is independently owned by one entity and one business purpose. Examples include customer/user acquisition, sponsor outreach, ambassador recruitment, service-provider recruitment, partnerships, B2B sales, vendor outreach, cart recovery, booking/intake, lifecycle nurture, reactivation, media/PR, reviews/referrals, consultation, speaking, bulk sales, distribution, community, and support.
+Claude completed the location/PIT plumbing and the result was independently reconciled against Supabase and the live HighLevel APIs.
 
-Inbound routing follows:
+### Basic location / credential / core CRM readiness
 
-`entity channel -> entity router -> intent -> entity specialist -> data guard -> CRM/pipeline action -> human escalation when required`
+- 26 / 26 active non-beverage entities have a mapped HighLevel location.
+- 26 / 26 have a matching per-location PIT in the authoritative Supabase credential path.
+- 26 / 26 PITs pass core CRM/contact/conversation authentication.
+- 26 / 26 support the custom-field and tag writes used by this CRM operating system.
 
-Outbound lifecycle follows:
+The existence of a reactivated agency credential does not change the entity operating rule: production entity automation uses the exact location/entity credential and never cross-uses credentials between brands.
 
-`source event -> entity/program classification -> consent/suppression check -> entity sender -> four-step sequence -> QA/send gate`
+### New/mapped locations from the infrastructure handoff
 
-Cross-brand routing, cross-brand sender fallback, and cross-brand conversation context are prohibited.
+- BARE — `GrP82FcIfLmZZYM4CLo1`
+- BODEGA — `MhjDux8DfQuIgZOs6bb4`
+- Brand Studio — `vNSvkuoyfU31H6L2bPcj`
+- Clean Cut Landscaping — `PNGsYICyiZcRQIfwbXVD`
+- Consultations — `UvskhCIb0elwrGX2M7qi`
+- Courses — `ZqGXVAJYb0ETyNLxykf1`
+- Frequency Productions — `Zm9L9yJnfEqIyUNlMmRh`
+- Hakuna Matata — `my3t8XWT680gA5UWpoda`
+- Halloween General — `Xl00ZeWTpZmay17o74Sw`
+- Halloween Women — `llEyWx8E3AoBgvNBThkk`
+- Halloween Sexy Women — `6WJTNsGNIcyo5HB2MoI2`
+- Mission 365 — `k0qCyTaLEJaIazRML7hs`
+- Synergy Sounds — `vHT7U9MIunt8Tl13nurI`
+- Umbrella Auto Exchange — `dBHdPA05U62NuOD4K5oo`
 
-## Verified QA Results
+## HighLevel Capability Truth — Independently Probed
 
-### Program/Event Simulation
+The infrastructure handoff validated core CRM writes, but native object-management permissions are separate. A safe invalid-body capability probe was therefore run against the actual native endpoints. The probe creates no agents or pipelines; an HTTP 422 proves endpoint authorization while HTTP 401 proves missing scope.
 
-A synthetic event was created for every ready messaging program and then removed after validation.
+### Conversation AI agent management
 
-- 158 / 158 program events routed to the correct specialist agent
-- 158 / 158 selected the correct email-sequence family
-- 158 / 158 remained in `draft_qa`
-- 0 unsafe dispatch statuses
-- 632 / 632 generated email steps remained `test_only`
-- 632 / 632 had `gate_allowed = false`
-- 0 synthetic emails were sent
-
-### DNC / Suppression Simulation
-
-One opted-out synthetic event was tested for each active entity.
-
-- 26 / 26 correctly suppressed
-- 26 / 26 marked consent blocked
-- 26 / 26 marked suppression blocked
-- 0 emails created for suppressed contacts
-
-### Route / Isolation QA
-
-- 78 / 78 required channel routes are active
-- 78 / 78 are `draft`
-- 0 active non-draft canonical routes
-- 26 / 26 entity cross-brand isolation checks passed
-- 26 / 26 objection/handoff checks passed
-- 78 / 78 routes include cross-brand escalation
-- 78 / 78 include custom-terms escalation
-- 78 / 78 include complaint escalation
-- 78 / 78 include legal/medical/emergency escalation safeguards
-- 158 / 158 programs include STOP guardrails
-- 158 / 158 programs include UNSUBSCRIBE guardrails
-
-### Agent Inventory QA
-
-- 184 expected active canonical agents
-- 184 actual active canonical agents
-- 0 unexpected active agents
-- 0 missing expected agents
-
-The QA results are persisted in `public.crm_messaging_qa_log`; synthetic dispatch/email records were removed after validation.
-
-## Legacy Messaging Cleanup
-
-The new architecture found and neutralized legacy messaging behavior that could compete with the canonical entity-owned system.
-
-- 21 legacy duplicate/unsafe conversation routes were changed to `blocked` and retained only for audit/recovery.
-- One legacy `STUSH__CONVERSATIONS` agent was disabled.
-- Previously discovered unrelated native HighLevel agents were moved to OFF mode rather than deleted, including unrelated Dr. Dorsey/Consultations/Washington Parq agents under The Kollective and a Lemon Pepper Lou's agent under The People's Dept.
-
-No legacy route is allowed to override the canonical draft-gated entity router.
-
-## Native HighLevel Conversation AI
-
-Native HighLevel Conversation AI objects are mirrored only when the exact entity/location PIT is available from the current Supabase credential stores. Supabase remains the canonical control plane.
-
-### Credential-ready and mirrored
-
-89 new native HighLevel agents are deployed in `OFF` mode across 12 entities:
+**12 / 26 entities are authorized and already mirrored natively:**
 
 | Entity | Native OFF agents |
 |---|---:|
@@ -116,71 +76,153 @@ Native HighLevel Conversation AI objects are mirrored only when the exact entity
 | The Kollective | 7 |
 | **Total** | **89** |
 
-All returned HighLevel native agent IDs are mirrored back into Supabase. Native agents remain `OFF`; they are not permitted to answer autonomously yet.
+All 89 native agents remain `OFF` and their native IDs are mirrored into Supabase.
 
-### HighLevel location exists but exact current PIT is not available in the active credential mirrors
+**14 / 26 entities have valid PITs/core CRM access but are missing Conversation AI agent-management permission:**
 
-These locations are real/mapped, but no exact current per-location PIT was found across the active/current Supabase GHL credential stores. Legacy/deactivated credentials are not reused across entities or locations.
-
-- BARE — `GrP82FcIfLmZZYM4CLo1`
-- Clean Cut — `PNGsYICyiZcRQIfwbXVD`
-- Frequency Productions — `Zm9L9yJnfEqIyUNlMmRh`
-- Hakuna Matata — `my3t8XWT680gA5UWpoda`
-- Halloween General — `Xl00ZeWTpZmay17o74Sw`
-- Mission 365 — `k0qCyTaLEJaIazRML7hs`
-- Synergy Sounds — `vHT7U9MIunt8Tl13nurI`
-- Umbrella Auto Exchange — `dBHdPA05U62NuOD4K5oo`
-
-Mission 365's own Supabase project vault was also checked and does not currently contain a HighLevel PIT.
-
-### No native location mapping yet
-
-- Bodega
+- BARE
+- BODEGA
 - Brand Studio
+- Clean Cut Landscaping
 - Consultations
 - Courses
+- Frequency Productions
+- Hakuna Matata
+- Halloween General
 - Halloween Women
 - Halloween Sexy Women
+- Mission 365
+- Synergy Sounds
+- Umbrella Auto Exchange
 
-These entities remain fully represented in the Supabase Messaging OS and are not merged into another entity/location for convenience.
+Their 95 canonical native-agent rows are explicitly marked `scope_blocked`, not pending. Required remediation: add the Conversation AI management/write permission used by `POST /conversation-ai/agents` to the existing Private Integration; do not rotate or cross-use tokens.
 
-## HighLevel Credential Architecture — Corrected
+### Native pipeline creation
 
-The prior agency-token assumption is retired.
+**0 / 26 current PITs are authorized for native pipeline creation.**
 
-**Actual architecture:** exact per-location HighLevel PIT credentials stored in Supabase and used only for their matching GHL location/entity.
+Every tested `POST /opportunities/pipelines` returned HTTP 401 with the current PITs. All 599 active pipeline definitions in KOLLECTIVE BOH are therefore marked:
 
-Rules:
+`blocked_pipeline_create_scope`
 
-1. No agency-wide credential is required or assumed.
-2. Never cross-use one entity/location PIT for another entity.
-3. Never reactivate legacy credentials merely because their name resembles a current brand.
-4. Legacy GHL credentials deactivated on 2026-07-28 remain deactivated unless separately validated against the exact current location.
-5. A location becomes native-ready only when its exact PIT is present in the current credential path.
-6. Once ready, run `public.crm_mirror_ghl_brand_agents(brand_key)` to create entity-owned native agents in OFF mode and store returned IDs in Supabase.
+Required remediation: add `pipelines.create` to each of the 26 existing entity PIT permission sets. The canonical pipeline/stage/workflow/SLA/handoff/KPI specifications remain complete in Supabase and do not need to be redesigned.
 
-## Security / Data Handling
+## All-Entity HighLevel CRM Configuration — Completed
 
-All `public.crm_messaging_%` control tables have RLS enabled and are operated as internal/service control tables. Messaging dispatch records store routing/contact metadata rather than duplicating full sensitive intake records.
+A generalized 26-entity configuration layer was added in the MCP Gateway:
 
-Help 911 and Mind Studio retain stricter human-gating and escalation behavior for legal, medical, clinical, emergency, or other high-risk conversations.
+- `public.crm_ghl_field_map`
+- `public.crm_ghl_tag_map`
+- `public.crm_provision_ghl_fields_tags(brand_key)`
 
-## Activation Policy
+Verified native configuration result:
 
-No entity's messaging system moves from draft/OFF into live autonomous operation until all of the following are verified for that entity:
+- 26 / 26 entity locations provisioned/reconciled
+- 260 / 260 required opportunity CRM fields ready
+- 288 / 288 entity/core/program tags ready
+- 0 field provisioning errors
+- 0 tag provisioning errors
 
-- correct sender/reply-to identity
-- consent and suppression behavior
-- cross-brand isolation
-- program-specific conversation simulations
-- objection and escalation behavior
-- pipeline/source trigger correctness
-- human owner/escalation route
-- native GHL mapping and exact PIT where native Conversation AI is used
-- approval by the responsible operating owner/PM
+Each entity has the standard opportunity control fields:
 
-Low-risk programs may later move from OFF/draft to suggestive or controlled automation after QA. High-risk, contractual, legal, medical, clinical, capital, complaint, refund, custom-terms, and unknown-fact conversations remain human-gated.
+- KHG CRM Department
+- KHG CRM Pipeline
+- KHG CRM Stage
+- KHG CRM Owner Role
+- KHG CRM PM Role
+- KHG CRM Next Action
+- KHG CRM Next Action Date
+- KHG CRM SLA Due
+- KHG CRM Source Record ID
+- KHG CRM Sync Status
+
+Core/program tags are entity-local and include `crm_live_sync`, `crm_needs_owner`, `crm_sla_active`, `crm_messaging_ready`, `crm_human_escalation`, plus one `crm_program_*` tag for each active entity messaging program.
+
+## Department / Pipeline Operating Layer
+
+KOLLECTIVE BOH currently contains:
+
+- 599 active pipeline definitions
+- 26 active entities
+- 14 departments represented across the active manifest
+- 599 / 599 pipeline definitions have owner-role coverage
+- 599 / 599 have PM-role coverage
+
+The native GHL pipeline objects are the part blocked by `pipelines.create`; their operating specifications are not blocked.
+
+## Sender Readiness
+
+- 26 / 26 entities have an explicit sender mapping.
+- 14 / 26 currently use a dedicated/non-fallback brand sender row.
+- 12 / 26 remain explicitly marked Kollective fallback and need a dedicated brand sender before unrestricted production outbound.
+
+Fallback entities:
+
+- BARE
+- BODEGA
+- Brand Studio
+- Clean Cut Landscaping
+- Consultations
+- Courses
+- Frequency Productions
+- Halloween General
+- Halloween Women
+- Halloween Sexy Women
+- The Mind Studio
+- Synergy Sounds
+
+No entity silently inherits Dr. Dorsey's sender identity.
+
+## QA / Safety State
+
+Existing full messaging QA remains valid:
+
+- 158 / 158 synthetic program events routed correctly
+- 632 / 632 generated email steps remained test-only/gated
+- 26 / 26 DNC simulations suppressed with zero email output
+- 78 / 78 canonical routes active in draft mode
+- 0 active non-draft canonical routes
+- 26 / 26 cross-brand isolation tests passed
+- 26 / 26 objection/handoff tests passed
+- 184 / 184 canonical agents accounted for
+
+High-risk legal/medical/clinical/capital/custom-terms/complaint scenarios remain human-gated.
+
+## New Control-Plane Assets Added During Takeover
+
+MCP Gateway migrations / assets:
+
+- `crm_native_mirror_accept_pit_validated`
+- `crm_ghl_native_scope_truth_audit`
+- `crm_all_entity_ghl_fields_tags_registry`
+- `crm_entity_go_live_readiness_registry`
+- `public.crm_ghl_capability_audit`
+- `public.crm_entity_go_live_readiness`
+- `public.crm_probe_ghl_config_write_scopes(...)`
+- `public.crm_refresh_entity_go_live_readiness()`
+
+All new control-plane tables have RLS enabled and are service-role-only. New SECURITY DEFINER functions use a fixed search path and have execute revoked from public/anon/authenticated.
+
+The Supabase security advisor found no new material warning attributable to these new tables/functions. The broader legacy project still contains existing advisor debt that should be handled as a separate security-hardening pass.
+
+## Current Go-Live Gates
+
+Core CRM configuration is ready for 26 / 26 entities. Live activation remains gated by the following real dependencies:
+
+1. Add `pipelines.create` to all 26 entity PIT permission sets.
+2. Add Conversation AI agent-management permission to the 14 newly provisioned/mapped PITs listed above.
+3. Create/verify dedicated sender identities for the 12 entities currently on explicit Kollective fallback.
+4. Review live audiences/contact consent before any real outbound campaign activation.
+5. Complete ClickUp execution binding when ClickUp write rate limiting clears.
+6. After scopes are fixed, rerun capability probes, mirror the 95 blocked native agents in `OFF` mode, then deploy native pipeline objects in controlled waves.
+
+## Known Architecture Exceptions Requiring Separate Decision
+
+- STUSH duplicate: canonical `2rlQ89TGyca6NZaFugHN`; duplicate `iMnrTkqOiutj7ayQMeFT` remains unresolved. The duplicate reportedly holds a large mixed cross-brand Houston contact population; do not merge automatically.
+- On Call duplicate: canonical `TPGXRZ0h4ClKDbQFu5ew`; duplicate `TPyMj9PwUj9WRkAt4v0Y` remains unresolved.
+- MAGA Merchandise currently shares main MAGA location `OR94o2hKNXj1tIopbmuw`; dedicated-location separation remains an explicit architecture decision.
+- Location `8dQDGCzUtKCVK9laectZ` has a Supabase/HighLevel identity mismatch and must not receive Kollective traffic until ownership is resolved.
 
 ## Beverage Scope
 
-The following are explicitly not part of this 26-entity deployment pass: BEVCO INTL., Infinity Water, Pronto, ORA, XXX Vodka, Privè Vodka, Noir, Otini, Tempo, Casa Cantina, and Island Water.
+Not included in this deployment pass: BEVCO INTL., Infinity Water, Pronto, ORA, XXX Vodka, Privè Vodka, Noir, Otini, Tempo, Casa Cantina, and Island Water.
