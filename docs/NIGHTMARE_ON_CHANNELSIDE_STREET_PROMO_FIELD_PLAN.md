@@ -2,11 +2,14 @@
 **Event:** Nightmare on Channelside — 21 Savage & Friends  
 **Market:** Tampa, Florida  
 **Event date:** October 31, 2026  
-**Version:** 2026-09-19 / Field Anchors v1  
+**Version:** 2026-09-19 / Field Anchors v2 — Atlanta nightlife corrected  
 **System of record:** Supabase `public.noc_daily_schedule` + `public.noc_city_plan`
 
 ## Objective
 Deploy flyers, posters, QR cards, and street teams only where the target audience is already concentrated. Fixed-date crowd anchors take priority over random street canvassing.
+
+## Data-quality rule
+A nightlife venue does not become a field target from a map listing alone. It must have current operating evidence and/or current dated events. Closed, stale, rebranded, or uncertain nightlife listings are excluded until re-verified.
 
 ## Default field model
 - **Tampa Core:** permanent local coverage; 3–4 nightlife activations weekly, daily final 14 days.
@@ -17,9 +20,9 @@ Deploy flyers, posters, QR cards, and street teams only where the target audienc
 - **Flyer Route:** public approaches and exits; do not enter private property or ticketed venues without approval.
 
 ## Universal timing rules
-1. **Nightlife:** line/entry 9:30–11:45 PM; second pass 1:45–2:45 AM at let-out.
+1. **Nightlife:** line/entry 9:30 PM–12:30 AM; second pass 2:00–3:15 AM at let-out.
 2. **Football/homecoming:** 3–3.5 hours before kickoff through 15 minutes before kickoff; second pass 30–60 minutes after game.
-3. **Festival/street party:** first 90 minutes + final 90 minutes. Avoid wasting inventory during the middle when people are settled into the event.
+3. **Festival/street party:** first 90 minutes + final 90 minutes.
 4. **Poster drops:** Thu/Fri 3:30–7:00 PM when managers are on-site but before peak nightlife traffic.
 5. **Campus:** 11 AM–2 PM on approved public/partner areas; campus property requires permission.
 6. **Proof:** timestamp, location, inventory issued/used, 3–5 photos, QR visible, venue permission where applicable.
@@ -44,7 +47,7 @@ Deploy flyers, posters, QR cards, and street teams only where the target audienc
 
 ### Timing
 - USF games: **3 hours pre-kick through 1 hour postgame**, then Ybor.
-- Ybor Fri/Sat: **9:30–11:45 PM + 1:45–3:00 AM**.
+- Ybor Fri/Sat: **9:30 PM–12:30 AM + 2:00–3:15 AM**.
 - Poster route: **Thu/Fri 4–7 PM**.
 
 ## ORLANDO — UCF + NIGHTLIFE
@@ -64,25 +67,46 @@ Deploy flyers, posters, QR cards, and street teams only where the target audienc
 - Oct 24: **3.5 hours before kickoff through 45 min after**; **9 PM–2 AM** University Blvd nightlife.
 - Oct 30: **4:30–7:20 PM** only; then return/hand-off toward Tampa.
 
-## ATLANTA — AUC HOMECOMING + CULTURE NIGHTLIFE
-### Locations
+## ATLANTA — CURRENT NIGHTLIFE + AUC/HOMECOMING
+
+### Priority nightlife targets
+1. **REVEL ATLANTA — 1778 Ellsworth Industrial Blvd NW, Atlanta, GA 30318**
+   - Current recurring programming includes **R&B Rewind Thursdays**, **Fantasy Fridays**, and **The Greatest Show** Saturdays.
+   - Use as a primary West Midtown nighttime intercept.
+   - Promo windows: **9:30 PM–12:30 AM arrivals** and **2:00–3:15 AM let-out/ride-share traffic**.
+   - Approved inside placements/partner activations can begin before doors if venue/promoter permission is secured.
+
+2. **OPIUM ATLANTA — 990 Brady Ave NW, Atlanta, GA 30318**
+   - Current recurring **#1 Party in the City / Opium Saturdays** programming runs **10 PM–3 AM**.
+   - Current dated event evidence also confirms the venue is active at 990 Brady Ave.
+   - Promo windows: **9:15 PM–12:30 AM arrivals** and **2:00–3:15 AM let-out/ride-share traffic**.
+   - Because this is an especially relevant hip-hop/R&B nightlife crowd, use city-coded flyers/QR cards and stronger ticket-conversion CTAs here.
+
+### Current event overlays
+- **Sep 25:** Opium — 80s & 90s Hip-Hop/R&B event, **9 PM–3 AM**.
+- **Oct 9–10:** AUC/SpelHouse Homecoming daytime plus Revel/Opium at night.
+- **Oct 10:** Morehouse Homecoming daytime; Revel + Opium Saturday-night deployment.
+- **Oct 16–17:** Clark Atlanta/AUC homecoming activity plus Revel/Opium nighttime deployment.
+- **Oct 24:** optional local Atlanta activation only; do not pull Orlando/Tallahassee traveling crews.
+- **Oct 30:** current Atlanta Halloween/day-party activity can be covered only by local ATL personnel because Tampa event operations take priority.
+
+### AUC / homecoming locations
 - Atlanta University Center public/partner perimeter.
 - Spelman / Morehouse homecoming approaches.
 - Clark Atlanta homecoming approaches.
-- Sweet Auburn / Auburn Avenue nightlife.
-- Royal Peacock Lounge — 186 1/2 Auburn Ave NE.
+- Verified homecoming parties and promoter events with current 2026 ticket/event pages.
 
-### Fixed anchors
-- **Oct 8–11:** Spelman Homecoming activities.
-- **Oct 9:** Spelman Market Friday.
-- **Oct 10:** Morehouse Homecoming.
-- **Oct 17:** Clark Atlanta Homecoming parade, tailgate, game.
-- ONE Musicfest is **not operating in 2026**; do not schedule a crew around it.
+### Explicit exclusions
+- **Do not route street teams to Royal Peacock as a default target.**
+- **Do not route to Compound:** current nightlife sources list it as closed/permanently closed.
+- **Do not route to Elleven45:** it was permanently closed by court order.
+- Do not use old “best Atlanta clubs” articles as an execution source.
 
-### Timing
-- Oct 9: **11:30 AM–5 PM** AUC public/partner zones; **9:30 PM–2 AM** nightlife.
-- Oct 10: **9:30 AM–2:30 PM** homecoming/tailgate perimeter; **10 PM–3 AM** nightlife.
-- Oct 17: **8:30 AM–2 PM** parade/tailgate/game ingress; **9 PM–1 AM** homecoming party zones.
+### Atlanta timing
+- **Homecoming daytime:** 10 AM–4:30 PM depending on event.
+- **Revel/Opium arrival traffic:** **9:30 PM–12:30 AM**.
+- **Revel/Opium let-out:** **2:00–3:15 AM**.
+- **Poster/partner placement:** **4–7 PM** with venue/business approval.
 
 ## JACKSONVILLE — DOWNTOWN + EVENT ANCHORS
 ### Locations
@@ -193,16 +217,17 @@ Selective local activation **3:30–8 PM**, then adult nightlife/Street Party wi
 # EXECUTION CALENDAR — CORE DECISIONS
 | Date | Core Traveling Priority | Local/Secondary Coverage |
 |---|---|---|
+| Sep 25 | **Atlanta Opium** | Tampa local |
 | Sep 26 | Orlando UCF | Tallahassee FAMU + Tampa Ybor |
 | Oct 2 | Jacksonville / local route day | Lakeland + Fort Myers local |
 | Oct 3 | Jacksonville Decca + Tampa USF/Ybor | — |
-| Oct 9 | Atlanta AUC | Gainesville local |
-| Oct 10 | Atlanta Morehouse | Miami Carnival local + Tampa local |
+| Oct 9 | **Atlanta AUC + Revel/Opium** | Gainesville local |
+| Oct 10 | **Atlanta Morehouse + Revel/Opium** | Miami Carnival local + Tampa local |
 | Oct 15 | Jacksonville Southbank | Tampa local |
-| Oct 16–17 | Atlanta CAU + Tampa USF | Miami III Points + Fort Myers local |
+| Oct 16–17 | **Atlanta CAU + Revel/Opium** + Tampa USF | Miami III Points + Fort Myers local |
 | Oct 23 | Tallahassee homecoming eve | South Georgia local |
-| Oct 24 | **Crew A Orlando / Crew B Tallahassee** | Tampa permanent + South GA/JAX/Sarasota local |
-| Oct 30 | Tampa core | Orlando local 4:30–7:20 PM only |
+| Oct 24 | **Crew A Orlando / Crew B Tallahassee** | Tampa permanent + South GA/JAX/Sarasota/ATL local |
+| Oct 30 | Tampa core | Orlando + Atlanta local only |
 | Oct 31 | **TAMPA ONLY** | No feeder travel |
 
 # FIELD MATERIAL MIX
@@ -233,6 +258,9 @@ Every activation closes with:
 - Replenish only routes with proof of traffic or scans.
 
 # SOURCE CHECKS
+- Revel Atlanta official events: https://clubrevelatlanta.com/events/
+- Opium Atlanta official events: https://opiumatl.com/events/
+- Opium Atlanta current Eventbrite listings: https://www.eventbrite.com/cc/opium-atlanta-events-2361509/
 - USF Football: https://gousfbulls.com/sports/football/schedule/text
 - UCF Football: https://ucfknights.com/sports/football/schedule
 - Spelman Homecoming: https://www.spelman.edu/alumnae/homecoming.html
@@ -246,7 +274,6 @@ Every activation closes with:
 - Fort Valley State Homecoming: https://fvsu.edu/about-fvsu/fvsu-homecoming
 - Downtown Lakeland: https://downtownlkld.com/firstfriday/
 - Sarasota County events: https://www.visitsarasota.com/events-festivals/
-- ONE Musicfest 2026 hiatus verified via Atlanta Journal-Constitution, July 31, 2026.
 
 ## Governance
-This is a living field plan. Exact kickoff times, event permits, and event locations marked TBA must be re-checked 72 hours before deployment. Supabase remains the executable daily calendar; this document is the field-team reference.
+This is a living field plan. Exact kickoff times, event permits, and event locations marked TBA must be re-checked 72 hours before deployment. Nightlife targets must also be checked against current dated event activity before dispatch. Supabase remains the executable daily calendar; this document is the field-team reference.
