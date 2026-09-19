@@ -26,7 +26,6 @@ These are currently active/verified places worth considering for flyers, posters
 - Status Night Club Tampa — 4235 N Armenia Ave — dedicated R&B and nightlife events
 - Santos Kitchen + Lounge — 101 N Franklin St — classic R&B/hip-hop Tuesdays; upscale downtown weekend lounge
 - Venue 2106 — 2106 W Main St — grown-folks lounge, R&B/live music
-- Fuego VIP Lounge — 2098 W Busch Blvd — late-night hip-hop lounge relationship target
 - Shuffle — 2612 N Tampa St — hip-hop community / promoter / artist networking
 - New World Tampa — 810 E Skagway Ave — current hip-hop/R&B showcases and local-artist ecosystem
 - Echo Downtown — 914 N Franklin St — college nightlife; use selectively on strong event nights
