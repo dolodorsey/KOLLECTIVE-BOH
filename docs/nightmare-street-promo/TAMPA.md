@@ -4,7 +4,7 @@
 **Event:** Nightmare on Channelside — October 31, 2026  
 **Version:** Tampa Deep Dive v4 — September 19, 2026  
 **Supabase:** public.noc_field_targets + public.noc_daily_schedule  
-**Status:** 36 dated Tampa targets / 17 Priority-1 targets + 27-place Tampa master list
+**Status:** 36 dated Tampa targets / 17 Priority-1 targets + 33-place Tampa master list
 
 ## Rule
 Tampa street promo is event-led. A crew is not dispatched because “Ybor is busy.” Every shift requires a current named event, verified active venue, exact time window, or approved partner route.
@@ -14,15 +14,42 @@ Tampa street promo is event-led. A crew is not dispatched because “Ybor is bus
 
 These are currently active/verified places worth considering for flyers, posters, QR cards, promoter relationships, ambassador recruiting, or event-night intercepts. **This list is not a ranking and does not mean every place must be hit every week.** The Tampa team decides frequency based on crowd, permission, scans, conversions, and relationship value.
 
-### Nightlife / Party / Lounge
+### Top Clubs / Lounges — Include In Team Review
+- Blue Mirage Tampa — 5305 N Armenia Ave — Saturday Hip-Hop & R&B / grown urban crowd
+- Fuego VIP Lounge — 2098 W Busch Blvd — Hip-Hop, R&B, Afrobeats, hookah, VIP
+- District 8 Night Club — 1509 E 8th Ave — live hip-hop / rotating R&B and special events
+- Club Prana — 1619 E 7th Ave — five floors; Hip-Hop, Caribbean Reggae, Latin, Afro Beats, open format
+- 1920 Ybor — 1920 E 7th Ave — R&B, hip-hop, culture and day-party programming
+- 7th + Grove — 1930 E 7th Ave — Black-owned restaurant/lounge, brunch + nightlife
+- Tangra Nightclub — 1611 E 7th Ave — multi-level club, hip-hop/Latin/open format
+- The Ritz Ybor — 1503 E 7th Ave — large concert/nightlife venue; use on audience-fit nights
+- Status Night Club Tampa — 4235 N Armenia Ave — dedicated R&B and nightlife events
+- Santos Kitchen + Lounge — 101 N Franklin St — classic R&B/hip-hop Tuesdays; upscale downtown weekend lounge
+- Venue 2106 — 2106 W Main St — grown-folks lounge, R&B/live music
+- Fuego VIP Lounge — 2098 W Busch Blvd — late-night hip-hop lounge relationship target
+- Shuffle — 2612 N Tampa St — hip-hop community / promoter / artist networking
+- New World Tampa — 810 E Skagway Ave — current hip-hop/R&B showcases and local-artist ecosystem
+- Echo Downtown — 914 N Franklin St — college nightlife; use selectively on strong event nights
+- Findy Cigar Company & Hookah Lounge — 5223 S MacDill Ave — lounge/relationship target
+
+### Team-use note for clubs/lounges
+This is deliberately a broad operating list, not a mandatory ranking. The Tampa field lead can decide which clubs deserve repeat visits, promoter relationships, approved interior placement, arrival/let-out teams, or no further spend. Current dated events and actual scan/sales results control frequency.
+
+### Nightlife / Party / Lounge — Full Master List
+- Blue Mirage Tampa — 5305 N Armenia Ave
+- Fuego VIP Lounge — 2098 W Busch Blvd
 - District 8 Night Club — 1509 E 8th Ave
+- Club Prana — 1619 E 7th Ave
 - 1920 Ybor — 1920 E 7th Ave
 - 7th + Grove — 1930 E 7th Ave
 - Tangra Nightclub — 1611 E 7th Ave
 - The Ritz Ybor — 1503 E 7th Ave
 - Status Night Club Tampa — 4235 N Armenia Ave
-- Shuffle — 2612 N Tampa St
+- Santos Kitchen + Lounge — 101 N Franklin St
 - Venue 2106 — 2106 W Main St
+- Shuffle — 2612 N Tampa St
+- New World Tampa — 810 E Skagway Ave
+- Echo Downtown — 914 N Franklin St
 - Findy Cigar Company & Hookah Lounge — 5223 S MacDill Ave
 
 ### Major Concert / Sports / Campus Traffic
