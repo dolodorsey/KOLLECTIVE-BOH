@@ -4,10 +4,60 @@
 **Event:** Nightmare on Channelside — October 31, 2026  
 **Version:** Tampa Deep Dive v4 — September 19, 2026  
 **Supabase:** public.noc_field_targets + public.noc_daily_schedule  
-**Status:** 36 verified Tampa targets / 17 Priority-1 targets
+**Status:** 36 dated Tampa targets / 17 Priority-1 targets + 27-place Tampa master list
 
 ## Rule
 Tampa street promo is event-led. A crew is not dispatched because “Ybor is busy.” Every shift requires a current named event, verified active venue, exact time window, or approved partner route.
+
+
+## TAMPA MASTER PLACE LIST — TEAM DECIDES FREQUENCY
+
+These are currently active/verified places worth considering for flyers, posters, QR cards, promoter relationships, ambassador recruiting, or event-night intercepts. **This list is not a ranking and does not mean every place must be hit every week.** The Tampa team decides frequency based on crowd, permission, scans, conversions, and relationship value.
+
+### Nightlife / Party / Lounge
+- District 8 Night Club — 1509 E 8th Ave
+- 1920 Ybor — 1920 E 7th Ave
+- 7th + Grove — 1930 E 7th Ave
+- Tangra Nightclub — 1611 E 7th Ave
+- The Ritz Ybor — 1503 E 7th Ave
+- Status Night Club Tampa — 4235 N Armenia Ave
+- Shuffle — 2612 N Tampa St
+- Venue 2106 — 2106 W Main St
+- Findy Cigar Company & Hookah Lounge — 5223 S MacDill Ave
+
+### Major Concert / Sports / Campus Traffic
+- Yuengling Center — 12499 USF Bull Run Dr
+- MIDFLORIDA Credit Union Amphitheatre — 4802 US-301
+- Raymond James Stadium — 4201 N Dale Mabry Hwy
+- USF Marshall Student Center / MSC Plaza — 4103 Cedar Circle
+
+### Streetwear / Sneakers / Fashion
+- Icon Clothing Shop — 1809 E Fowler Ave
+- Social Status Tampa — 1505 W Swann Ave Suite 2
+- THE LAB — 4037 Henderson Blvd
+- International Plaza and Bay Street — 2223 N Westshore Blvd
+- University Mall — 2200 E Fowler Ave
+- WestShore Plaza — 250 Westshore Plaza
+
+### Barbers / Beauty / Community Touchpoints
+- Kings Kare Tampa Barber — 12421 N Florida Ave Suite 101A
+- Clutch Cutz — N Florida — 9917 N Florida Ave
+- Clutch Cutz — East Tampa — 5101 E Busch Blvd
+- Clutch Cutz — USF — 5405 E Fowler Ave
+- Razorz Edge Barbershop — 3695 W Waters Ave
+- The U Barbershop — 2369 E Fowler Ave
+- Beauty Depot — Fowler — 1401 E Fowler Ave
+- Elom African Braids — 3607 E Hillsborough Ave
+
+### How the team should use the master list
+- **Nightlife:** event night, arrival line, let-out, promoter relationship.
+- **Retail/streetwear:** approved counter cards, posters, staff promo codes, QR stands.
+- **Barbers/beauty:** referral codes, posters, QR cards, ambassador recruiting.
+- **Campus:** only approved/authorized promotion or public perimeter activity.
+- **Arenas/stadiums:** event-led public/approved ingress and egress.
+- **Malls:** tenant-by-tenant relationships; do not assume general solicitation is permitted.
+- **Any place that produces scans/sales:** replenish.
+- **Any place that does not:** hold or stop.
 
 ## Immediate
 ### Sep 19 — Ryan Castro
