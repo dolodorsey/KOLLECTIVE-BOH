@@ -1,279 +1,422 @@
-# NIGHTMARE ON CHANNELSIDE — STREET PROMO FIELD PLAN
+# NIGHTMARE ON CHANNELSIDE — VERIFIED STREET PROMO FIELD PLAN V3
+
 **Event:** Nightmare on Channelside — 21 Savage & Friends  
-**Market:** Tampa, Florida  
 **Event date:** October 31, 2026  
-**Version:** 2026-09-19 / Field Anchors v2 — Atlanta nightlife corrected  
-**System of record:** Supabase `public.noc_daily_schedule` + `public.noc_city_plan`
+**Updated:** September 19, 2026  
+**Supabase execution layer:** `public.noc_field_targets` + `public.noc_daily_schedule`  
+**Rule:** Current dated event / current official programming required. No legacy nightlife lists.
 
-## Objective
-Deploy flyers, posters, QR cards, and street teams only where the target audience is already concentrated. Fixed-date crowd anchors take priority over random street canvassing.
-
-## Data-quality rule
-A nightlife venue does not become a field target from a map listing alone. It must have current operating evidence and/or current dated events. Closed, stale, rebranded, or uncertain nightlife listings are excluded until re-verified.
-
-## Default field model
-- **Tampa Core:** permanent local coverage; 3–4 nightlife activations weekly, daily final 14 days.
-- **Travel Crew A:** Tier 1 feeder-city events.
-- **Travel Crew B:** used on collision weekends, especially October 24.
-- **Local Captains:** Tier 2 markets and overflow Tier 1 coverage.
-- **Poster Route:** partner retail, barbers, salons, sneaker/streetwear stores, restaurants, hookah/nightlife businesses; permission required.
-- **Flyer Route:** public approaches and exits; do not enter private property or ticketed venues without approval.
-
-## Universal timing rules
-1. **Nightlife:** line/entry 9:30 PM–12:30 AM; second pass 2:00–3:15 AM at let-out.
-2. **Football/homecoming:** 3–3.5 hours before kickoff through 15 minutes before kickoff; second pass 30–60 minutes after game.
-3. **Festival/street party:** first 90 minutes + final 90 minutes.
-4. **Poster drops:** Thu/Fri 3:30–7:00 PM when managers are on-site but before peak nightlife traffic.
-5. **Campus:** 11 AM–2 PM on approved public/partner areas; campus property requires permission.
-6. **Proof:** timestamp, location, inventory issued/used, 3–5 photos, QR visible, venue permission where applicable.
+## NON-NEGOTIABLE FIELD RULE
+A venue is not a deployment target because it is famous, historically relevant, or appears on Google/Yelp. It must have current 2026 operating evidence or a current dated event. Generic corridors are backup context only; named current events drive crew deployment.
 
 ---
 
-# TIER 1 PHYSICAL MARKETS
+# 1. TAMPA BAY — CORE MARKET / TRAVEL CREW NOT REQUIRED
 
-## TAMPA BAY — LOCAL SATURATION
-### Evergreen nightlife corridor
-- Ybor City 7th/8th Avenue.
-- District 8 Night Club — 1509 E 8th Ave.
-- Club Prana — 1619 E 7th Ave.
-- The Ritz Ybor — 1503 E 7th Ave.
-- Add approved partner bars, restaurants, hookah lounges, barbers, salons, sneaker/streetwear stores.
+## PRIORITY 1
+### SEP 24 — Wu-Tang Clan + Bone Thugs-N-Harmony
+**Location:** MIDFLORIDA Credit Union Amphitheatre  
+**Audience:** Direct hip-hop concert audience  
+**Deploy:** 5:30–7:25 PM public/approved approaches; 10:15–11:45 PM egress  
+**Crew:** Tampa Core  
+**Material:** 750 flyers / 200 QR cards / no unauthorized venue posting
 
-### Fixed anchors
-- **Oct 3:** USF vs Temple at Raymond James Stadium — kickoff TBA.
-- **Oct 17:** USF vs Kent State at Raymond James Stadium — kickoff TBA.
-- **Oct 24 onward:** daily local saturation.
-- **Oct 31:** event day; no core feeder-city travel.
+### SEP 25 — 7th+Grown
+**Location:** 7th + Grove, Ybor  
+**Event:** Current Friday 10 PM–3 AM programming  
+**Deploy:** 4–7 PM partner/poster placements; 9:30 PM–12 AM arrivals; 2–3:15 AM let-out  
+**Crew:** Tampa Core
 
-### Timing
-- USF games: **3 hours pre-kick through 1 hour postgame**, then Ybor.
-- Ybor Fri/Sat: **9:30 PM–12:30 AM + 2:00–3:15 AM**.
-- Poster route: **Thu/Fri 4–7 PM**.
+### SEP 26 — Throwback Therapy feat. Hurricane Chris
+**Location:** 1920 Ybor, 1920 E 7th Ave  
+**Event:** 7 PM–1 AM; 90s/2000s R&B + Hip-Hop  
+**Deploy:** 6:30–9 PM arrivals; 11:45 PM–1:15 AM exit  
+**Crew:** Tampa Core  
+**Why:** One of the strongest audience-match parties currently scheduled in Tampa.
 
-## ORLANDO — UCF + NIGHTLIFE
-### Locations
-- Acrisure Bounce House / UCF public approaches.
-- University Boulevard corridor.
-- Knight Library — 11448 University Blvd.
-- Downtown Orlando / Wall Street Plaza — 26 Wall St.
+## RECURRING
+### District 8 Night Club
+**Address:** 1509 E 8th Ave  
+**Use:** Only on currently confirmed hip-hop/R&B nights.  
+**Deploy:** 9:30 PM–12:15 AM arrivals; 2–3:15 AM let-out.
 
-### Fixed anchors
-- **Sep 26:** UCF vs TCU — 3:30 PM.
-- **Oct 24:** UCF Homecoming vs BYU — kickoff TBA.
-- **Oct 30:** Space Game vs Baylor — 7:30 PM. Local Orlando crew only; core crew stays Tampa.
-
-### Timing
-- Sep 26: **12:00–3:15 PM** game ingress; **9 PM–2 AM** UCF nightlife.
-- Oct 24: **3.5 hours before kickoff through 45 min after**; **9 PM–2 AM** University Blvd nightlife.
-- Oct 30: **4:30–7:20 PM** only; then return/hand-off toward Tampa.
-
-## ATLANTA — CURRENT NIGHTLIFE + AUC/HOMECOMING
-
-### Priority nightlife targets
-1. **REVEL ATLANTA — 1778 Ellsworth Industrial Blvd NW, Atlanta, GA 30318**
-   - Current recurring programming includes **R&B Rewind Thursdays**, **Fantasy Fridays**, and **The Greatest Show** Saturdays.
-   - Use as a primary West Midtown nighttime intercept.
-   - Promo windows: **9:30 PM–12:30 AM arrivals** and **2:00–3:15 AM let-out/ride-share traffic**.
-   - Approved inside placements/partner activations can begin before doors if venue/promoter permission is secured.
-
-2. **OPIUM ATLANTA — 990 Brady Ave NW, Atlanta, GA 30318**
-   - Current recurring **#1 Party in the City / Opium Saturdays** programming runs **10 PM–3 AM**.
-   - Current dated event evidence also confirms the venue is active at 990 Brady Ave.
-   - Promo windows: **9:15 PM–12:30 AM arrivals** and **2:00–3:15 AM let-out/ride-share traffic**.
-   - Because this is an especially relevant hip-hop/R&B nightlife crowd, use city-coded flyers/QR cards and stronger ticket-conversion CTAs here.
-
-### Current event overlays
-- **Sep 25:** Opium — 80s & 90s Hip-Hop/R&B event, **9 PM–3 AM**.
-- **Oct 9–10:** AUC/SpelHouse Homecoming daytime plus Revel/Opium at night.
-- **Oct 10:** Morehouse Homecoming daytime; Revel + Opium Saturday-night deployment.
-- **Oct 16–17:** Clark Atlanta/AUC homecoming activity plus Revel/Opium nighttime deployment.
-- **Oct 24:** optional local Atlanta activation only; do not pull Orlando/Tallahassee traveling crews.
-- **Oct 30:** current Atlanta Halloween/day-party activity can be covered only by local ATL personnel because Tampa event operations take priority.
-
-### AUC / homecoming locations
-- Atlanta University Center public/partner perimeter.
-- Spelman / Morehouse homecoming approaches.
-- Clark Atlanta homecoming approaches.
-- Verified homecoming parties and promoter events with current 2026 ticket/event pages.
-
-### Explicit exclusions
-- **Do not route street teams to Royal Peacock as a default target.**
-- **Do not route to Compound:** current nightlife sources list it as closed/permanently closed.
-- **Do not route to Elleven45:** it was permanently closed by court order.
-- Do not use old “best Atlanta clubs” articles as an execution source.
-
-### Atlanta timing
-- **Homecoming daytime:** 10 AM–4:30 PM depending on event.
-- **Revel/Opium arrival traffic:** **9:30 PM–12:30 AM**.
-- **Revel/Opium let-out:** **2:00–3:15 AM**.
-- **Poster/partner placement:** **4–7 PM** with venue/business approval.
-
-## JACKSONVILLE — DOWNTOWN + EVENT ANCHORS
-### Locations
-- Downtown / E Bay Street.
-- Decca Live area — 323 E Bay St.
-- Friendship Fountain / Southbank Riverwalk.
-- Murray Hill / Edgewood Avenue.
-- Nightlife partner route downtown and Riverside/King Street.
-
-### Fixed anchors
-- **Oct 2:** First Friday at Friendship Fountain — 6–9 PM.
-- **Oct 3:** Dancehall at 9AM at Decca Live — 9 AM–3 PM.
-- **Oct 15:** Sip & Stroll — 5–8 PM; Silent Disco — 7–11 PM.
-- **Oct 24:** Murray Hill-O-Ween — 5–9 PM; local-captain only because Tier 1 crews are split elsewhere.
-
-### Timing
-- Oct 2: **5:15–8:30 PM**.
-- Oct 3: **8:15–10:30 AM + 2–3:30 PM**; nightlife **9:30 PM–1:30 AM**.
-- Oct 15: **4:45–8:30 PM** Southbank; nightlife **9:30 PM–1:30 AM**.
-- Oct 24: **4:30–8 PM** selective adult-targeted zones, then nightlife.
-
-## TALLAHASSEE — FAMU + FSU/COLLEGETOWN
-### Locations
-- FAMU / Bragg Memorial Stadium public approaches.
-- FSU / Tennessee Street / CollegeTown.
-- Recess at CollegeTown — 705 S Woodward Ave.
-- Bullwinkle's Saloon — 620 W Tennessee St.
-- Top Flite Club — 623 Osceola St.
-
-### Fixed anchors
-- **Sep 26:** FAMU vs Alabama A&M — 7 PM.
-- **Oct 24:** FAMU Homecoming vs Arkansas-Pine Bluff — 3 PM.
-- **Oct 31:** FAMU home game exists, but do **not** send the core team; Tampa event day takes precedence.
-
-### Timing
-- Sep 26: **3:30–6:45 PM** tailgate/public approaches + **9:30 PM–1:30 AM** nightlife.
-- Oct 23: homecoming-eve partner/poster drops afternoon + nightlife **9:30 PM–2 AM**.
-- Oct 24: **9:30 AM–2:45 PM** parade/tailgate zone; **6–8 PM** postgame; **10 PM–2 AM** nightlife.
+**Tampa decision:** Saturate. This is the home market and strongest repeated physical spend.
 
 ---
 
-# TIER 2 SELECTIVE PHYSICAL MARKETS
+# 2. ORLANDO — UCF + CURRENT R&B/HIP-HOP PARTIES
 
-## GAINESVILLE
-### Anchor
-**Oct 9 — UF Homecoming**
-- Gator Gallop — 9 AM.
-- Homecoming Parade — noon.
-- Campus Festival — noon, Plaza of the Americas.
-- Gator Growl — 7 PM, Stephen C. O'Connell Center.
+## SEP 26 — UCF vs TCU Afterparty: Hip-Hop vs R&B
+**Location:** Fixtion, 15 N Orange Ave  
+**Event:** 10 PM–2 AM  
+**Deploy:** UCF game traffic earlier; Fixtion 9:30 PM–12:15 AM + 1:30–2:15 AM  
+**Crew:** Travel Crew A  
+**Priority:** 1
 
-### Timing
-**10:30 AM–2 PM**, **5–7 PM** event ingress, and **9:30 PM–2 AM** Midtown nightlife. Use local captain because Atlanta is a simultaneous core deployment.
+## OCT 17 — Marvin's Room
+**Location:** The Beacham, 46 N Orange Ave  
+**Event:** 9:30 PM–2:15 AM; old/new school R&B  
+**Deploy:** 9–11:45 PM + 1:30–2:30 AM  
+**Crew:** Orlando local / feeder crew  
+**Priority:** 1
 
-## MIAMI / SOUTH FLORIDA
-### Anchors
-- **Oct 10:** Miami Carnival J'Ouvert — 7 AM–3 PM, Central Broward Park, Lauderhill.
-- **Oct 11:** Miami Carnival Parade & Concert — 11 AM–11 PM; venue subject to final confirmation.
-- **Oct 16–17:** III Points at Mana Wynwood.
+## OCT 23 — UCF Homecoming AlumKnights All Black
+**Location:** Mango's Orlando, 8126 International Dr  
+**Event:** 9 PM–2 AM; Hip-Hop/R&B/throwbacks  
+**Deploy:** 8:30–11:30 PM + 1:30–2:15 AM  
+**Crew:** Travel Crew A + local support  
+**Priority:** 1
 
-### Timing
-- J'Ouvert: **6:15–9:30 AM + 1–3 PM** egress.
-- III Points: Wynwood public/partner approaches **4–8 PM**, nightlife follow-up after event.
-- Physical deployment only if local captain is available or city scans/sales justify travel.
+## OCT 24 — Reminisce UCF Homecoming
+**Location:** Blue Martini Pointe Orlando, 9101 International Dr #1182  
+**Event:** 10 PM–2 AM; Hip-Hop/R&B/throwbacks  
+**Deploy:** After UCF game; 9:30 PM–12 AM + 1:30–2:15 AM  
+**Crew:** Travel Crew A  
+**Priority:** 1
 
-## SOUTH GEORGIA
-### Primary: Valdosta State Homecoming — Oct 18–24
-- Oct 23 Hopper Courtyard — noon–3 PM.
-- Oct 23 NPHC Showcase — 7–10 PM.
-- Oct 24 Parade — 11 AM.
-- Oct 24 BlazerGate — noon.
-- Oct 24 game — 3 PM.
+## OCT 25 — R&Boo Halloween Block Party
+**Location:** Walter's Tavern, 2105 N Orange Blossom Trail  
+**Event:** 4–9 PM  
+**Deploy:** 3:30–6 PM + 7:30–9:15 PM  
+**Crew:** Orlando local only  
+**Priority:** 2
 
-### Secondary: Fort Valley State Homecoming — Oct 24
-- Oct 23 Mixer/Cookout — 1–4 PM.
-- Oct 23 Day2Night party — 4–11 PM.
-- Oct 23 Step Show — 7 PM.
-- Oct 24 Parade — 9 AM.
-- Oct 24 game — 1 PM.
-
-### Decision
-Use **local South Georgia captains**. Do not divert Orlando/Tallahassee core crews on Oct 24.
-
-## LAKELAND
-### Anchor
-**Oct 2 — Downtown First Friday — 6–9 PM**, 117 N Kentucky Ave / Munn Park.
-
-### Timing
-Poster/partner drops **3:30–5:30 PM**; selective street promo **5:30–8:30 PM**. Local-only.
-
-## FORT MYERS
-### Anchors
-- **Oct 2:** Downtown Art Walk — 6–10 PM.
-- **Oct 16:** Downtown Music Walk — 6–10 PM.
-
-### Timing
-River District **5:30–9:30 PM**. Local-only unless scan/sales data unlocks travel.
-
-## SARASOTA
-### Anchor
-**Oct 24 — Gulfcoast Pride Festival & Street Party — 4–11 PM**, Rosemary District.
-
-### Timing
-Selective local activation **3:30–8 PM**, then adult nightlife/Street Party window **8–11 PM**. Do not divert Tier 1 crews.
+**Orlando decision:** Heavy UCF/homecoming deployment. Event-led, not generic downtown canvassing.
 
 ---
 
-# EXECUTION CALENDAR — CORE DECISIONS
-| Date | Core Traveling Priority | Local/Secondary Coverage |
-|---|---|---|
-| Sep 25 | **Atlanta Opium** | Tampa local |
-| Sep 26 | Orlando UCF | Tallahassee FAMU + Tampa Ybor |
-| Oct 2 | Jacksonville / local route day | Lakeland + Fort Myers local |
-| Oct 3 | Jacksonville Decca + Tampa USF/Ybor | — |
-| Oct 9 | **Atlanta AUC + Revel/Opium** | Gainesville local |
-| Oct 10 | **Atlanta Morehouse + Revel/Opium** | Miami Carnival local + Tampa local |
-| Oct 15 | Jacksonville Southbank | Tampa local |
-| Oct 16–17 | **Atlanta CAU + Revel/Opium** + Tampa USF | Miami III Points + Fort Myers local |
-| Oct 23 | Tallahassee homecoming eve | South Georgia local |
-| Oct 24 | **Crew A Orlando / Crew B Tallahassee** | Tampa permanent + South GA/JAX/Sarasota/ATL local |
-| Oct 30 | Tampa core | Orlando + Atlanta local only |
-| Oct 31 | **TAMPA ONLY** | No feeder travel |
+# 3. ATLANTA — REVEL + OPIUM FIRST
 
-# FIELD MATERIAL MIX
-For each Tier 1 activation:
-- 500–1,000 hand flyers depending on crowd size.
-- 25–50 posters reserved for approved permanent placements.
-- 100–250 QR/promo cards for high-intent conversations.
-- 10–20 counter cards/table pieces for approved partners.
-- Unique city + crew + date QR/promo code.
+## PERMANENT CURRENT TARGETS
+### REVEL ATLANTA
+**Address:** 1778 Ellsworth Industrial Blvd NW  
+**Current programming:** R&B Rewind Thursdays / Fantasy Fridays / Greatest Show Saturdays  
+**Deploy:** 9:30 PM–12:30 AM arrivals; 2–3:15 AM let-out  
+**Priority:** 1
 
-Tier 2:
-- 250–500 flyers.
-- 10–25 posters.
-- 50–100 QR/promo cards.
+### OPIUM ATLANTA
+**Address:** 990 Brady Ave NW  
+**Current programming:** active hip-hop nightlife / recurring Saturday events  
+**Deploy:** 9:15 PM–12:30 AM arrivals; 2–3:15 AM let-out  
+**Priority:** 1
 
-# QA / PROOF STANDARD
-Every activation closes with:
-- City / date / crew.
-- Exact target.
-- Arrival / departure.
-- Flyers issued / remaining.
-- Posters placed + business name.
-- Permission proof where needed.
-- Timestamped photos.
-- QR scan count at 24h / 72h.
-- Ticket conversions by city code at 24h / 72h.
-- Notes: crowd fit, objections, strongest creative, weak locations.
-- Replenish only routes with proof of traffic or scans.
+## SEP 25 — 80s & 90s Hip-Hop/R&B at Opium
+**Event:** 9 PM–3 AM  
+**Deploy:** 8:30–10 PM approved placements; 9:15 PM–12:30 AM arrivals; 2–3:15 AM let-out  
+**Crew:** ATL City Captain
 
-# SOURCE CHECKS
-- Revel Atlanta official events: https://clubrevelatlanta.com/events/
-- Opium Atlanta official events: https://opiumatl.com/events/
-- Opium Atlanta current Eventbrite listings: https://www.eventbrite.com/cc/opium-atlanta-events-2361509/
-- USF Football: https://gousfbulls.com/sports/football/schedule/text
-- UCF Football: https://ucfknights.com/sports/football/schedule
-- Spelman Homecoming: https://www.spelman.edu/alumnae/homecoming.html
-- Morehouse Homecoming: https://morehouse.edu/events/signature-events/homecoming
-- FAMU Football: https://famuathletics.com/sports/football/schedule/2026
-- UF Homecoming/Gator Growl: https://www.gatorgrowl.org/
-- Visit Jacksonville: https://www.visitjacksonville.com/events/
-- Miami Carnival: https://miamicarnival.org/about-us/
-- III Points: https://www.iiipoints.com/
-- Valdosta State Homecoming: https://www.valdosta.edu/student/student-life/special-events/homecoming.php
-- Fort Valley State Homecoming: https://fvsu.edu/about-fvsu/fvsu-homecoming
-- Downtown Lakeland: https://downtownlkld.com/firstfriday/
-- Sarasota County events: https://www.visitsarasota.com/events-festivals/
+## OCT 10 — Cutwater Fest
+**Location:** Cafe Circa, 464 Edgewood Ave SE  
+**Event:** 3–9 PM; Hip-Hop/R&B/Afrobeats  
+**Deploy:** 2:30–5 PM + 7:30–9:15 PM, then move crew to Revel/Opium  
+**Priority:** 2
 
-## Governance
-This is a living field plan. Exact kickoff times, event permits, and event locations marked TBA must be re-checked 72 hours before deployment. Nightlife targets must also be checked against current dated event activity before dispatch. Supabase remains the executable daily calendar; this document is the field-team reference.
+## OCT 14 — CAU Homecoming Concert Afterparty at Opium
+**Location:** 990 Brady Ave NW  
+**Event:** 10 PM–3 AM  
+**Deploy:** 9:30 PM–12:30 AM + 2–3:15 AM  
+**Priority:** 1
+
+## OCT 24 — SUM'N GOOD
+**Location:** Southern Feed Store, 1245 Glenwood Ave SE  
+**Event:** 4–9 PM; Hip-Hop/R&B/Afrobeats/Dancehall  
+**Crew:** ATL local only because core travel crews are in Orlando/Tallahassee.
+
+### EXPLICIT ATLANTA EXCLUSIONS
+- Royal Peacock — not a default execution target.
+- Compound — do not route.
+- Elleven45 — do not route.
+- No old "best clubs in Atlanta" lists.
+
+**Atlanta decision:** REVEL + OPIUM are the permanent nightlife anchors; current homecoming/promoter parties overlay them.
+
+---
+
+# 4. JACKSONVILLE — DECCA LIVE FIRST
+
+## SEP 25 — Red Room
+**Location:** Decca Live, 323 E Bay St  
+**Event:** 10 PM–3 AM  
+**Audience:** Reggaeton/dembow/2000s crossover  
+**Deploy:** 9:30 PM–12 AM + 2–3:15 AM  
+**Priority:** 2
+
+## OCT 2 — House Party
+**Location:** Decca Live  
+**Event:** 10 PM–3 AM  
+**Deploy:** 9:30 PM–12:15 AM + 2–3:15 AM  
+**Priority:** 1
+
+## OCT 3 — Dancehall at 9AM
+**Location:** Decca Live  
+**Event:** 9 AM–3 PM  
+**Deploy:** 8:15–10:30 AM + 2–3:30 PM  
+**Priority:** 1  
+**Why:** Prior RNB at 9AM events were reported sold out.
+
+## OCT 20 — Hurricane Wisdom
+**Location:** Decca Live  
+**Event:** 8 PM on current venue calendar  
+**Deploy:** 6:30–8 PM ingress + post-show egress  
+**Priority:** 1
+
+**Jacksonville decision:** Decca's dated event calendar drives the route. Do not send a team just to "downtown Jacksonville."
+
+---
+
+# 5. TALLAHASSEE — FAMU HOMECOMING PARTY CIRCUIT
+
+## OCT 10 — White Lie T-Shirt Party
+**Location:** Potbelly's  
+**Crew:** TLH City Captain  
+**Priority:** 2  
+**Deploy:** Confirm doors 72h out; hit arrivals + let-out.
+
+## OCT 17 — FAMU Homecoming Kickoff: Uprooted Camo Party
+**Location:** Potbelly's  
+**Priority:** 1  
+**Decision:** Homecoming promo wave starts here — not on game day.
+
+## OCT 19 — Homecoming Block Bash
+**Location:** Potbelly's  
+**Event:** Everybody free  
+**Priority:** 1  
+**Deploy:** Opening 90 minutes + closing 90 minutes.
+
+## OCT 20 — Homecoming Taco Tuesday
+**Location:** Flamingoz  
+**Use:** Local replenishment / QR push.
+
+## OCT 21 — Trap RNB: FAMU Homecoming
+**Location:** Bajas, 2020 W Pensacola St #120A  
+**Event:** 10 PM–2 AM  
+**Deploy:** 9:15 PM–12 AM + 1:30–2:15 AM  
+**Priority:** 1  
+**Why:** Promoted as sold out each year.
+
+## OCT 21–24 — Bajas Homecoming Week
+Use current nightly Bajas programming as a recurring homecoming anchor after event confirmation.
+
+**Tallahassee decision:** Strong physical market during Oct 17–24. Potbelly's + Bajas replace generic "CollegeTown nightlife" as the actual execution targets.
+
+---
+
+# 6. GAINESVILLE — UF HOMECOMING / UGK WEEKEND
+
+## OCT 3 — Murda Beatz
+**Location:** Vivid Music Hall  
+**Doors:** 9 PM  
+**Priority:** 2
+
+## OCT 9 — Plies Live
+**Location:** Heartwood Soundstage  
+**Event:** 7–11 PM  
+**Deploy:** 5:30–7 PM + 10:15–11:30 PM  
+**Priority:** 1
+
+## OCT 9 — Reloaded Official Homecoming Afterparty
+**Location:** The Range  
+**Event:** 10 PM–2 AM  
+**Deploy:** 9:15 PM–12 AM + 1:30–2:15 AM  
+**Priority:** 1
+
+## OCT 10 — Trap vs R&B
+**Location:** The Range  
+**Event:** 10 PM–2 AM  
+**Deploy:** 9:15 PM–12 AM + 1:30–2:15 AM  
+**Priority:** 1
+
+## OCT 11 — All White Day Party
+**Location:** Vivid Music Hall  
+**Doors:** 3 PM  
+**Deploy:** 2:15–4:30 PM + egress  
+**Priority:** 2
+
+**Gainesville decision:** Concentrate almost all physical spend on Oct 9–11. This weekend is much stronger than routine Gainesville canvassing.
+
+---
+
+# 7. MIAMI / SOUTH FLORIDA — E11EVEN ARTIST NIGHTS
+
+**Crew rule:** South Florida local captain. Do not burn Tampa travel crew on generic Miami canvassing.
+
+## OCT 2 — Nelly at E11EVEN
+Priority 1.
+
+## OCT 3 — T.I. at E11EVEN
+Priority 1.
+
+## OCT 9 — Yung Miami at E11EVEN
+Priority 1.
+
+## OCT 10 — Offset at E11EVEN
+Priority 1.
+
+## OCT 15 — Bone Thugs-N-Harmony at E11EVEN
+Priority 1.
+
+## OCT 16 — Swae Lee at E11EVEN
+Priority 1.
+
+## OCT 17 — DaBaby at E11EVEN
+**Priority:** MAXIMUM  
+**Why:** Direct Nightmare lineup-artist crossover audience.
+
+## OCT 23 — Fetty Wap at E11EVEN
+Priority 1; one-week-out conversion push.
+
+**Location:** E11EVEN, 29 NE 11th St, Miami  
+**Standard deploy:** Verify show timing; public/approved approaches roughly 10 PM–1 AM + late egress.
+
+**Miami decision:** Use artist-night precision. E11EVEN gives us better audience alignment than generic Wynwood flyering. III Points can be secondary only if local capacity remains.
+
+---
+
+# 8. SOUTH GEORGIA — VALDOSTA STATE HOMECOMING
+
+## OCT 23 — Some Sexy Vibes 4 U
+**Location:** Pedros Tacos & Tequila, 2905 N Ashley St  
+**Event:** 9 PM–2 AM; 100% R&B  
+**Deploy:** 8:30–11:30 PM + 1:30–2:15 AM  
+**Priority:** 1
+
+## OCT 23 — There's No Place Like Homecoming
+**Location:** Primetime, 1919 Baytree Place  
+**Event:** 10 PM–1:30 AM  
+**Priority:** 2
+
+## OCT 24 — Grits & Grooves R&B Brunch
+**Location:** Whiskey River, 703 Gornto Rd  
+**Event:** Morning/early afternoon  
+**Deploy:** 9:30 AM–12 PM + 1–2:15 PM  
+**Priority:** 2
+
+## OCT 24 — Lavish Alumni Homecoming Finale
+**Location:** Big Nick's, 1201 Baytree Rd  
+**Event:** 9 PM–2 AM  
+**Priority:** 1
+
+## OCT 24 — Old Skool Rewind
+**Location:** Kennedy Center, 306 St Augustine Rd  
+**Event:** 9 PM–2 AM; R&B/Hip-Hop  
+**Priority:** 2
+
+**South Georgia decision:** Use Valdosta local ambassadors/captain. Oct 23–24 is the only period that warrants serious physical concentration.
+
+---
+
+# 9. LAKELAND — SELECTIVE LOCAL ONLY
+
+## OCT 4 — Beats N Brunch
+**Location:** 2810 Lakeland Highlands Rd  
+**Event:** 5–10 PM  
+**Promoter:** Fourlife Promotions  
+**Deploy:** 4:30–7 PM + 9–10:15 PM  
+**Priority:** 3
+
+## OCT 16 — Exhale RNB After-Work
+**Location:** Bentley Pines / 2810 Lakeland Highlands Rd  
+**Starts:** 6 PM  
+**Deploy:** 5:30–8 PM + close-out once confirmed  
+**Priority:** 2  
+**Why:** Best direct R&B fit currently found in Lakeland.
+
+## OCT 17 — Saints & Sinners
+**Location:** 2810 Lakeland Highlands Rd  
+**Event:** 10 PM–2 AM  
+**Deploy:** 9:30 PM–12 AM + 1:30–2:15 AM  
+**Priority:** 3
+
+**Lakeland decision:** Local captain only. No dedicated traveling crew.
+
+---
+
+# 10. SARASOTA — LOW-PRIORITY / NO FAKE URBAN TARGET
+
+## OCT 24 — Boo Bash
+**Location:** Joyland Live, 8341 Lockwood Ridge Rd  
+**Event:** 9 PM; current confirmed Halloween party  
+**Priority:** 4  
+**Crew:** Sarasota local only  
+**Rule:** Do not divert Tier 1 staff.
+
+**Sarasota decision:** We did not find a strong current 2026 hip-hop/R&B party that justifies travel spend. Keep this market to local poster/QR partnerships and Boo Bash only if the crowd proves useful.
+
+---
+
+# 11. FORT MYERS — LOCAL ONLY UNTIL STRONGER EVENT APPEARS
+
+## OCT 10 — Ezzy R at Luxury Lounge
+**Location:** Luxury Lounge Fort Myers, 3940 Metro Pkwy #125  
+**Event:** 9 PM  
+**Audience:** Urban/Latin nightlife  
+**Deploy:** 8:15–10:30 PM + egress  
+**Priority:** 3
+
+## OCT 24 — Dayshift
+**Location:** The Ranch  
+**Event:** 5–9 PM; 30+ daytime dance party  
+**Decision:** Lower fit; only use if local team has excess capacity.
+
+## OCT 31 — 2000s Halloween Party at The Ranch
+**DO NOT DEPLOY CORE CREW.** Concert day in Tampa.
+
+**Fort Myers decision:** Local-only. No traveling street-team budget until a stronger hip-hop/R&B anchor is announced.
+
+---
+
+# MARKET DEPLOYMENT ORDER
+
+## FULL PHYSICAL SATURATION
+1. Tampa
+2. Atlanta
+3. Orlando
+4. Tallahassee
+5. Jacksonville
+6. Gainesville
+
+## EVENT-SPECIFIC LOCAL DEPLOYMENT
+7. Miami / South Florida
+8. South Georgia
+9. Lakeland
+
+## LOW-SPEND / LOCAL-ONLY
+10. Fort Myers
+11. Sarasota
+
+This ordering is an **operational allocation**, not a statement that every event in a higher market will outperform every event below it. Actual spend should move based on scans and ticket conversions.
+
+---
+
+# FIELD EXECUTION STANDARD
+
+Every activation must have:
+- city
+- target/event name
+- verified date/time
+- exact address
+- crew owner
+- arrival and departure window
+- flyer count
+- QR card count
+- poster placements only with permission
+- timestamped photos
+- 24h QR scans
+- 72h ticket conversions
+- field notes
+- next decision: **REPLENISH / HOLD / STOP**
+
+## Inventory default
+**Priority 1:** 500–1,000 flyers + 150–250 QR cards  
+**Priority 2:** 300–500 flyers + 75–150 QR cards  
+**Priority 3:** 150–300 flyers + 50–100 QR cards  
+**Priority 4:** local-only micro deployment; no travel expense
+
+## Final-week law
+October 30–31: traveling core crews return/stay in Tampa. Feeder markets can be worked only by their local captains.
+
+## Source validation law
+Re-verify every dated event **72 hours before dispatch**. If event time, venue, or status changes, update `noc_field_targets` and the matching `noc_daily_schedule` record before issuing inventory.
+
+---
+**Current Supabase status at V3 build:** 48 field targets / 45 verified / 19 daily schedule dates loaded with exact FIELD TARGETS v3.
