@@ -60,8 +60,14 @@ Deno.serve(async(req)=>{
     );
     const accounts=await readBody(accountRes);
     const account=Array.isArray(accounts)?accounts[0]:null;
-    if(!accountRes.ok||!account||account.entity_key!=="casper-group"||account.lane!=="casper_location"||account.active!==true){
-      return json({ok:false,error:"casper_outreach_account_not_authorized"},403);
+    const permittedAccount=Boolean(
+      account && account.active===true && (
+        (account.entity_key==="casper-group" && account.lane==="casper_location") ||
+        (account.entity_key==="the-kollective" && account.lane==="sponsor")
+      )
+    );
+    if(!accountRes.ok||!permittedAccount){
+      return json({ok:false,error:"outreach_account_not_authorized"},403);
     }
 
     const contactRes=await fetch(
