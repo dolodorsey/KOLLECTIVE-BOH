@@ -82,16 +82,18 @@ Vendor tasks:
 
 ## HighLevel Truth Rule
 
-Affected Casper/Kollective pipeline manifests were corrected from `deployed` to `deployed_unverified`.
+The outreach **pipeline objects themselves are provider-verified live in HighLevel**. Native deployment receipts show HTTP 200/201 plus HighLevel pipeline IDs for the Casper location/vendor pipelines and The Kollective sponsor/VC/capital pipelines.
 
-Observed at correction:
-- Casper live GHL readiness: 20/100
-- The Kollective live GHL readiness: 0/100
-- pipelines_ready: false
-- workflows_ready: false
-- contacts_data_ready: false
+Pipeline manifests therefore use `ghl_status = deployed_verified`.
 
-Do not call a HighLevel lane deployed/verified until live readiness proves the actual pipeline, workflow, contact sync, and reporting requirements. The existing `ghl-entity-pipeline-deploy` job remains the deployment mechanism.
+Broader HighLevel readiness remains separate:
+- Casper: pipeline objects verified; workflows, contact sync and reporting are still incomplete.
+- The Kollective: pipeline objects verified; workflows, contact sync and reporting are still incomplete.
+- Exact per-location PIT write authority is currently missing under the strict entity-write policy, so new entity-level GHL writes must not substitute a shared/agency credential.
+
+The August readiness snapshot was corrected so `pipelines_ready = true` where native receipts exist; stale “pipelines missing” items were removed. The readiness score itself was not guessed/recomputed.
+
+**Rule:** pipeline deployed ≠ full GHL autonomous readiness. Keep pipeline deployment proof, workflow readiness, contact sync, reporting, and credential/write authority as separate evidence gates.
 
 ## Scheduler
 
