@@ -133,3 +133,15 @@ A single scheduled automation operates these slots. It may send only an approved
 
 ### Consent intake
 `public.sync_first_party_email_consent_v1()` now imports only explicit first-party consent from supported sources into the canonical `email_consent` table. It runs every 15 minutes via pg_cron. It does not infer consent from cold lead records, Gmail contacts, or unrelated brands.
+
+
+## 2026-09-21 execution update — founder directives applied
+
+- Production ramp floor is now **50 recipients per entity per day**, processed in **10-recipient chunks**.
+- Ramp ladder: **50 → 75 → 100 → 150 → 250 → 400 → 650 → 1,000/day**, with advancement gated by healthy delivery evidence.
+- **ICONIC LIVE / Nightmare on Channelside is explicitly authorized to use The Kollective Gmail sender** (`thekollectivehospitality@gmail.com`). This is a sender-only exception. ICONIC audience, tracking, suppression, reply handling, and reporting remain event-specific and cannot be merged with The Kollective audience.
+- ICONIC shared-sender QA was delivered successfully to the founder review inbox. Gmail message ID: `1a0c703a3446083f`.
+- ICONIC concert + merch campaigns moved from `blocked_sender` to `authorized_pending_audience`.
+- Dr. Dorsey, Infinity Water, and Pronto Energy email packages now have verified sender routes, tracked destinations, approved packages, launch authorization, and daily send slots. They remain gated by eligible audience availability.
+- First-party consent sync now also ingests explicit consent from Nightmare giveaway + Halloween lead capture tables every 15 minutes.
+- Current verified explicit-consent recovery from the inspected first-party sources is still zero for the active newsletter lanes; do not manufacture consent or reuse another entity's list.
