@@ -117,11 +117,11 @@ The full enterprise master contact universe is not merely a discovery source. Ev
 
 Current canonical pool:
 - 112,349 active master records
-- 107,955 records with email or phone
+- 107,872 records with email or phone
 - 87,217 unique usable email subscribers in the current deduplicated newsletter materialization pass
 
 Operating rule:
-- every active GHL company location targets 107,955 contactable master records;
+- every active GHL company location targets 107,872 contactable master records;
 - contact records are physically upserted into each exact company GHL location through a rate-limited background sync;
 - sender, workflows, pipelines, attribution, campaign history and reporting remain company-specific;
 - the same enterprise contact may exist independently in multiple company CRMs;
