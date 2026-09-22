@@ -7,13 +7,12 @@ Signed operating agreements, cap tables and prior contracts control until formal
 ## Default structure
 - Standard entity: 73% Founder / 10% Kollective Team Participation Pool / 12% Entity Operator Pool / 5% Strategic Reserve.
 - Three-operator entity: 70% Founder / 10% Team Pool / 15% Operator Pool / 5% Reserve.
-- ICONIC LIVE: 70% Founder / 10% Team Pool / 15% Diesel / 5% Reserve.
+- ICONIC LIVE: 70% Founder / 10% Team Pool / 20% unallocated strategic/operator reserve.
 - The Kollective parent: 80% Founder / 10% Team Pool / 5% operating incentive / 5% Reserve.
 - Default operator/team units: non-voting economic participation, with the final instrument determined by counsel.
 - Sole Exchange: if legally nonprofit/tax-exempt, do not issue equity in the nonprofit. Use permitted fair-market-value compensation or a compliant management-services arrangement.
 
 ## Kollective Team Participation Pool - 100 points
-- Diesel 24
 - Jojo 16
 - Quinten 12
 - Brianna 10
@@ -24,10 +23,10 @@ Signed operating agreements, cap tables and prior contracts control until formal
 - Tay 5
 - Kenny 3
 - Justin 2
-- Future reserve 2
+- Unallocated future reserve 26
 
 ## Proposed entity operator allocations
-- ICONIC LIVE: Diesel 15%
+- ICONIC LIVE: prior 15% operator proposal withdrawn and returned to unallocated reserve pending a new founder-approved appointment.
 - BEVCO: Kay 12%
 - The Kollective: Brianna 2%, Jojo 1.5%, Quinten 1.5%
 - Kollective Entertainment: Chizzy 7%, Sevant 5%
@@ -51,5 +50,7 @@ Signed operating agreements, cap tables and prior contracts control until formal
 - 80/100 performance gate target
 - Unvested interests subject to forfeiture/repurchase under signed documents
 
-## Diesel prior 50/50 discussion
-If 50/50 was never legally issued, this framework can become the formal offer. If a signed/issued 50/50 interest exists, it must be amended, bought back, terminated or replaced through signed legal documentation.
+## Diesel separation directive — 2026-09-22
+Diesel has no current proposed allocation, team-pool allocation, voting authority, asset-approval authority, partner role or project-manager role in this framework. All internal proposed economics tied to him are withdrawn and recorded at 0%.
+
+If any interest was legally signed, issued or vested outside this internal proposal, counsel must complete the required amendment, buyback, termination or replacement documents. This internal systems change does not itself alter executed legal instruments.
