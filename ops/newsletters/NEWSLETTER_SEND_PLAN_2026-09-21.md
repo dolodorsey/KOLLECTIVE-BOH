@@ -2,7 +2,7 @@
 
 Owner: Kollective Marketing OS
 Timezone: America/New_York
-Rule: Brand audiences, consent, sender identity, tracking and reporting remain isolated by entity. No cross-brand sender fallback.
+Rule: Brand audiences, consent, sender identity, tracking and reporting remain isolated by entity. No cross-brand sender fallback. The weekly creative is distributed through daily incremental cohorts so each active sender builds healthy volume every day.
 
 ## Campaign schedule
 
@@ -77,3 +77,26 @@ Primary CTA: SHOP MERCH
 - [ ] Production schedule confirmed in provider
 - [ ] Provider campaign/source ID written back to Supabase
 - [ ] Delivery/open/click/bounce reporting reconciled after send
+
+
+## Daily sender ramp — revised 2026-09-21
+
+The prior one-send-per-brand weekly cadence is superseded by a daily cohort model.
+
+| Entity | Daily slot (ET) | Cohort rule | Ramp target |
+|---|---:|---|---|
+| The Kollective | 8:30 AM | New consented recipients only | 10 → 25 → 50 → 100 → 250 → 500 → 1,000 |
+| S.O.S. | 10:45 AM | Provider-only; new consented recipients only | 10 → 25 → 50 → 100 → 250 → 500 → 1,000 |
+| Mission 365 | 1:00 PM | New consented recipients only | 10 → 25 → 50 → 100 → 250 → 500 → 1,000 |
+| Hakuna Matata | 3:15 PM | New consented recipients only | 10 → 25 → 50 → 100 → 250 → 500 → 1,000 |
+| Sole Exchange | 5:30 PM | New consented recipients only | 10 → 25 → 50 → 100 → 250 → 500 → 1,000 |
+| ICONIC LIVE / Nightmare | 7:45 PM | One event email/day; rotate approved concert + merch content | 10 → 25 → 50 → 100 → 250 → 500 → 1,000 |
+
+### Daily scale rule
+
+- Every active entity gets its own daily send window, 135 minutes apart.
+- Volume can advance one rung after 24 hours of healthy provider/delivery evidence.
+- The same recipient is never counted as a new warm-up send twice for the same campaign.
+- A sender does not advance when bounce, complaint, unsubscribe, provider-failure, throttling, consent, suppression, or exact-sender gates fail.
+- ICONIC LIVE uses one daily sender slot even though two approved newsletter creatives exist; do not double-send the entity during warm-up.
+- Supabase `communication-send-ramp-refresh-v1` evaluates ramp state hourly; `khg-enterprise-autonomy-tick` evaluates due daily operations every five minutes.
