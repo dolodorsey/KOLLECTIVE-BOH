@@ -7,7 +7,7 @@ Folder: https://drive.google.com/drive/folders/106U_VDQvd2wuk4tRbnyL6VfXLuH2Ea9F
 
 ## Separate company handoffs
 
-- ICONIC LIVE — Diesel + Bri  
+- ICONIC LIVE — Bri + Q + Sevant  
   https://docs.google.com/document/d/1bHNzyLStqMhdIuLyQrb7sQ1DPTXZkCbLz1RISSRfcBg/edit
 
 - Entertainment SUPPORT — Chizzy + Sevant  
@@ -42,6 +42,10 @@ Folder: https://drive.google.com/drive/folders/106U_VDQvd2wuk4tRbnyL6VfXLuH2Ea9F
 
 - Mission 365 — Jojo + Q + Chizzy  
   https://docs.google.com/document/d/1tpcmG5xyR2aCol0bdpDZQi__9JwbYoL0nBtRkDEa4GI/edit
+
+## Authority change — 2026-09-22
+
+Diesel has been removed from all current partner, owner-operator and project-manager authority. ICONIC LIVE now routes to Bri as primary PM, with Q and Sevant supporting.
 
 ## Backend rule
 
