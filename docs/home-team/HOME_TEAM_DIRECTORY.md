@@ -1,8 +1,7 @@
-# Home Team Directory - 2026-09-20
+# Home Team Directory - 2026-09-22
 
 | Person | Role | Email | Phone | Status |
 |---|---|---|---|---|
-| Diesel | Owner-Operator | kingdmmanagement@gmail.com | 646-629-7103 | VERIFIED |
 | Brianna | Project Manager | drdorseyassistant@gmail.com | 917-847-3598 | VERIFIED |
 | Jojo | Operating Partner | saitta89@gmail.com | 443-422-8737 | VERIFIED |
 | Quinten (Q) | Operating Partner | quintinm.heard@gmail.com | 404-316-3172 | VERIFIED |
@@ -18,7 +17,7 @@
 
 | Entity | Current operator / PM |
 |---|---|
-| ICONIC LIVE | Diesel |
+| ICONIC LIVE | Brianna / Quinten / Sevant |
 | BEVCO + beverage brands | Kay |
 | The Kollective | Brianna / Jojo / Quinten |
 | Kollective Entertainment | Chizzy / Sevant |
@@ -34,6 +33,10 @@
 | Member's Elite | Tay / Justin |
 | PULSE | Raven / Tay |
 | BARE | Raven / Tay |
+
+## Authority change — 2026-09-22
+
+Diesel was removed from all current partner, owner-operator and project-manager authority. Brianna is the primary project manager for ICONIC LIVE, with Quinten and Sevant supporting. Historical records remain in the system audit trail only.
 
 ## Daily update
 1. Yesterday: finished result + proof.
