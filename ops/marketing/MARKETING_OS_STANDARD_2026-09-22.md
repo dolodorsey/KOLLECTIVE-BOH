@@ -94,15 +94,36 @@ BEVCO and each beverage brand have separate marketing records. Core audiences in
 - Campaigns: public.marketing_native_campaigns
 - Sender state: public.communication_sender_profiles
 - Send receipts: public.communication_send_log
-- CRM: HighLevel entity-specific location/pipeline when connector IAM scope is available
+- CRM: HighLevel entity-specific location/pipeline when connector scope is available
 
 ## Current verified focus coverage
 25 focus/entity plans were verified with all six core lanes stored:
 social_post, engagement, dm, comment, email_outreach, shopify_email.
 
+## GHL deployment truth from internal mirror
+Deployed / native pipeline IDs present:
+- Good Times
+- Mission 365
+- S.O.S.
+- Casper Group
+- STUSH
+- Sole Exchange
+- The Kollective
+
+Partially deployed / remediation still required:
+- On Call
+
+Blocked or not certifiable live yet:
+- FĚNYX — exact location PIT missing
+- ICONIC — entity remediation required
+- BEVCO INTL — scope currently validation-only
+- Luxe on Demand — scope currently validation-only
+- Mister Manufacturing — pending scope probe
+- The Kollective Entertainment — no certified deployment row found in the current focus dashboard
+
 ## Known execution blockers
-- HighLevel live resource search currently returns connector IAM 401, so GHL pipelines/automations cannot be certified live from this session.
-- Mission 365: social identity + email sender setup required.
+- Direct HighLevel resource search currently returns connector IAM 401, so live provider re-verification from this session remains blocked even where internal deployment receipts exist.
+- Mission 365: social identity + email sender setup required even though pipelines are deployed.
 - Luxe on Demand: social identity + email sender setup required.
 - S.O.S.: email sender setup required.
 - Several beverage brands have strategy stored but sender/provider setup still required.
