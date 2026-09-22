@@ -158,3 +158,56 @@ Newsletter scheduling/execution is **not** owned by ChatGPT task automation.
 - Graphic rendering standard is locked in `ops/newsletters/GRAPHIC_ONLY_NEWSLETTER_STANDARD.md`.
 - GHL runtime template standard is stored in the MCP Gateway `ghl_script_templates` table under `graphic_only_newsletter_standard` and `graphic_only_newsletter_multipage_standard`.
 - Existing receipt-backed GHL email dispatcher/reconciler remains the execution transport path.
+
+
+## 2026-09-22 — GHL runtime closeout
+
+### Mission 365 + Hakuna Matata sender routes
+Both previously blocked newsletter senders are now operational through exact GHL locations in the MCP Gateway.
+
+- Mission 365 GHL location: `k0qCyTaLEJaIazRML7hs`
+  - Contact upsert HTTP: 201
+  - Email send HTTP: 201
+  - GHL provider message ID: `OMkYOS5qm1R9NycKdIM9`
+  - Gmail inbox proof: `1a0c7724cc5e4c39`
+  - Inbox reports `has_attachment=false`
+  - HTML contains the approved Mission 365 newsletter graphic as the visible body.
+- Hakuna Matata GHL location: `my3t8XWT680gA5UWpoda`
+  - Contact upsert HTTP: 201
+  - Email send HTTP: 201
+  - GHL provider message ID: `ysl1lDlcz9i8DlkcUZFs`
+  - Gmail inbox proof: `1a0c772453e15f09`
+  - Inbox reports `has_attachment=false`
+  - HTML contains the approved Hakuna Matata newsletter graphic as the visible body.
+
+The MCP Gateway `v_ghl_send_ready` now reports `email_ready=true` for Mission 365, Hakuna Matata, S.O.S., and The Kollective.
+
+### Subscriber → GHL materialization
+Added `public.sync_newsletter_subscribers_to_ghl_v1()` in MCP Gateway.
+
+Behavior:
+- Reads only active rows in `newsletter_subscribers`.
+- Requires an active exact-brand row in `brand_ghl_map` with a PIT.
+- Upserts each explicit subscriber into that exact GHL location.
+- Mirrors the returned GHL contact ID into `ghl_outreach_contacts`.
+- Preserves exact brand context and consent classification.
+- Does not convert generic CRM contacts, scraped leads, or another entity's audience into subscribers.
+- Runs every 2 minutes by pg_cron: `khg-newsletter-subscriber-ghl-sync-v1`.
+- Public/anon/authenticated EXECUTE is revoked; cron/database owner execution only.
+
+The first live sync completed with 1 existing Dr. Dorsey subscriber and 0 errors.
+
+### First production cohort attempt
+The GHL newsletter enqueuer + receipt-backed dispatcher were run after sender closeout.
+
+Current result for the active newsletter lanes:
+- The Kollective: 0 active newsletter subscribers
+- S.O.S.: 0
+- Mission 365: 0
+- Hakuna Matata: 0
+- Sole Exchange: 0
+- ICONIC LIVE / Nightmare: 0
+
+Therefore no real production recipients were queued. This is a valid HOLD, not an execution failure. The system is ready to enqueue up to the current 50/day warm-up cap automatically as soon as explicit brand subscribers exist and are mirrored into their exact GHL location.
+
+Do not manufacture subscribers to fill a warm-up quota.
