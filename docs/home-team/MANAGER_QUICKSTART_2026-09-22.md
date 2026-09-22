@@ -39,12 +39,12 @@ If provider API publishing is unavailable but the official brand account is conf
 ## Current social truth — 2026-09-22
 | Entity | Official IG | Connection | Programmed | Published receipts | Next gate |
 |---|---|---:|---:|---:|---|
-| ICONIC | @THEICONICLIVE | connected | 0 | 0 | program calendar |
+| ICONIC | @THEICONICLIVE | connected | 2 | 0 | awaiting exact content approval (2 QA-passed slots) |
 | The Kollective | @KOLLECTIVEHOSPITALITY | connected | 10 | 0 | program calendar |
 | Casper Group | @THECASPERGROUPWORLDWIDE | connected | 7 | 0 | program calendar |
-| FĚNYX | @FENYXWORLD | connected | 11 | 0 | program calendar |
-| S.O.S. | @SUPERHERO.ONSTANDBY | connected | 28 | 0 | program calendar |
-| STUSH | @STUSHUSA | connected | 5 | 2 | program calendar |
+| FĚNYX | @FENYXWORLD | connected | 11 | 0 | awaiting exact content approval (2 QA-passed slots) |
+| S.O.S. | @SUPERHERO.ONSTANDBY | connected | 28 | 0 | replacement creative required; checked provider graphic failed claims QA |
+| STUSH | @STUSHUSA | connected | 5 | 2 | awaiting exact content approval (1 QA-passed slot) |
 | Good Times | @GOODTIMESWORLDWIDE | connected | 11 | 1 | program calendar |
 | BEVCO | @BEVCOHQ | setup required | 1 | 0 | provider connection |
 | Sole Exchange | @THESOLEEXCHANGEWORLDWIDE | setup required | 28 | 0 | provider connection |
