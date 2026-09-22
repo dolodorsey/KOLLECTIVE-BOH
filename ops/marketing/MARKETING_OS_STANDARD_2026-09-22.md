@@ -1,240 +1,63 @@
-# Marketing OS Standard — 2026-09-22 v3
+# Marketing operating standard — evidence correction, September 22, 2026
 
-## Scope
-Current marketing focus excludes On Call, Luxe on Demand, and Mister Manufacturing. Their existing plans remain stored but their current marketing channel plans are paused.
+## Superseding correction
+The earlier v3 statement that a 30/30 or 12/12 count established a fully equipped marketing operation was too broad. Those counts established that selected database fields and channel definitions were populated. They did NOT establish substantive SOP quality, source-backed target lists, finished visual assets, approved recipient cohorts, native workflow deployment, successful sends/posts, or business outcomes.
 
-The current certified focus set contains 30 entity/brand records. Each must remain isolated by entity ID, social identity, sender route, audience, tracking, CRM pipeline, execution receipt, and reporting.
+Do not reuse structural coverage counts as operational certification. A completed audit can report a blocked operation; the audit completion must not be presented as business execution.
 
-## 12 required marketing lanes
-Every current focus entity must have all 12 lanes defined, even when a lane is explicitly not used or setup-required.
+## Current planning horizon
+The active work horizon is September 22 through September 28, 2026, America/New_York. Detailed company runbooks are stored separately in the internal Drive workspace and indexed in Supabase under packet version `focus-week-2026-09-22-v1`.
 
-1. Social publishing
-2. Engagement
-3. DMs
-4. Comments
-5. Email outreach / lifecycle
-6. Shopify Email when applicable
-7. Direct outreach
-8. Creator / ambassador outreach
-9. Partnership outreach
-10. Paid media
-11. Retargeting
-12. Referral / retention
+Existing focus execution takes precedence over new provider connections or portfolio expansion. On Call, Luxe on Demand and Mister Manufacturing remain outside this sprint. Mission 365 activation and the previously identified non-live entity/provider activation work are deferred. Mission 365 has priority when that activation work is explicitly resumed. This document does not authorize automatic resumption after September 28.
 
-Additional event/SMS channels may be layered on where applicable.
+The public repository contains the operating standard, not private recipient lists or full internal campaign packets. Each internal company packet owns its own audience, assets, facts, sender route, conversion path, daily assignments and results.
 
-## Engagement separation
-- Publishing = owned content distribution.
-- Engagement = proactive relationship-building: likes, saves, story reactions/replies, priority-account interaction.
-- Comments = public conversations.
-- DMs = private conversations and follow-up.
-- Direct outreach = researched outbound to qualified people/accounts.
-- Creator outreach = creator/ambassador acquisition and activation.
-- Partnership outreach = B2B/strategic relationship development.
+## Status meanings
+- Prepared: a concrete artifact exists and can be inspected. It may still require named source inputs, visual review or recipient resolution.
+- Reviewed: the designated reviewer has checked the exact artifact version against the relevant sources.
+- Approved for release: an authorized decision is bound to the artifact hash, entity, destination, account, audience and intended action.
+- Scheduled: the responsible execution system has an actual schedule record. A planned timestamp in a runbook is not a provider schedule.
+- Submitted: the provider accepted the request. Submission is not delivery or publication confirmation.
+- Executed: the real provider result is recorded and the actual external result is checked.
+- Converted: the corresponding business milestone is supported by source records. Clicks, applications, carts and pledges are not respectively bookings, activated providers, paid orders or received donations.
 
-These cannot be collapsed into one generic "social" task.
+Never replace unknown results with zero, estimated success, or an active flag. Do not close future assignments as completed when writing a plan.
 
-## Required plan fields
-- annual objective
-- first 90 days
-- quarterly plan
-- weekly scorecard
-- team meeting plan
-- social_plan
-- engagement_plan
-- dm_plan
-- comment_plan
-- email_plan
-- shopify_email_plan
-- outreach_plan
-- creator_plan
-- partnership_plan
-- retention_plan
-- paid_media_plan
-- reporting_plan
-- automation_plan
-- status / POC / conversion path / KPIs / cadence / approval / compliance
+## Required weekly handoff
+Every company runbook must stand alone. It contains the business outcome, exact source references, one named operator and a distinct reviewer, seven dated assignments, concrete acceptance criteria, daily caption/Story options, email bodies or design copy with eligibility rules, personalized outreach scripts, source-backed target-selection instructions, exception handling and a stage-based scorecard.
 
-## Current certification
-Verified in Supabase after v3 backfill:
-- Focus records: 30
-- 12/12 stored plan lanes: 30/30
-- 12/12 executable channel definitions: 30/30
-- Engagement target layer populated: 30/30
-- Active full-funnel growth program: 30/30
+The six operating procedures in every packet cover daily capacity and inputs; content preparation/review/release; engagement/comment/DM triage; email and Shopify release; researched outreach; and independent evidence close.
 
-A plan is not equivalent to provider readiness. Any setup-required provider/account/sender lane must have an open company_execution_queue remediation item.
+Operator allocation is not proof that the person accepted the workload. Acceptance and available capacity must be recorded. Reuse an existing valid approved asset or workflow instead of creating duplicate work to increase row counts.
 
-## Social identity hard gate
-Social identity is an execution invariant, not an agent suggestion.
+## Daily operating contract
+Open the company-scoped assignment and current source records. Prioritize unresolved customer intent and existing work before new output. Prepare the specific artifact named for that day. The reviewer inspects the artifact itself, not a title or a claimed quality score. Missing information is identified by the exact field or evidence required; deferred activation is not escalated as today's priority.
 
-Before an Instagram publish:
-1. Resolve the exact entity and canonical handle.
-2. Resolve the exact social account and connected account.
-3. Verify numeric Instagram external account ID.
-4. Load the exact account credential.
-5. Read the live profile from Meta.
-6. Normalize live Meta username and directory username.
-7. If usernames do not match, fail closed BEFORE creating a media container.
-8. Disable/quarantine the stale route.
-9. Write an audit receipt.
-10. Require identity reconciliation before future publishing.
+Before an external action, verify exact entity, content, sender/account, destination, audience eligibility, rights, timing and approval. Submit once through an authorized existing route. On an ambiguous timeout, inspect provider state before retrying. Attach the actual provider or manually verifiable result and its business outcome. If nothing was sent, published or converted, say so.
 
-No provider username match = no publish.
+## Social identity and content binding
+Current S.O.S. Instagram is @SUPERHERO.ONSTANDBY, the account formerly @ROSEONPIEDMONT / @THEROSEONPIEDMONT. Historical handle aliases are not current publishing authority for the old brand. The conflicting legacy route remains quarantined.
 
-## S.O.S. identity correction
-Founder correction, 2026-09-22:
-- Current S.O.S. Instagram: @SUPERHERO.ONSTANDBY
-- The live account currently @SUPERHERO.ONSTANDBY is the account formerly known as @ROSEONPIEDMONT / @THEROSEONPIEDMONT.
-- The former Rose route is therefore an S.O.S. identity lineage, not a current Rose publishing route.
-- Rose social publishing is blocked until a distinct current Rose Instagram account is verified.
-- A second conflicting S.O.S. database identity was quarantined and cannot publish.
+The deployed social-publish-executor v9 introduced a pre-container live-username mismatch block. That change is not a certification of every publishing path or every possible failure case. Approval must ALSO bind the intended entity and asset to the current account. Changing an account mapping cannot make an old Rose content approval valid S.O.S. content.
 
-The canonical current S.O.S. provider account uses Instagram external account ID 17841456987375604.
+Required release evidence includes the current provider identity, exact asset entity, approval hash, current destination, source facts and rights. A new local validator or a policy document is not deployed provider enforcement until integration and end-to-end tests are recorded.
 
-## Social incident root cause
-A Rose content package was published through a database route labelled Rose. During the publish, the Meta profile read returned the live username superhero.onstandby and the executor calculated username_matches_directory=false.
+## Engagement, comments and DMs
+Treat these as distinct work. Handle actual high-intent inbound first, classify its purpose, answer contextually, and log the real conversation reference. An audience cluster is not a researched contact list. Do not cold-DM someone simply for liking a post. A social interaction is not blanket email or SMS eligibility. Unsupported actions stay human-operated or held. Opt-outs stop the conversation. Personal @DOLODORSEY DMs remain founder-only.
 
-The executor stored that mismatch but did not abort. It proceeded to create and publish the media container. This was a hard-gate failure at the final execution adapter.
+## Email and Shopify
+Read current campaigns and native flows before making changes. A stored definition, active label or native ID alone does not prove a working lifecycle. Use one owner system for each event; Shopify and GHL must not both send the same abandonment reminder.
 
-The fix is in MCP Gateway social-publish-executor v9:
-- live username mismatch is now a pre-publish hard failure
-- stale account is disabled
-- audit event is written
-- no media container is created
+Verify the brand-scoped audience, documented eligibility, suppression, prior campaign delivery, rolling frequency and shared sender capacity. Existing authorized enterprise-subscriber inheritance must be documented, not guessed. Shared commerce infrastructure does not merge STUSH, FENYX, event-merch or app audiences.
 
-This is why additional agents alone did not prevent the incident: upstream agents were advisory/QA layers, while the irreversible provider executor did not enforce the identity invariant.
+The approved newsletter graphic is the visible email body and is clickable, not an attachment. Required provider compliance elements remain intact. One-to-one relationship outreach uses the appropriate personalized message rather than an unrelated newsletter.
 
-## App standard
-Current app marketing focus: Good Times, S.O.S., Mission 365.
+Separate seed tests, customer sends, provider acceptance, inbox delivery and business conversion. No unapproved customer message may be sent under the label QA. Respect the existing recipient-level rolling frequency limit even when several campaigns are prepared for the same week.
 
-Good Times, S.O.S., and Mission 365 remain launch-gated until public listing and promotion QA are verified. Prelaunch CTA stays on launch updates/waitlist language until the gate passes.
+## Brand-specific business proof
+Good Times distinguishes useful discovery, website actions, signups, saved plans and downstream official actions. Native-store availability and city readiness must be verified before making those claims. S.O.S. focuses on provider application and verification without guaranteed work, earnings or unproven consumer coverage. ICONIC separates ticket, sponsor and merchandise outcomes and validates lineup, venue, rights and ticket details. Retail campaigns require actual product and variant truth. Beverage outreach requires real stock/sample/terms authority and appropriate product-claim review. Casper parent commercial opportunities are not proof that a dormant concept is open. Sole Exchange separates inquiries, pledges, received donations, requests and completed matches.
 
-Required app lifecycle:
-- welcome/value promise
-- signup/onboarding
-- activation
-- incomplete onboarding recovery
-- feature/use-case education
-- social proof
-- inactive 7-day reactivation
-- inactive 30-day win-back
-- referral/invite
-- release/launch communication
+## Source of truth and verification
+Supabase `entity_operating_packets` stores versioned weekly packet records and links to the separate full runbooks. `enterprise_entity_daily_ops` stores dated assignments, acceptance criteria, owner/reviewer, planning deadlines and actual proof fields. `enterprise_handoff_notes` provides company-specific handoff references. Existing content, campaign, sender and provider receipt tables remain the evidence sources for real external execution.
 
-## Email sender truth
-- Good Times: connected exact sender route.
-- S.O.S.: certified exact-location sender reply@mail.superherosonstandby.com with reply-to help@thesuperherosonstandby.com.
-- Mission 365: exact HighLevel location delivery is verified. Dedicated Mission 365 sender remains an upgrade, not a blocker.
-- ICONIC: founder-approved explicit parent transport route through The Kollective Gmail. Audience, creative, CTA, tracking, and attribution remain ICONIC-only.
-- Infinity Water and Pronto Energy: connected brand sender profiles.
-- Other sender profiles remain setup-required until verified; they must not be marked executed without provider proof.
-
-## Shopify / retail
-STUSH and FĚNYX use brand-specific Shopify segments even when sharing commerce infrastructure.
-
-Required Shopify lifecycle:
-- welcome
-- browse abandonment
-- cart abandonment
-- checkout abandonment
-- post-purchase
-- review/UGC
-- cross-sell
-- win-back
-- VIP retention
-- drop/restock
-
-## BEVCO
-BEVCO and each beverage brand keep separate plans and audiences.
-
-Full funnel includes:
-- consumer demand
-- hospitality/on-premise placements
-- retail buyers
-- distributors
-- events/activations
-- creator advocacy
-- account reorders
-- retargeting
-- retention
-
-Alcohol brands require 21+ audience/platform/legal compliance.
-
-## Casper Group
-Parent and active concepts keep separate brand execution. Full funnel includes:
-- local social demand
-- food/lifestyle creator engine
-- catering and group-order outreach
-- property/location pipeline
-- office/event relationships
-- repeat-visit retention
-- local paid/retargeting when ready
-
-## ICONIC
-Full funnel includes:
-- artist-specific creative
-- ticket urgency
-- promoters
-- micro-influencers
-- fan pages
-- sponsors
-- media
-- group sales
-- hospitality partners
-- ticket-buyer retention
-- next-event cross-sell
-- merch
-
-## Reporting truth rules
-Daily:
-- provider publishing receipts
-- engagement completed
-- DM/comment SLA
-- email sends/replies
-- outreach touches
-- new qualified leads
-- provider failures
-
-Weekly:
-- qualified reach
-- engagement quality
-- site/profile traffic
-- leads/signups
-- email performance
-- outreach replies/meetings
-- pipeline movement
-- conversion
-- retention
-- revenue / mission KPI
-- winning/weak creative
-- next experiments
-
-Non-negotiable truth:
-- no provider receipt = not executed
-- no cross-brand attribution
-- do not hide setup blockers
-- do not equate lead with qualified lead
-- do not let advisory agents override hard execution gates
-
-## Source of truth
-- Strategy: public.company_annual_plans
-- Executable channels: public.company_channel_plans
-- Engagement targets: public.growth_social_engagement_targets
-- Full-funnel programs: public.growth_programs
-- Content: public.growth_content_operations
-- Campaigns: public.marketing_native_campaigns
-- Sender profiles: public.communication_sender_profiles
-- Send receipts: public.communication_send_log
-- Remediation: public.company_execution_queue
-- Social provider runtime: MCP Gateway social_accounts / connected_accounts / social-publish-executor
-
-## Non-negotiables
-- Separate every brand/entity.
-- Exact social identity must be provider-verified.
-- Explicit parent sender routes must be recorded, not assumed.
-- Consent/suppression rules apply.
-- Human approval for outbound relationship actions.
-- No generic engagement farming.
-- No cold SMS.
-- Provider receipts required before claiming execution.
+Blank proof fields remain blank until actual work is proven. Prepared material must not be promoted to live status to make a dashboard look complete. No new agents, paid spend, provider registration or customer sends are authorized by creating these records.
