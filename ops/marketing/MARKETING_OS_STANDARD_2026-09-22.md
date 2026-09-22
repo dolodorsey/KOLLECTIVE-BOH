@@ -35,6 +35,9 @@ Every active focus entity must have a complete, brand-isolated marketing system 
 ## App standard
 Applies to Good Times, S.O.S., Mission 365, On Call, and Luxe on Demand.
 
+### Launch gate
+App marketing must reflect the real listing state. Good Times, S.O.S., and Mission 365 currently remain in pre-launch mode: public App Store listing not verified and promotion QA not approved. Their CTA must stay on launch updates/waitlist language until both gates pass. Never publish “Download now” early.
+
 ### Social
 5–7 feed/reel posts weekly plus daily stories. Content must include demos, use cases, social proof, partner/provider stories, feature education, and conversion CTAs.
 
