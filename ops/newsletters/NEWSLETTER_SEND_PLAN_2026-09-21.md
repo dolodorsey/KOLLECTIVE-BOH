@@ -211,3 +211,38 @@ Current result for the active newsletter lanes:
 Therefore no real production recipients were queued. This is a valid HOLD, not an execution failure. The system is ready to enqueue up to the current 50/day warm-up cap automatically as soon as explicit brand subscribers exist and are mirrored into their exact GHL location.
 
 Do not manufacture subscribers to fill a warm-up quota.
+
+
+## 2026-09-22 — Good Times newsletters + enterprise subscriber segmentation
+
+Founder clarified that the preloaded contacts are already company subscribers. Product-level newsletters are now segmentation of the existing enterprise subscriber base, not a new cold-acquisition consent event. The controlling standard is `ops/newsletters/ENTERPRISE_SUBSCRIBER_SEGMENTATION_STANDARD.md`.
+
+### Good Times GHL
+- Location: `jbm4vUg0J1llNkK8q6Lt`
+- Sender QA received from `reply@mail.thegoodtimesworldwide.com`
+- GHL provider QA message: `6G8mzQtTfTOLwbz5Ap68`
+- Gmail inbox proof: `1a0c77e804034563`
+- `has_attachment=false`
+- Graphic-only HTML body verified.
+
+### Good Times newsletter schedule
+- 2026-09-22 4:45 PM ET — Atlanta This Week / Weekly City Guide
+- 2026-09-23 4:45 PM ET — The Next 30 Days in Atlanta
+- 2026-09-24 4:45 PM ET — Date Night in Atlanta
+
+All three creatives use the locked graphic-only body standard. The artwork is the visible newsletter body and is clickable to a tracked Good Times destination.
+
+### Audience materialization
+The Good Times preload importer snapshots contacts that existed by `2026-09-22T04:45:00Z`, excludes DND/no-email records, and materializes eligible contacts into the Good Times newsletter subscriber lane.
+
+Initial explicit runtime result after founder clarification:
+- 3,000 preload contacts inspected manually in the first two passes
+- 586 subscribers added by those two passes
+- background import continues every 5 minutes
+- later status check showed 862 active Good Times newsletter subscribers available
+- global/channel DND and unsubscribe remain controlling
+
+### Ramp
+Good Times restarts the current newsletter program at 50/day, 10 recipients per dispatcher batch, then 75 → 100 → 150 → 250 → 400 → 650 → 1,000/day after healthy evidence.
+
+The GHL dispatcher was corrected so 50 is no longer a hard system maximum; the dispatcher can support the active ramp up to 1,000/day while the enqueuer/warm-up schedule controls how many recipients are actually eligible each day.
