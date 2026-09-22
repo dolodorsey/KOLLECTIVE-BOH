@@ -109,3 +109,37 @@ Example: ICONIC LIVE may use The Kollective email transport when explicitly auth
 Data can be reused by relevance.
 
 Company identity cannot be merged.
+
+
+## 2026-09-22 founder clarification — full pool per company
+
+The full enterprise master contact universe is not merely a discovery source. Every separate company is entitled to its own independent copy/use of the full enterprise-owned contact pool over time.
+
+Current canonical pool:
+- 112,349 active master records
+- 107,955 records with email or phone
+- 87,217 unique usable email subscribers in the current deduplicated newsletter materialization pass
+
+Operating rule:
+- every active GHL company location targets 107,955 contactable master records;
+- contact records are physically upserted into each exact company GHL location through a rate-limited background sync;
+- sender, workflows, pipelines, attribution, campaign history and reporting remain company-specific;
+- the same enterprise contact may exist independently in multiple company CRMs;
+- campaign relevance still controls who receives a specific message;
+- DND, unsubscribe, bounce, complaint and suppression controls still override campaign eligibility.
+
+The distinction is:
+
+**Full pool ownership/access = YES for every company.**
+
+**Every contact receives every campaign = NO.**
+
+Current newsletter-company pools have been materialized to roughly 87.2K active email subscribers each, including Hakuna Matata, Sole Exchange, ICONIC/Nightmare, Mission 365, Good Times, The Kollective and S.O.S. S.O.S.'s provider-recruitment newsletter remains segment-gated to provider-qualified subscribers even though the company owns the full pool.
+
+GHL full-contact replication runtime:
+- seed: every minute
+- dispatch: every minute
+- receipt reconciliation: every minute
+- current-focus companies prioritized first
+- remaining active companies continue automatically afterward
+- Pronto Energy is the sole currently blocked GHL location because its exact-location PIT is missing.
