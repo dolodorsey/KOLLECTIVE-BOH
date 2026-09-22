@@ -8,7 +8,7 @@ Rule: Brand audiences, consent, sender identity, tracking and reporting remain i
 
 | Brand / Division | Campaign Key | Intended Send | Audience | Creative | Execution State |
 |---|---|---:|---|---|---|
-| The Kollective | `newsletter:2026-09-22:the-kollective:weekly-roundup` | Tue Sep 22, 10:00 AM ET | The Kollective consented subscribers | KOLLECTIVE NEWSLETTER PG1.png + PG2.png | Authorized pending audience sync |
+| The Kollective | `newsletter:2026-09-22:the-kollective:weekly-roundup` | Tue Sep 22, 10:00 AM ET | The Kollective consented subscribers | KOLLECTIVE NEWSLETTER PG1.png + PG2.png | Media + tracking + founder test complete; authorized pending consent-audience sync |
 | S.O.S. | `newsletter:2026-09-22:s-o-s:provider-early-access` | Tue Sep 22, 1:30 PM ET | Provider early-access list only | S.O.S. NEWSLETTER.png | Blocked: exact HighLevel location PIT + provider audience consent sync required |
 | ICONIC LIVE / Nightmare on Channelside | `newsletter:2026-09-23:concert-tampa-halloween:concert-update` | Wed Sep 23, 11:00 AM ET | Event-consented attendees / prospects | NOC NEWSLETTER.png | Blocked until exact entity sender is executable |
 | Mission 365 | `newsletter:2026-09-24:mission-365:weekly` | Thu Sep 24, 10:30 AM ET | Mission 365 consented subscribers | MISSION 365 NEWSLETTER.png | Blocked until exact entity sender is executable |
@@ -62,7 +62,7 @@ Primary CTA: SHOP MERCH
 5. The Kollective two-page creative renders PG1 first, then PG2.
 6. The direct HighLevel connector returned an IAM 401 during this programming pass. S.O.S. also lacks the exact persisted location PIT required by the runtime guard. Do not bypass either condition by borrowing another brand sender.
 7. Supabase `marketing_native_campaigns` is the canonical send-control record for this week's package.
-8. Current Supabase marketing-consent tables contain no active records for this package, so no live bulk send is authorized until consented brand audiences are synced.
+8. Current Supabase marketing-consent tables contain no active records for this package, so no live bulk send is authorized until consented brand audiences are synced.\n9. All eight newsletter graphics are staged as email-safe public Shopify CDN media and all seven campaigns have tracked CTA routes written into Supabase.\n10. The Kollective founder QA test was sent from the exact Kollective Gmail sender to the founder review inbox; Gmail message ID: `1a0c6c696acbc1d3`.
 
 ## QA before release
 
@@ -70,9 +70,9 @@ Primary CTA: SHOP MERCH
 - [ ] Exact GHL location PIT verified where HighLevel is the transport
 - [ ] Correct brand audience synced
 - [ ] Suppressions / unsubscribes applied
-- [ ] Creative image hosted in email-safe public media
+- [x] Creative image hosted in email-safe public media
 - [ ] Mobile preview checked
-- [ ] CTA destination verified
+- [x] CTA destination routes generated and written to Supabase
 - [ ] Test send received
 - [ ] Production schedule confirmed in provider
 - [ ] Provider campaign/source ID written back to Supabase
