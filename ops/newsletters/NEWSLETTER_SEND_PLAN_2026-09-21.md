@@ -145,3 +145,16 @@ A single scheduled automation operates these slots. It may send only an approved
 - Dr. Dorsey, Infinity Water, and Pronto Energy email packages now have verified sender routes, tracked destinations, approved packages, launch authorization, and daily send slots. They remain gated by eligible audience availability.
 - First-party consent sync now also ingests explicit consent from Nightmare giveaway + Halloween lead capture tables every 15 minutes.
 - Current verified explicit-consent recovery from the inspected first-party sources is still zero for the active newsletter lanes; do not manufacture consent or reuse another entity's list.
+
+
+## Execution architecture correction — 2026-09-21
+
+Newsletter scheduling/execution is **not** owned by ChatGPT task automation.
+
+- HighLevel is the execution/sending layer.
+- Supabase is the control plane and source of truth for consent, suppression, campaign state, sender routing, ramp state, tracking, QA, and receipts.
+- GitHub stores the operating standard.
+- ChatGPT automation previously created for the daily entity email ramp has been disabled and marked migrated to GHL.
+- Graphic rendering standard is locked in `ops/newsletters/GRAPHIC_ONLY_NEWSLETTER_STANDARD.md`.
+- GHL runtime template standard is stored in the MCP Gateway `ghl_script_templates` table under `graphic_only_newsletter_standard` and `graphic_only_newsletter_multipage_standard`.
+- Existing receipt-backed GHL email dispatcher/reconciler remains the execution transport path.
