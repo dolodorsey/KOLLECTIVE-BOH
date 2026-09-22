@@ -100,3 +100,36 @@ The prior one-send-per-brand weekly cadence is superseded by a daily cohort mode
 - A sender does not advance when bounce, complaint, unsubscribe, provider-failure, throttling, consent, suppression, or exact-sender gates fail.
 - ICONIC LIVE uses one daily sender slot even though two approved newsletter creatives exist; do not double-send the entity during warm-up.
 - Supabase `communication-send-ramp-refresh-v1` evaluates ramp state hourly; `khg-enterprise-autonomy-tick` evaluates due daily operations every five minutes.
+
+
+## Ramp v3 — founder direction 2026-09-21
+
+The sender warm-up policy is now **50 production recipients/day to start**, executed in **10-recipient chunks**, not 10 recipients/day.
+
+Ramp ladder: **50 → 75 → 100 → 150 → 250 → 400 → 650 → 1,000/day**, with a 24-hour healthy-delivery gate before each increase. Any throttle, provider failure, bounce/complaint/unsubscribe threshold breach, sender failure, consent failure, or suppression issue stops scaling.
+
+Daily entity slots (America/New_York):
+- 07:15 — Dr. Dorsey
+- 08:15 — The Kollective
+- 09:15 — Casper Group
+- 10:15 — S.O.S.
+- 11:15 — Infinity Water
+- 12:15 — Mission 365
+- 13:15 — Pronto Energy
+- 14:15 — Hakuna Matata
+- 15:15 — Sole Exchange
+- 18:15 — ICONIC LIVE / Nightmare on Channelside
+
+A single scheduled automation operates these slots. It may send only an approved campaign, from the exact entity sender, to that entity's eligible audience. Draft/unapproved content is prepared but held.
+
+### Sender repairs completed
+- Sole Exchange: brand-owned Gmail route reconciled into communication_sender_profiles.
+- Casper Group: brand-owned Gmail route reconciled.
+- Dr. Dorsey: brand-owned Gmail route reconciled.
+- Infinity Water: brand-owned Gmail route reconciled.
+- Pronto Energy: brand-owned Gmail route reconciled.
+- The Kollective remains connected.
+- S.O.S. transport is historically verified, but BOH exact-location PIT persistence remains a current execution gate.
+
+### Consent intake
+`public.sync_first_party_email_consent_v1()` now imports only explicit first-party consent from supported sources into the canonical `email_consent` table. It runs every 15 minutes via pg_cron. It does not infer consent from cold lead records, Gmail contacts, or unrelated brands.
