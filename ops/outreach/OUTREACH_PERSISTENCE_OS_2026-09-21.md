@@ -161,18 +161,17 @@ View:
 
 RLS is enabled on all new public tables. Direct `anon` / `authenticated` access is revoked; service-side workflows are the intended execution path.
 
-## HighLevel truth
+## HighLevel truth — superseded 2026-09-23
 
-Do not treat CRM manifest status as live proof.
+Do not treat CRM manifest status as live proof, and do not treat the ChatGPT-facing HighLevel connector IAM state as GHL runtime health.
 
-At implementation:
-- Casper Group location mapping exists, but live readiness is 20/100 and pipelines/workflows/contact data are not verified ready.
-- The Kollective readiness is 0/100 in the readiness audit.
-- The ChatGPT-facing HighLevel connector returns IAM 401 for required scope.
+**Authoritative runtime:** Supabase-backed GHL credentials and entity/location mappings. The agency credential was validated on 2026-09-23 against the live agency inventory (97 locations). Each lane must still prove its exact location, sender, pipeline/workflow state, contacts, delivery and provider receipts independently.
 
-Relevant pipeline manifests were changed from `deployed` to `planned_qa_gated` until live verification succeeds.
+**Default outbound:** GHL for marketing email, newsletters, nurture, provider recruitment, customer lifecycle, operational follow-up and SMS. Entity data, locations, senders, workflows and reporting remain fully separated.
 
-VC uses Gmail as the primary outbound channel even after GHL is repaired; GHL is tracking/CRM support for VC, not the mass-mail sender.
+**Exception:** VC / investor relations continues to use founder 1:1 Gmail from `thedoctordorsey@gmail.com`; GHL supports CRM/tracking for that lane. Founder-personal or another explicitly approved special case may also use Gmail. There is no automatic marketing fallback from GHL to Gmail.
+
+Relevant pipeline manifests remain QA-gated until their exact entity objects are verified live.
 
 ## Event outcomes
 
