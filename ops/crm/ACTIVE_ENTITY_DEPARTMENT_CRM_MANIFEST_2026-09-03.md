@@ -37,7 +37,7 @@ Included active CRM deployment scope:
 
 Explicitly excluded from this sprint:
 - Beverages
-- Rose on Piedmont
+- Retired S.O.S. legacy identity (historical records only; never operate as a current entity)
 - ICONIC / active concert properties
 - Water Portfolio
 - Playmaker's Sports Association
@@ -182,15 +182,15 @@ Every HighLevel object must remain entity-owned:
 
 No cross-brand contact pooling, sender reuse, opportunity mixing, or generic enterprise pipelines unless explicitly approved.
 
-## HighLevel Deployment Status
+## HighLevel Deployment Status — superseded 2026-09-23
 
-Wave 1 pipeline specifications are ready in Supabase, but HighLevel live provisioning is blocked by the current connected-app IAM scope. Current connector response:
+**Supabase-backed GHL runtime is the authoritative execution path.** KOLLECTIVE BOH has an active GHL agency credential validated on 2026-09-23 against the live agency inventory (97 locations), plus entity/location runtime mappings. The ChatGPT-facing HighLevel connector may still return an IAM 401; that is an admin-surface limitation and must never be reported as HighLevel being unavailable.
 
-`401 — This authClass type is not allowed to access this scope. Please verify your IAM configuration.`
+Each entity remains 100% isolated. Its exact GHL location/subaccount, sender, pipeline, workflows, contacts, fields, agents and reporting must be separately verified. Some per-location pipeline-create scopes and exact-location credentials still require remediation; those are entity-specific gaps, not an enterprise GHL outage.
 
-The seven Wave 1 HighLevel bindings currently report `needs_credentials`. Supabase manifest rows therefore use `ghl_status = blocked_iam` so the deployment queue is explicit and auditable rather than silently incomplete.
+Marketing email/newsletters/nurture/provider/customer lifecycle/SMS use GHL as the primary route. Gmail is exception-only for VC/investor/founder-personal or another explicitly approved special case; there is no automatic marketing fallback to Gmail.
 
-Once IAM scope is restored, provision in this order:
+Provision/verify in this order:
 1. verify entity location/subaccount
 2. create/update custom fields and tags
 3. create pipelines and stages
