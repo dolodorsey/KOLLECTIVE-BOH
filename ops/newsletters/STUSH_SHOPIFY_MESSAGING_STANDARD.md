@@ -96,3 +96,17 @@ Tracked STUSH links are registered in BOH. Production campaigns are packaged and
 - backend customer API: blocked by missing customer scopes
 - sender `info@stushusa.com`: configured as the required STUSH identity in BOH, not yet proven in Shopify Notifications
 - newsletters: ready as Shopify-native packages, held from send until the two Shopify-native blockers above are cleared
+
+
+## Shared-shop constraint
+
+The currently connected Shopify shop is the shared BODEGA backend. Shopify's notification/marketing sender identity is configured at the **shop level**, not as a STUSH-only segment property.
+
+Therefore, changing the shared shop's sender to `info@stushusa.com` would also affect other Shopify-originated communication from that shop.
+
+For strict 100% company separation, production STUSH Shopify messaging requires one of these exact states:
+
+1. the shared BODEGA shop is intentionally used only for STUSH-originated Shopify email while other brands use separate email execution; or
+2. STUSH is restored/moved to a dedicated Shopify shop with `info@stushusa.com` as its authenticated sender.
+
+Do not silently change the shared store-wide sender because that would violate company isolation.
