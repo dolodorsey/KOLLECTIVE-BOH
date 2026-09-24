@@ -34,3 +34,14 @@
 -- Sender warmup ladder
 -- 50 -> 75 -> 100 -> 150 -> 250 -> 400 -> 650 -> 1000/day
 -- 10 recipients per dispatcher batch
+
+
+-- 2026-09-23 production start hardening
+-- - company full-contact replication is active against the 107,872 provider-valid master-contact target.
+-- - newsletter campaign startup uses public.enqueue_one_newsletter_start_v1().
+-- - current warmup cap is enforced from brand_ghl_map/email_warmup_schedule at 50/day.
+-- - dispatcher cap counts BOTH sending + sent so slow provider receipts cannot overshoot a warmup rung.
+-- - pending rows above the warmup cap are cancelled before provider dispatch.
+-- - ICONIC / Nightmare may source physical GHL contacts from the authorized Kollective location while keeping ICONIC campaign identity.
+-- - S.O.S. Founding Provider campaign remains provider-segment gated even though S.O.S. has full-pool company access.
+-- - production startup cohorts launched: Kollective 50, Mission 365 50, Hakuna Matata 50, Good Times 50, Sole Exchange 50, ICONIC 50, S.O.S. provider cohort 12 currently materialized/sendable.
