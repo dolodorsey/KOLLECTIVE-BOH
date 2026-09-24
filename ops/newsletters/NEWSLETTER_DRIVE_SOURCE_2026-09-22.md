@@ -39,6 +39,6 @@ The source files themselves label the sequence 1/4 through 4/4. Preserve this or
 
 ## Deployment gates
 
-- STUSH exact GHL location exists and PIT is active, but marketing sender delivery proof must pass before production newsletter send.
+- STUSH newsletters are Shopify-native through Shopify Messaging. GHL remains CRM-only. Production sender must be info@stushusa.com and stushusa.com must be authenticated in Shopify before release.
 - FĚNYX exact GHL location exists, but exact-location PIT is currently missing. Prepare creative/CTA/sequence now; do not send until exact sender/runtime is restored.
 - Current existing entity newsletters continue under the locked graphic-only HTML body standard.
