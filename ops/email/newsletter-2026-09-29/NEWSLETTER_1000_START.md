@@ -54,3 +54,42 @@ Founder Gmail raw-MIME QA produced the following transport truth:
 
 ### Runtime repair
 `ghl-newsletter-dispatch-v4` was upgraded to version 5 to honor newsletter sender-route overrides. If an override uses a different HighLevel location, the dispatcher resolves/upserts the recipient into the sender location before sending and records the routed sender/contact evidence.
+
+
+## Deliverability repair results — 2026-09-29
+
+A second founder-inbox A/B test proved the old image-only body was a major placement problem for several authenticated senders.
+
+### New rendering standard
+Use **graphic-first deliverability hybrid v3**:
+- 25–80 words of visible brand-native intro copy
+- one visible text CTA
+- hero newsletter graphic remains the primary visual and remains clickable
+- no attachment
+- 620px max-width responsive email body
+- hidden preheader allowed
+- one visible intro for multi-page newsletters, then stack graphics
+- exact-package founder QA before any live allocation
+
+### A/B results
+- STUSH: image-only test = Spam; hybrid test = **Inbox**
+- ICONIC LIVE / Nightmare: image-only test = Spam; hybrid test = **Inbox**
+- S.O.S.: image-only test = Spam; hybrid test = **Inbox**
+- Hakuna Matata via Kollective: image-only test = Spam; hybrid test = **Inbox**
+- Sole Exchange: image-only = Spam; hybrid = **still Spam** → reputation/warm-up remains
+- Mission 365 via Kollective: hybrid = **still Spam** → owner hold remains
+- Kollective control: authenticated and already landed in Inbox
+- GOOD TIMES: remains blocked on a real DNS defect: SPF/DMARC pass, but DKIM selector `pic` has no public key.
+
+### GOOD TIMES external DNS repair
+Do not guess or invent the DKIM public key. In the GOOD TIMES HighLevel subaccount (`jbm4vUg0J1llNkK8q6Lt`) recover the provider-generated DKIM record for `mail.thegoodtimesworldwide.com`. The founder Gmail raw header proves the missing selector is:
+
+`pic._domainkey.mail.thegoodtimesworldwide.com`
+
+Restore the exact provider-generated value in the authoritative DNS (GoDaddy), wait for provider verification, then re-run founder QA. No 1,000-recipient GOOD TIMES release until DKIM passes.
+
+### S.O.S. DNS hygiene
+SPF and DKIM pass. Gmail did not emit a DMARC result for the root From domain. Verify `_dmarc.superherosonstandby.com` exists and is syntactically valid. Do not overwrite an existing DMARC policy blindly. Hybrid founder QA now lands in Inbox, so this is a DNS-hygiene item rather than a current content-placement blocker.
+
+### Runtime
+`ghl-newsletter-dispatch-v4` is now version 5 and honors sender-route overrides, including cross-location contact resolution/upsert when a campaign is sent through an approved parent transport.
