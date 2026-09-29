@@ -93,3 +93,26 @@ SPF and DKIM pass. Gmail did not emit a DMARC result for the root From domain. V
 
 ### Runtime
 `ghl-newsletter-dispatch-v4` is now version 5 and honors sender-route overrides, including cross-location contact resolution/upsert when a campaign is sent through an approved parent transport.
+
+
+## Continuation checkpoint — old package freeze + STUSH dual route verified
+
+- All legacy newsletter campaigns for GOOD TIMES, STUSH, Kollective, S.O.S., Sole Exchange, Hakuna Matata, Mission 365 and ICONIC LIVE were moved back to draft. The founder is supplying new newsletter packages; legacy creative must not release.
+- All stale unsent newsletter queue rows with no provider message ID were retired as superseded. Current pending/sending queue for these lanes is zero.
+- Old live-send cron loops for GOOD TIMES, Kollective, ICONIC LIVE, Sole Exchange and S.O.S. were disabled so no stale package can leak while the new creative is being built.
+- Subscriber sync and delivery-audit infrastructure may continue; public newsletter sends remain gated by new-package founder QA.
+- STUSH dual route is now the operating standard:
+  - HighLevel allocation: 500
+  - Shopify Email allocation: 500
+  - Total initial STUSH cap: 1,000
+  - 72-hour cross-provider dedupe required
+- Shopify segment verification:
+  - Segment: `STUSH | Email Subscribers`
+  - Segment ID: `gid://shopify/Segment/580298965183`
+  - Query: `email_subscription_status = 'SUBSCRIBED' AND customer_tags CONTAINS 'stush-newsletter'`
+  - Verified current segment count: **921**
+- STUSH HighLevel founder hybrid QA landed in Inbox with SPF/DKIM/DMARC passing.
+- S.O.S., ICONIC LIVE and Hakuna Matata hybrid founder QA also landed in Inbox.
+- Sole Exchange remains authentication-clean but reputation/spam constrained.
+- Mission 365 remains owner-held.
+- GOOD TIMES remains blocked on the missing `pic._domainkey.mail.thegoodtimesworldwide.com` DKIM public key plus the founder's new creative.
