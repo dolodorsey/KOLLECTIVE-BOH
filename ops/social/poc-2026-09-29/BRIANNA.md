@@ -2,7 +2,7 @@
 
 ## DR. DORSEY — @DOLODORSEY
 Target: 3–4 feed/reels + 8–15 stories daily.
-- 9:30: real Hakuna Matata parable carousel only.
+- 9:30: real Hakuna Matata complete 5-slide parable carousel only.
 - 12:30: BTS — meetings, brands, warehouse, products, travel, team, building.
 - 7:00: founder/lifestyle/quote/company push.
 - Optional late-night post.
