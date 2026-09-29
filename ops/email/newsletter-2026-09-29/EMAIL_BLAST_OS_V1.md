@@ -111,3 +111,17 @@ Publication truth:
 `PROGRAMMED → QA → VERIFIED AUDIENCE → PROVIDER ACCEPTED → PROVIDER MESSAGE ID → DELIVERY/PLACEMENT → METRICS`
 
 A database timestamp alone is never send proof.
+
+
+## Founder correction — STUSH minimum is 1K per platform
+Updated directive:
+- STUSH HighLevel minimum: **1,000**
+- STUSH Shopify Email minimum: **1,000**
+- STUSH total campaign target: **2,000**
+- Do not interpret prior 500/500 split as the cap.
+- GHL may continue in provider-safe batches until 1,000 provider-accepted messages are reached.
+- Shopify Email target is 1,000; current connected Shopify store has **921 email-subscribed customers**, so there is a current 79-subscriber shortfall before a true 1,000 unique Shopify Email blast is possible.
+- Never fabricate Shopify marketing consent to fill the 79 gap.
+- Cross-provider dedupe is preferred when enough distinct consented recipients exist, but the founder's minimum is 1,000 delivered by each platform.
+
+All other focus entity blast targets remain **1,000 minimum per campaign**, with provider throttling treated as pacing—not as a smaller campaign goal.
