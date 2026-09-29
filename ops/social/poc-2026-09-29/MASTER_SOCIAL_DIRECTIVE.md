@@ -27,7 +27,7 @@ Founder directive: every entity POC is responsible for keeping that entity's soc
 - Casper Group: 2–4 feed/reels; 5–10 stories
 
 ## Dr. Dorsey / Hakuna Matata lock
-The 9:30 AM lane is the real Hakuna Matata parable format: 3–5 slide cinematic story carousel. Mini Me acts inside the story. Generic big-head motivational portraits are not valid parable assets.
+The 9:30 AM lane is the real Hakuna Matata parable format: complete 5-slide cinematic story carousel. Mini Me acts inside the story. Generic big-head motivational portraits are not valid parable assets.
 
 Standard Dr. Dorsey flow:
 - 9:30 AM — Hakuna Matata / Mini Me parable
