@@ -2,7 +2,7 @@
 
 ## DR. DORSEY — @DOLODORSEY
 Support the 9:30 parable / 12:30 BTS / 7:00 founder-lifestyle structure.
-Real Hakuna Matata parables are 3–5 slide cinematic story carousels. Mini Me acts inside the story.
+Real Hakuna Matata parables are complete 5-slide cinematic story carousels. Mini Me acts inside the story.
 
 ## THE KOLLECTIVE — @KOLLECTIVEHOSPITALITY
 Target: 2–4 feed/reels + 5–10 stories daily.
