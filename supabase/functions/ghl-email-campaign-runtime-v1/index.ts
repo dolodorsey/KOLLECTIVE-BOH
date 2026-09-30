@@ -99,9 +99,6 @@ async function getUser(rt:any){
 }
 async function probeEntity(entityKey:string){
   try{
-    if(entityKey==="fenyx"){
-      try{ await runtime(entityKey); }catch{ await repairFenyx(); }
-    }
     const rt=await runtime(entityKey);
     const [loc,camps,contacts]=await Promise.all([
       ghl(rt.token,"/locations/"+encodeURIComponent(rt.locationId),"GET",undefined,"v3"),
@@ -240,6 +237,8 @@ async function dispatchCampaign(campaignId:string,maxOverride?:number,dryRun=fal
   if(meta.paused_for_20260929_newsletter_refresh===true||meta.paused===true)return {ok:false,error:"campaign_paused",pause_reason:String(meta.pause_reason||"")};
   const authorized=meta.launch_authorized===true||c.status==="ready_for_native_execution"||c.status==="sending";
   if(!authorized)return {ok:false,error:"campaign_not_launch_authorized",status:c.status};
+  const audienceReady=meta.audience_ready===true||c.status==="ready_for_native_execution"||c.status==="sending";
+  if(!audienceReady)return {ok:false,error:"campaign_audience_not_verified",status:c.status};
   if(c.provider!=="enterprise_email")return {ok:false,error:"provider_not_highlevel_email",provider:c.provider};
   const rt=await runtime(entityKey);
   const {data:profile}=await db.from("communication_sender_profiles").select("*").eq("brand_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
@@ -265,9 +264,9 @@ async function dispatchCampaign(campaignId:string,maxOverride?:number,dryRun=fal
     return {ok:false,error:"native_campaign_create_failed",http:create.status,detail:safe(create.body?.message||create.body?.error||JSON.stringify(create.body))};
   }
   const nativeId=String(create.body.id);
-  const now=new Date(),pad=(n:number)=>String(n).padStart(2,"0");
-  const hour24=now.getHours(), ampm=hour24>=12?"PM":"AM", hour12=hour24%12||12;
-  const sendAt=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(hour12)}:${pad(now.getMinutes())} ${ampm}`;
+  const now=new Date();
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:true}).formatToParts(now).filter(p=>p.type!=="literal").map(p=>[p.type,p.value]));
+  const sendAt=`${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute} ${parts.dayPeriod}`;
   const schedule=await ghl(rt.token,"/emails/locations/"+encodeURIComponent(rt.locationId)+"/campaigns/emails/"+encodeURIComponent(nativeId)+"/schedule","POST",{
     scheduleType:"batch",timeZone:"America/New_York",userId:user.user.id,userName:user.user.name,
     emailMeta:{subject:String(c.subject||c.campaign_name||"").slice(0,500),fromName:String(profile.from_name||c.campaign_name||"").slice(0,180),fromEmail:String(profile.from_address||meta.sender_from||""),replyToAddress:String(profile.reply_to||profile.from_address||""),previewText:String(c.preheader||"").slice(0,500)},
@@ -305,6 +304,30 @@ async function reconcileAll(){
   const out=[]; for(const c of data||[])out.push(await reconcileCampaign(c)); return out;
 }
 
+async function qaSend(entityKey:string,recipient:string){
+  const allowedRecipients=new Set(["thedoctordorsey@gmail.com","dolodorsey@gmail.com"]);
+  const email=String(recipient||"thedoctordorsey@gmail.com").trim().toLowerCase();
+  if(!allowedRecipients.has(email))return {ok:false,error:"qa_recipient_not_allowlisted"};
+  if(!FOCUS.includes(entityKey))return {ok:false,error:"entity_not_in_focus_scope"};
+  const rt=await runtime(entityKey);
+  const {data:profile}=await db.from("communication_sender_profiles").select("*").eq("brand_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
+  const {data:route}=await db.from("enterprise_entity_sender_routes").select("*").eq("entity_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
+  if(!profile?.sending_enabled||!profile?.verified||profile?.connection_status!=="connected"||!profile?.from_address)return {ok:false,error:"sender_profile_not_ready"};
+  if(route?.route_status!=="ready")return {ok:false,error:"sender_route_not_ready",route_status:route?.route_status};
+  const up=await ghl(rt.token,"/contacts/upsert","POST",{locationId:rt.locationId,firstName:"Dr.",lastName:"Dorsey",email,source:"KHG internal email QA",tags:["khg-internal-qa"],createNewIfDuplicateAllowed:false},"2021-07-28");
+  const contactId=String(up.body?.contact?.id||up.body?.id||"");
+  if(!up.ok||!contactId)return {ok:false,error:"qa_contact_upsert_failed",http:up.status,detail:safe(up.body?.message||up.body?.error||JSON.stringify(up.body))};
+  const label=entityKey.toUpperCase();
+  const subject="[INTERNAL QA] "+label+" sender certification — 2026-09-30";
+  const body="Internal sender certification for "+label+". This message verifies the exact-brand HighLevel email execution path and provider receipt.";
+  const html="<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:40px auto\"><h2>"+label+" Email QA</h2><p>"+body+"</p><p><strong>Internal QA only.</strong></p></div>";
+  const sent=await ghl(rt.token,"/conversations/messages","POST",{type:"Email",contactId,emailFrom:String(profile.from_address),emailTo:email,subject,html,message:body,status:"pending"},"v3");
+  const messageId=String(sent.body?.messageId||sent.body?.id||sent.body?.message?.id||"");
+  const now=new Date().toISOString();
+  await db.from("communication_send_log").insert({channel:"email",brand_key:entityKey,stream:"marketing",sender_profile_id:profile.id,provider:"highlevel_conversation",provider_message_id:messageId||null,recipient:email,status:sent.ok&&messageId?"accepted":"failed",subject,body_preview:body.slice(0,240),campaign_key:"internal-qa:email-runtime:20260930",error_message:sent.ok?null:safe(sent.body?.message||sent.body?.error||"provider_message_id_missing"),metadata:{test:true,is_test:true,internal_qa:true,http_status:sent.status,ghl_contact_id:contactId,exact_brand_sender:true},submitted_at:now,updated_at:now});
+  return {ok:sent.ok&&Boolean(messageId),entity_key:entityKey,recipient:email,from_address:profile.from_address,http_status:sent.status,provider_message_id:messageId||null,error:sent.ok?null:safe(sent.body?.message||sent.body?.error||"provider_message_id_missing")};
+}
+
 Deno.serve(async(req)=>{
   if(req.method==="GET")return json({ok:true,system:"KHG HighLevel Native Email Campaign Runtime",version:"1",focus:FOCUS,secrets_returned:false});
   if(req.method!=="POST")return json({ok:false,error:"method_not_allowed"},405);
@@ -322,6 +345,10 @@ Deno.serve(async(req)=>{
       const results=[]; for(const e of FOCUS)results.push(await probeEntity(e));
       await db.from("crm_legacy_ghl_runtime_call_log").insert({runtime_slug:"ghl-email-campaign-runtime-v1",action:"probe_all",disposition:"observed",request_metadata:{results,secrets_returned:false},occurred_at:new Date().toISOString()});
       return json({ok:true,results,secrets_returned:false});
+    }
+    if(action==="qa_send"){
+      const entity=String(body?.entity_key||""); if(!entity)return json({ok:false,error:"entity_key_required"},400);
+      const r=await qaSend(entity,String(body?.recipient||"thedoctordorsey@gmail.com")); return json(r,r.ok?200:409);
     }
     if(action==="dry_run"){
       const id=String(body?.campaign_id||""); if(!id)return json({ok:false,error:"campaign_id_required"},400);
