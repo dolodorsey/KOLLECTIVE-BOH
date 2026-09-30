@@ -57,6 +57,17 @@ The rest of the daily slots rotate through:
 - **BEVCO BTS:** HOLD. Do not use until the founder explicitly releases it.
 - **DOLO OPTIONS:** HOLD. Do not use until the founder explicitly releases it.
 
+
+## Caption Voice v2 — Lifestyle Founder, Not Flyer Page
+
+@DOLODORSEY is a lifestyle-founder media property. Captions should feel introspective, effortless, quotable, confident, culturally fluent, aspirational, selective-flex and concise.
+
+- Lead with perspective, observation, access, taste, lifestyle, work, travel, relationships or founder motion.
+- Promotions must be reframed through Dr. Dorsey's point of view instead of reading like a flyer or press release.
+- Avoid generic motivation, corporate wording, long explanations and repetitive hard-sell CTAs.
+- Do not use plain/low-effort Mini Me graphics. Mini Me is only eligible when the asset is premium, approved and visually strong; otherwise use the approved Hakuna/alternative slot content.
+- Do not auto-DM from @DOLODORSEY.
+
 ## Permanent DORSEY Caption Footer
 
 Every future DORSEY caption must include:
