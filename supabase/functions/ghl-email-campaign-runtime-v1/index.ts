@@ -117,8 +117,9 @@ async function probeEntity(entityKey:string){
     const fromAddress=String(profile?.from_address||"").trim().toLowerCase();
     const crossBrandBlocked=(entityKey==="iconic-live-entertainment" && /kollective/.test(fromAddress))
       || (entityKey==="fenyx" && (/kollective/.test(fromAddress)||/bodega/.test(fromAddress)));
+    const placementHold=profile?.metadata?.deliverability_hold===true;
     const senderAddressReady=Boolean(fromAddress)&&!crossBrandBlocked;
-    const executionReady=(nativeReady||conversationReady)&&senderAddressReady;
+    const executionReady=(nativeReady||conversationReady)&&senderAddressReady&&!placementHold;
     const executionMode=executionReady?(nativeReady?"native_campaign":"conversation_email"):null;
     if(profile){
       const m={...(profile.metadata||{}),native_campaign_api_http:camps.status,native_campaign_api_verified:nativeReady,conversation_email_probe_http:conv.status,conversation_email_verified:conversationReady,email_execution_mode:executionMode,exact_location_credential:true,last_runtime_probe_at:now};
@@ -126,14 +127,14 @@ async function probeEntity(entityKey:string){
         delete m.transport_blocker;
         await db.from("communication_sender_profiles").update({provider:"highlevel_gateway",verified:true,sending_enabled:true,connection_status:"connected",daily_cap:Math.max(1000,Number(profile.daily_cap||0)),last_verified_at:now,metadata:m,updated_at:now}).eq("id",profile.id);
       }else{
-        m.transport_blocker=crossBrandBlocked?"cross_brand_marketing_sender_prohibited":(!fromAddress?"brand_sender_address_missing":m.transport_blocker||"email_execution_scope_not_verified");
+        m.transport_blocker=crossBrandBlocked?"cross_brand_marketing_sender_prohibited":(!fromAddress?"brand_sender_address_missing":(placementHold?"gmail_qa_spam_placement_hold":m.transport_blocker||"email_execution_scope_not_verified"));
         await db.from("communication_sender_profiles").update({sending_enabled:false,connection_status:"needs_verification",metadata:m,updated_at:now}).eq("id",profile.id);
       }
     }
     const {data:route}=await db.from("enterprise_entity_sender_routes").select("route_status,reason,evidence").eq("entity_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
     const hardHold=entityKey==="mission-365" && String(route?.reason||"").toLowerCase().includes("owner hold");
     const routeStatus=executionReady && !hardHold ? "ready" : "blocked";
-    const blockedReason=hardHold?String(route?.reason||"Owner hold"):(crossBrandBlocked?"Marketing sender is owned by another brand; cross-brand sender fallback is prohibited.":(!fromAddress?"No brand-owned marketing sender address is configured.":"Exact-location token does not currently have a verified email execution path."));
+    const blockedReason=hardHold?String(route?.reason||"Owner hold"):(crossBrandBlocked?"Marketing sender is owned by another brand; cross-brand sender fallback is prohibited.":(!fromAddress?"No brand-owned marketing sender address is configured.":(placementHold?"Latest Gmail QA placement is Spam; production send is held until inbox placement is re-verified.":"Exact-location token does not currently have a verified email execution path.")));
     await db.from("enterprise_entity_sender_routes").update({
       route_provider:"highlevel_gateway",
       route_status:routeStatus,
@@ -142,7 +143,7 @@ async function probeEntity(entityKey:string){
       reason:executionReady?`Exact-location HighLevel token verified for ${executionMode}; sender is production-capable subject to campaign approval, audience/DND rules, unsubscribe controls, and delivery health.`:blockedReason,
       updated_at:now
     }).eq("entity_key",entityKey).eq("channel","email").eq("stream","marketing");
-    return {entity_key:entityKey,location_id:rt.locationId,location_http:loc.status,email_campaign_http:camps.status,conversation_email_http:conv.status,contacts_http:contacts.status,contacts_total:Number.isFinite(total)?total:null,user_resolved:Boolean(user.ok),from_address:fromAddress||null,cross_brand_sender_blocked:crossBrandBlocked,execution_mode:executionMode,ready:executionReady&&!hardHold,hard_hold:hardHold};
+    return {entity_key:entityKey,location_id:rt.locationId,location_http:loc.status,email_campaign_http:camps.status,conversation_email_http:conv.status,contacts_http:contacts.status,contacts_total:Number.isFinite(total)?total:null,user_resolved:Boolean(user.ok),from_address:fromAddress||null,cross_brand_sender_blocked:crossBrandBlocked,deliverability_hold:placementHold,execution_mode:executionMode,ready:executionReady&&!hardHold,hard_hold:hardHold};
   }catch(e){return {entity_key:entityKey,ready:false,error:safe(e instanceof Error?e.message:e)}}
 }
 function campaignHtml(c:any){
@@ -312,14 +313,15 @@ async function qaSend(entityKey:string,recipient:string){
   const rt=await runtime(entityKey);
   const {data:profile}=await db.from("communication_sender_profiles").select("*").eq("brand_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
   const {data:route}=await db.from("enterprise_entity_sender_routes").select("*").eq("entity_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
-  if(!profile?.sending_enabled||!profile?.verified||profile?.connection_status!=="connected"||!profile?.from_address)return {ok:false,error:"sender_profile_not_ready"};
-  if(route?.route_status!=="ready")return {ok:false,error:"sender_route_not_ready",route_status:route?.route_status};
+  if(!profile?.verified||!profile?.from_address)return {ok:false,error:"sender_profile_not_qa_ready"};
+  if(route?.route_status==="blocked")return {ok:false,error:"sender_route_blocked",route_status:route?.route_status};
   const up=await ghl(rt.token,"/contacts/upsert","POST",{locationId:rt.locationId,firstName:"Dr.",lastName:"Dorsey",email,source:"KHG internal email QA",tags:["khg-internal-qa"],createNewIfDuplicateAllowed:false},"2021-07-28");
   const contactId=String(up.body?.contact?.id||up.body?.id||"");
   if(!up.ok||!contactId)return {ok:false,error:"qa_contact_upsert_failed",http:up.status,detail:safe(up.body?.message||up.body?.error||JSON.stringify(up.body))};
   const label=entityKey.toUpperCase();
-  const subject="[INTERNAL QA] "+label+" sender certification — 2026-09-30";
-  const body="Internal sender certification for "+label+". This message verifies the exact-brand HighLevel email execution path and provider receipt.";
+  const stamp=new Date().toISOString().replace(/\.\d{3}Z$/,"Z");
+  const subject="[INTERNAL PLACEMENT QA] "+label+" — "+stamp;
+  const body="Internal placement certification for "+label+". This message verifies the exact-brand HighLevel sender identity, provider receipt, and Gmail placement after sender alignment.";
   const html="<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:40px auto\"><h2>"+label+" Email QA</h2><p>"+body+"</p><p><strong>Internal QA only.</strong></p></div>";
   const sent=await ghl(rt.token,"/conversations/messages","POST",{type:"Email",contactId,emailFrom:String(profile.from_address),emailTo:email,subject,html,message:body,status:"pending"},"v3");
   const messageId=String(sent.body?.messageId||sent.body?.id||sent.body?.message?.id||"");
