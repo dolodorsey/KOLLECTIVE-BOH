@@ -161,13 +161,73 @@ function campaignHtml(c:any){
   return '<!doctype html><html><body style="font-family:Arial,sans-serif;margin:0;padding:32px;background:#fff;color:#111">'+hidden+'<div style="max-width:620px;margin:0 auto;font-size:16px;line-height:1.55">'+body+'<p style="margin-top:28px"><a href="'+dest+'" style="display:inline-block;padding:14px 20px;background:#111;color:#fff;text-decoration:none;font-weight:700">'+cta+'</a></p></div></body></html>';
 }
 async function collectRecipients(rt:any,c:any,maxRecipients:number){
-  const meta=c.metadata||{},filter=meta.provider_filter||{};
-  const existingRes=await db.from("communication_send_log").select("recipient").eq("brand_key",c.brand_key).eq("campaign_key",c.campaign_key).in("status",["queued","submitted","accepted","delivered"]);
+  const meta=c.metadata||{};
+  const singleFilter=meta.provider_filter||null;
+  const filters=Array.isArray(meta.provider_filters)&&meta.provider_filters.length
+    ? meta.provider_filters
+    : (singleFilter?.field?[singleFilter]:[]);
+  const existingRes=await db.from("communication_send_log")
+    .select("recipient")
+    .eq("brand_key",c.brand_key)
+    .eq("campaign_key",c.campaign_key)
+    .in("status",["queued","submitted","accepted","delivered"]);
   const existing=new Set((existingRes.data||[]).map((x:any)=>String(x.recipient||"").toLowerCase()).filter(Boolean));
-  const suppressRes=await db.from("email_suppression").select("email_norm,scope,brand_key").or("scope.eq.global,and(scope.eq.brand,brand_key.eq."+c.brand_key+")");
+  const contactGapHours=Math.max(0,Math.min(720,Number(meta.contact_gap_hours||0)));
+  const recent=new Set<string>();
+  if(contactGapHours>0){
+    const since=new Date(Date.now()-contactGapHours*3600000).toISOString();
+    const {data:recentRows}=await db.from("communication_send_log")
+      .select("recipient")
+      .eq("brand_key",c.brand_key)
+      .eq("channel","email")
+      .eq("stream","marketing")
+      .in("status",["queued","submitted","accepted","delivered"])
+      .gte("submitted_at",since);
+    for(const row of recentRows||[]){
+      const e=String(row?.recipient||"").toLowerCase();
+      if(e)recent.add(e);
+    }
+  }
+  const suppressRes=await db.from("email_suppression")
+    .select("email_norm,scope,brand_key")
+    .or("scope.eq.global,and(scope.eq.brand,brand_key.eq."+c.brand_key+")");
   const suppressed=new Set((suppressRes.data||[]).map((x:any)=>String(x.email_norm||"").toLowerCase()).filter(Boolean));
-  const out:any[]=[]; let startAfterId="",startAfter="",pages=0;
-  while(out.length<maxRecipients && pages<30){
+  const out:any[]=[];
+  let pages=0, providerTotal:number|null=null;
+
+  const accept=(x:any)=>{
+    const email=String(x?.email||"").trim().toLowerCase();
+    if(!email||existing.has(email)||recent.has(email)||suppressed.has(email))return;
+    if(x?.dnd===true)return;
+    if(String(x?.dndSettings?.email?.status||"").toLowerCase()==="active")return;
+    if(!x?.id)return;
+    out.push({id:String(x.id),email,tags:Array.isArray(x.tags)?x.tags:[]});
+  };
+
+  if(filters.length){
+    let page=1;
+    while(out.length<maxRecipients && page<=100){
+      const r=await ghl(rt.token,"/contacts/search","POST",{
+        locationId:rt.locationId,
+        page,
+        pageLimit:100,
+        filters
+      },"2021-07-28");
+      if(!r.ok) throw new Error("contact_search_failed_"+r.status+":"+safe(r.body?.message||r.body?.error||JSON.stringify(r.body),240));
+      const rows=Array.isArray(r.body?.contacts)?r.body.contacts:[];
+      const total=Number(r.body?.total??r.body?.count??rows.length);
+      if(Number.isFinite(total))providerTotal=total;
+      if(!rows.length)break;
+      for(const x of rows){accept(x);if(out.length>=maxRecipients)break;}
+      pages++;
+      if(rows.length<100)break;
+      page++;
+    }
+    return {recipients:out,pages,provider_total:providerTotal,filters};
+  }
+
+  let startAfterId="",startAfter="";
+  while(out.length<maxRecipients && pages<100){
     let path="/contacts/?locationId="+encodeURIComponent(rt.locationId)+"&limit=100";
     if(startAfterId)path+="&startAfterId="+encodeURIComponent(startAfterId);
     if(startAfter)path+="&startAfter="+encodeURIComponent(startAfter);
@@ -175,25 +235,89 @@ async function collectRecipients(rt:any,c:any,maxRecipients:number){
     if(!r.ok) throw new Error("contact_list_failed_"+r.status);
     const rows=Array.isArray(r.body?.contacts)?r.body.contacts:[];
     if(!rows.length)break;
-    for(const x of rows){
-      const email=String(x?.email||"").trim().toLowerCase();
-      if(!email||existing.has(email)||suppressed.has(email))continue;
-      if(x?.dnd===true)continue;
-      if(String(x?.dndSettings?.email?.status||"").toLowerCase()==="active")continue;
-      if(filter?.field==="city"&&filter?.operator==="eq"&&String(x?.city||"").trim().toLowerCase()!==String(filter?.value||"").trim().toLowerCase())continue;
-      if(!x?.id)continue;
-      out.push({id:String(x.id),email});
-      if(out.length>=maxRecipients)break;
-    }
+    for(const x of rows){accept(x);if(out.length>=maxRecipients)break;}
     const metaR=r.body?.meta||{};
     const last=rows[rows.length-1]||{};
     const nextId=String(metaR?.startAfterId||metaR?.nextStartAfterId||last?.id||"");
     const next=String(metaR?.startAfter||metaR?.nextStartAfter||"");
+    pages++;
     if(!nextId||nextId===startAfterId)break;
-    startAfterId=nextId; startAfter=next; pages++;
+    startAfterId=nextId; startAfter=next;
   }
-  return {recipients:out,pages};
+  return {recipients:out,pages,provider_total:null,filters:[]};
 }
+
+async function pipelineProbe(entityKey:string,pipelineId:string){
+  const rt=await runtime(entityKey);
+  let all:any[]=[];
+  for(let page=1;page<=20;page++){
+    const path="/opportunities/search?locationId="+encodeURIComponent(rt.locationId)
+      +"&pipelineId="+encodeURIComponent(pipelineId)
+      +"&status=all&limit=100&page="+page;
+    const r=await ghl(rt.token,path,"GET",undefined,"v3");
+    if(!r.ok)return {ok:false,entity_key:entityKey,pipeline_id:pipelineId,http_status:r.status,error:safe(r.body?.message||r.body?.error||JSON.stringify(r.body))};
+    const rows=Array.isArray(r.body?.opportunities)?r.body.opportunities:[];
+    all=all.concat(rows);
+    const total=Number(r.body?.meta?.total??r.body?.total??all.length);
+    if(rows.length<100||all.length>=total)break;
+  }
+  const contactIds=[...new Set(all.map((x:any)=>String(x?.contact?.id||x?.contactId||x?.contact_id||"")).filter(Boolean))];
+  return {
+    ok:true,
+    entity_key:entityKey,
+    pipeline_id:pipelineId,
+    opportunities:all.length,
+    unique_contacts:contactIds.length,
+    contact_ids:contactIds.slice(0,1000),
+    sample:all.slice(0,10).map((x:any)=>({
+      id:x?.id||null,
+      name:x?.name||null,
+      status:x?.status||null,
+      pipelineStageId:x?.pipelineStageId||x?.pipeline_stage_id||null,
+      contactId:x?.contact?.id||x?.contactId||x?.contact_id||null
+    }))
+  };
+}
+
+async function tagLookup(entityKey:string,query:string){
+  const rt=await runtime(entityKey);
+  const r=await ghl(rt.token,"/locations/"+encodeURIComponent(rt.locationId)+"/tags","GET",undefined,"2021-07-28");
+  const rows=Array.isArray(r.body?.tags)?r.body.tags:[];
+  const q=String(query||"").trim().toLowerCase();
+  return {
+    ok:r.ok,
+    entity_key:entityKey,
+    http_status:r.status,
+    matches:rows.filter((x:any)=>!q||String(x?.name||"").toLowerCase().includes(q))
+      .slice(0,100)
+      .map((x:any)=>({id:String(x?.id||""),name:String(x?.name||"")}))
+  };
+}
+
+async function audienceProbe(entityKey:string,filters:any[]){
+  const rt=await runtime(entityKey);
+  const r=await ghl(rt.token,"/contacts/search","POST",{
+    locationId:rt.locationId,
+    page:1,
+    pageLimit:25,
+    filters:Array.isArray(filters)?filters:[]
+  },"2021-07-28");
+  const rows=Array.isArray(r.body?.contacts)?r.body.contacts:[];
+  return {
+    ok:r.ok,
+    entity_key:entityKey,
+    http_status:r.status,
+    total:Number(r.body?.total??r.body?.count??rows.length),
+    sample:rows.slice(0,10).map((x:any)=>({
+      id:x?.id||null,
+      email:Boolean(x?.email),
+      city:x?.city||null,
+      tags:Array.isArray(x?.tags)?x.tags.slice(0,20):[]
+    })),
+    filters
+  };
+}
+
 const encoder=new TextEncoder();
 async function hmacHex(v:string){const k=await crypto.subtle.importKey("raw",encoder.encode(SK),{name:"HMAC",hash:"SHA-256"},false,["sign"]);const sig=await crypto.subtle.sign("HMAC",k,encoder.encode(v));return [...new Uint8Array(sig)].map(b=>b.toString(16).padStart(2,"0")).join("")}
 function b64url(v:string){return btoa(v).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
@@ -234,6 +358,8 @@ async function dispatchCampaign(campaignId:string,maxOverride?:number,dryRun=fal
   if(error||!c) return {ok:false,error:"campaign_not_found"};
   const entityKey=String(c.brand_key||"");
   if(!FOCUS.includes(entityKey))return {ok:false,error:"entity_not_in_focus_scope"};
+  if(c.scheduled_for && new Date(String(c.scheduled_for)).getTime()>Date.now()+30000)
+    return {ok:false,error:"campaign_not_due",scheduled_for:c.scheduled_for};
   const meta:any=c.metadata||{};
   if(meta.paused_for_20260929_newsletter_refresh===true||meta.paused===true)return {ok:false,error:"campaign_paused",pause_reason:String(meta.pause_reason||"")};
   const authorized=meta.launch_authorized===true||c.status==="ready_for_native_execution"||c.status==="sending";
@@ -257,15 +383,18 @@ async function dispatchCampaign(campaignId:string,maxOverride?:number,dryRun=fal
   if(dryRun)return {ok:true,dry_run:true,entity_key:entityKey,campaign_id:campaignId,eligible_recipients:aud.recipients.length,pages:aud.pages,cap,from:profile.from_address,execution_mode:"native_campaign"};
   const lock=await db.from("marketing_native_campaigns").update({status:"dispatching",updated_at:new Date().toISOString(),metadata:{...meta,dispatch_started_at:new Date().toISOString(),dispatch_target_count:aud.recipients.length}}).eq("id",campaignId).eq("status",c.status).select("id").maybeSingle();
   if(!lock.data)return {ok:false,error:"campaign_already_claimed_or_status_changed"};
-  const create=await ghl(rt.token,"/emails/locations/"+encodeURIComponent(rt.locationId)+"/campaigns/emails","POST",{
-    name:String(c.campaign_name||c.campaign_key).slice(0,180),editorType:"html",editorContent:html,timeZone:"America/New_York",userId:user.user.id,userName:user.user.name
-  },"v3");
-  if(!create.ok||!create.body?.id){
-    await db.from("marketing_native_campaigns").update({status:"dispatch_failed",metadata:{...meta,dispatch_error:"native_campaign_create_failed",dispatch_http:create.status,dispatch_detail:safe(create.body?.message||create.body?.error||JSON.stringify(create.body))},updated_at:new Date().toISOString()}).eq("id",campaignId);
-    return {ok:false,error:"native_campaign_create_failed",http:create.status,detail:safe(create.body?.message||create.body?.error||JSON.stringify(create.body))};
+  let nativeId=String(c.native_campaign_id||"");
+  if(!nativeId){
+    const create=await ghl(rt.token,"/emails/locations/"+encodeURIComponent(rt.locationId)+"/campaigns/emails","POST",{
+      name:String(c.campaign_name||c.campaign_key).slice(0,180),editorType:"html",editorContent:html,timeZone:"America/New_York",userId:user.user.id,userName:user.user.name
+    },"v3");
+    if(!create.ok||!create.body?.id){
+      await db.from("marketing_native_campaigns").update({status:"dispatch_failed",metadata:{...meta,dispatch_error:"native_campaign_create_failed",dispatch_http:create.status,dispatch_detail:safe(create.body?.message||create.body?.error||JSON.stringify(create.body))},updated_at:new Date().toISOString()}).eq("id",campaignId);
+      return {ok:false,error:"native_campaign_create_failed",http:create.status,detail:safe(create.body?.message||create.body?.error||JSON.stringify(create.body))};
+    }
+    nativeId=String(create.body.id);
   }
-  const nativeId=String(create.body.id);
-  const now=new Date();
+  const now=new Date(Date.now()+3*60*1000);
   const parts=Object.fromEntries(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:true}).formatToParts(now).filter(p=>p.type!=="literal").map(p=>[p.type,p.value]));
   const sendAt=`${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute} ${parts.dayPeriod}`;
   const schedule=await ghl(rt.token,"/emails/locations/"+encodeURIComponent(rt.locationId)+"/campaigns/emails/"+encodeURIComponent(nativeId)+"/schedule","POST",{
@@ -348,6 +477,22 @@ Deno.serve(async(req)=>{
       await db.from("crm_legacy_ghl_runtime_call_log").insert({runtime_slug:"ghl-email-campaign-runtime-v1",action:"probe_all",disposition:"observed",request_metadata:{results,secrets_returned:false},occurred_at:new Date().toISOString()});
       return json({ok:true,results,secrets_returned:false});
     }
+    if(action==="pipeline_probe"){
+      const entity=String(body?.entity_key||""); const pipelineId=String(body?.pipeline_id||"");
+      if(!entity||!pipelineId)return json({ok:false,error:"entity_key_and_pipeline_id_required"},400);
+      const r=await pipelineProbe(entity,pipelineId);
+      return json(r,r.ok?200:400);
+    }
+    if(action==="tag_lookup"){
+      const entity=String(body?.entity_key||""); if(!entity)return json({ok:false,error:"entity_key_required"},400);
+      const r=await tagLookup(entity,String(body?.query||""));
+      return json(r,r.ok?200:400);
+    }
+    if(action==="audience_probe"){
+      const entity=String(body?.entity_key||""); if(!entity)return json({ok:false,error:"entity_key_required"},400);
+      const r=await audienceProbe(entity,Array.isArray(body?.filters)?body.filters:[]);
+      return json(r,r.ok?200:400);
+    }
     if(action==="qa_send"){
       const entity=String(body?.entity_key||""); if(!entity)return json({ok:false,error:"entity_key_required"},400);
       const r=await qaSend(entity,String(body?.recipient||"thedoctordorsey@gmail.com")); return json(r,r.ok?200:409);
@@ -374,6 +519,7 @@ Deno.serve(async(req)=>{
       for(const c of cands||[]){
         const m:any=c.metadata||{};
         if(m.paused_for_20260929_newsletter_refresh===true||m.paused===true)continue;
+        if(c.scheduled_for && new Date(String(c.scheduled_for)).getTime()>Date.now()+30000)continue;
         if(!(m.launch_authorized===true||c.status==="ready_for_native_execution"))continue;
         if(c.status!=="ready_for_native_execution" && m.audience_ready!==true)continue;
         results.push(await dispatchCampaign(String(c.id),undefined,false));
