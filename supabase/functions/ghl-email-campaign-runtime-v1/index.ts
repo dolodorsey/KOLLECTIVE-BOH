@@ -5,7 +5,7 @@ const SU = Deno.env.get("SUPABASE_URL") || "";
 const SK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const GHL = "https://services.leadconnectorhq.com";
 const db = createClient(SU, SK, { auth: { persistSession:false, autoRefreshToken:false } });
-const FOCUS = ["the-kollective","good-times","sole-exchange","s-o-s","stush","bodega","fenyx","iconic-live-entertainment","mission-365"];
+const LEGACY_FOCUS = ["the-kollective","good-times","sole-exchange","s-o-s","stush","bodega","fenyx","iconic-live-entertainment","mission-365"];
 const ALL_DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
 const json = (b:unknown,s=200)=>new Response(JSON.stringify(b),{status:s,headers:{"content-type":"application/json","cache-control":"no-store"}});
@@ -36,6 +36,15 @@ async function ghl(token:string,path:string,method="GET",body?:unknown,version="
   try{p=t?JSON.parse(t):{}}catch{p={raw:safe(t)}}
   return {ok:r.ok,status:r.status,body:p};
 }
+async function managedEntityKeys(){
+  const {data}=await db.from("v_current_focus_scope_manifest_v1").select("entity_key").eq("daily_focus",true);
+  return [...new Set((data||[]).map((x:any)=>String(x?.entity_key||"")).filter(Boolean))];
+}
+async function isManagedEntity(entityKey:string){
+  const keys=await managedEntityKeys();
+  return keys.includes(entityKey)||LEGACY_FOCUS.includes(entityKey);
+}
+
 async function runtime(entityKey:string){
   const {data:rt,error}=await db.from("crm_ghl_entity_runtime_map")
     .select("entity_key,ghl_location_id,is_active,metadata")
@@ -115,8 +124,11 @@ async function probeEntity(entityKey:string){
     const now=new Date().toISOString();
     const {data:profile}=await db.from("communication_sender_profiles").select("id,provider,from_address,metadata,daily_cap").eq("brand_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
     const fromAddress=String(profile?.from_address||"").trim().toLowerCase();
-    const crossBrandBlocked=(entityKey==="iconic-live-entertainment" && /kollective/.test(fromAddress))
-      || (entityKey==="fenyx" && (/kollective/.test(fromAddress)||/bodega/.test(fromAddress)));
+    const fromDomain=(fromAddress.split("@")[1]||"").toLowerCase();
+    const fenyxDedicated=entityKey==="fenyx" && (fromDomain.startsWith("fenyx.")||fromAddress.startsWith("fenyx@"));
+    const iconicDedicated=entityKey==="iconic-live-entertainment" && (fromDomain.startsWith("iconic.")||fromAddress.startsWith("iconic@"));
+    const crossBrandBlocked=(entityKey==="iconic-live-entertainment" && /kollective/.test(fromAddress) && !iconicDedicated)
+      || (entityKey==="fenyx" && (/kollective/.test(fromAddress)||/bodega/.test(fromAddress)) && !fenyxDedicated);
     const placementHold=profile?.metadata?.deliverability_hold===true;
     const senderAddressReady=Boolean(fromAddress)&&!crossBrandBlocked;
     const executionReady=(nativeReady||conversationReady)&&senderAddressReady&&!placementHold;
@@ -195,13 +207,22 @@ async function collectRecipients(rt:any,c:any,maxRecipients:number){
   const out:any[]=[];
   let pages=0, providerTotal:number|null=null;
 
+  const requiredTags=(Array.isArray(meta.required_tags)?meta.required_tags:[]).map((x:any)=>String(x).toLowerCase());
+  const requiredTagGroups=(Array.isArray(meta.required_tag_groups)?meta.required_tag_groups:[])
+    .map((g:any)=>Array.isArray(g)?g.map((x:any)=>String(x).toLowerCase()):[])
+    .filter((g:any[])=>g.length);
+  const forbiddenTags=(Array.isArray(meta.forbidden_tags)?meta.forbidden_tags:[]).map((x:any)=>String(x).toLowerCase());
   const accept=(x:any)=>{
     const email=String(x?.email||"").trim().toLowerCase();
     if(!email||existing.has(email)||recent.has(email)||suppressed.has(email))return;
     if(x?.dnd===true)return;
     if(String(x?.dndSettings?.email?.status||"").toLowerCase()==="active")return;
     if(!x?.id)return;
-    out.push({id:String(x.id),email,tags:Array.isArray(x.tags)?x.tags:[]});
+    const tags=(Array.isArray(x.tags)?x.tags:[]).map((t:any)=>String(t).toLowerCase());
+    if(requiredTags.length && !requiredTags.some((t:string)=>tags.includes(t)))return;
+    if(requiredTagGroups.length && !requiredTagGroups.every((g:string[])=>g.some((t:string)=>tags.includes(t))))return;
+    if(forbiddenTags.some((t:string)=>tags.includes(t)))return;
+    out.push({id:String(x.id),email,tags});
   };
 
   if(filters.length){
@@ -357,8 +378,8 @@ async function dispatchCampaign(campaignId:string,maxOverride?:number,dryRun=fal
   const {data:c,error}=await db.from("marketing_native_campaigns").select("*").eq("id",campaignId).maybeSingle();
   if(error||!c) return {ok:false,error:"campaign_not_found"};
   const entityKey=String(c.brand_key||"");
-  if(!FOCUS.includes(entityKey))return {ok:false,error:"entity_not_in_focus_scope"};
-  if(c.scheduled_for && new Date(String(c.scheduled_for)).getTime()>Date.now()+30000)
+  if(!await isManagedEntity(entityKey))return {ok:false,error:"entity_not_in_focus_scope"};
+  if(!dryRun && c.scheduled_for && new Date(String(c.scheduled_for)).getTime()>Date.now()+30000)
     return {ok:false,error:"campaign_not_due",scheduled_for:c.scheduled_for};
   const meta:any=c.metadata||{};
   if(meta.paused_for_20260929_newsletter_refresh===true||meta.paused===true)return {ok:false,error:"campaign_paused",pause_reason:String(meta.pause_reason||"")};
@@ -420,13 +441,13 @@ async function reconcileCampaign(c:any){
   if(!c.native_campaign_id||!sourceId)return {ok:false,error:"native_ids_missing"};
   const rt=await runtime(String(c.brand_key));
   const get=await ghl(rt.token,"/emails/locations/"+encodeURIComponent(rt.locationId)+"/campaigns/emails/"+encodeURIComponent(String(c.native_campaign_id)),"GET",undefined,"v3");
-  const stats=await ghl(rt.token,"/emails/locations/"+encodeURIComponent(rt.locationId)+"/campaigns/stats/email/"+encodeURIComponent(sourceId),"GET",undefined,"v3");
+  const stats=await ghl(rt.token,"/emails/locations/"+encodeURIComponent(rt.locationId)+"/campaigns/stats/email-campaigns/"+encodeURIComponent(sourceId),"GET",undefined,"v3");
   const nativeStatus=String(get.body?.status||get.body?.campaign?.status||"");
   const complete=["sent","complete","completed"].includes(nativeStatus.toLowerCase());
   const now=new Date().toISOString();
   const meta={...(c.metadata||{}),native_status:nativeStatus,native_status_http:get.status,native_stats_http:stats.status,native_stats:stats.ok?stats.body:undefined,last_native_reconcile_at:now};
   await db.from("marketing_native_campaigns").update({status:complete?"sent":(nativeStatus||c.status),metadata:meta,updated_at:now}).eq("id",c.id);
-  if(complete) await db.from("communication_send_log").update({status:"accepted",updated_at:now}).eq("brand_key",c.brand_key).eq("campaign_key",c.campaign_key).eq("provider_message_id",c.native_campaign_id).eq("status","submitted");
+  // Native campaign statistics are aggregate provider truth. Do not fabricate per-recipient accepted/delivered receipts.
   return {ok:get.ok,entity_key:c.brand_key,campaign_id:c.id,native_campaign_id:c.native_campaign_id,native_status:nativeStatus,stats_http:stats.status};
 }
 async function reconcileAll(){
@@ -438,7 +459,7 @@ async function qaSend(entityKey:string,recipient:string){
   const allowedRecipients=new Set(["thedoctordorsey@gmail.com","dolodorsey@gmail.com"]);
   const email=String(recipient||"thedoctordorsey@gmail.com").trim().toLowerCase();
   if(!allowedRecipients.has(email))return {ok:false,error:"qa_recipient_not_allowlisted"};
-  if(!FOCUS.includes(entityKey))return {ok:false,error:"entity_not_in_focus_scope"};
+  if(!await isManagedEntity(entityKey))return {ok:false,error:"entity_not_in_focus_scope"};
   const rt=await runtime(entityKey);
   const {data:profile}=await db.from("communication_sender_profiles").select("*").eq("brand_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
   const {data:route}=await db.from("enterprise_entity_sender_routes").select("*").eq("entity_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
@@ -467,7 +488,7 @@ async function manualB2BSend(entityKey:string,p:any){
   const body=String(p?.text_body||"").trim().slice(0,8000);
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return {ok:false,error:"valid_recipient_email_required"};
   if(!company||!candidateId||!subject||!body)return {ok:false,error:"company_candidate_subject_body_required"};
-  if(!FOCUS.includes(entityKey))return {ok:false,error:"entity_not_in_focus_scope"};
+  if(!await isManagedEntity(entityKey))return {ok:false,error:"entity_not_in_focus_scope"};
   const rt=await runtime(entityKey);
   const {data:profile}=await db.from("communication_sender_profiles").select("*")
     .eq("brand_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
@@ -511,8 +532,46 @@ async function manualB2BSend(entityKey:string,p:any){
   return {ok:sent.ok&&Boolean(messageId),entity_key:entityKey,recipient:email,company_name:company,candidate_id:candidateId,from_address:profile.from_address,http_status:sent.status,provider_message_id:messageId||null,error:sent.ok?null:safe(sent.body?.message||sent.body?.error||"provider_message_id_missing")};
 }
 
+async function seedDraftSend(entityKey:string,draftId:string,recipient:string){
+  const allowedRecipients=new Set(["thedoctordorsey@gmail.com","dolodorsey@gmail.com"]);
+  const email=String(recipient||"").trim().toLowerCase();
+  if(!allowedRecipients.has(email))return {ok:false,error:"seed_recipient_not_allowlisted"};
+  if(!await isManagedEntity(entityKey))return {ok:false,error:"entity_not_in_daily_marketing_roster"};
+  const {data:draft}=await db.from("communication_first_send_drafts").select("*").eq("id",draftId).eq("entity_key",entityKey).maybeSingle();
+  if(!draft)return {ok:false,error:"draft_not_found"};
+  if(!["approved","review"].includes(String(draft.status||"")))return {ok:false,error:"draft_not_seed_eligible",status:draft.status};
+  const rt=await runtime(entityKey);
+  const {data:profile}=await db.from("communication_sender_profiles").select("*")
+    .eq("brand_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
+  if(!profile?.verified||!profile?.from_address)return {ok:false,error:"sender_profile_not_seed_ready"};
+  const up=await ghl(rt.token,"/contacts/upsert","POST",{
+    locationId:rt.locationId,firstName:"Dr.",lastName:"Dorsey",email,
+    source:"KHG realistic email seed QA",tags:["khg-internal-qa","newsletter:qa"],createNewIfDuplicateAllowed:false
+  },"2021-07-28");
+  const contactId=String(up.body?.contact?.id||up.body?.id||"");
+  if(!up.ok||!contactId)return {ok:false,error:"seed_contact_upsert_failed",http:up.status,detail:safe(up.body?.message||up.body?.error||JSON.stringify(up.body))};
+  const subject=String(draft.subject||"").slice(0,500);
+  const body=String(draft.text_body||draft.preheader||draft.purpose||"").slice(0,8000);
+  const html=String(draft.html_body||"").trim() || "<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:32px auto;line-height:1.55\">"+body.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")+"</div>";
+  const sent=await ghl(rt.token,"/conversations/messages","POST",{
+    type:"Email",contactId,emailFrom:String(profile.from_address),emailTo:email,subject,html,message:body,status:"pending"
+  },"v3");
+  const messageId=String(sent.body?.messageId||sent.body?.id||sent.body?.message?.id||"");
+  const now=new Date().toISOString();
+  await db.from("communication_send_log").insert({
+    channel:"email",brand_key:entityKey,stream:"marketing",sender_profile_id:profile.id,
+    provider:"highlevel_conversation",provider_message_id:messageId||null,recipient:email,
+    status:sent.ok&&messageId?"accepted":"failed",subject,body_preview:body.slice(0,240),
+    campaign_key:"internal-seed:"+String(draft.draft_key||draft.id),
+    error_message:sent.ok?null:safe(sent.body?.message||sent.body?.error||"provider_message_id_missing"),
+    metadata:{test:true,is_test:true,internal_seed:true,realistic_content:true,draft_id:draft.id,draft_key:draft.draft_key,http_status:sent.status,ghl_contact_id:contactId},
+    submitted_at:now,updated_at:now
+  });
+  return {ok:sent.ok&&Boolean(messageId),entity_key:entityKey,draft_id:draft.id,draft_key:draft.draft_key,recipient:email,from_address:profile.from_address,subject,http_status:sent.status,provider_message_id:messageId||null,error:sent.ok?null:safe(sent.body?.message||sent.body?.error||"provider_message_id_missing")};
+}
+
 Deno.serve(async(req)=>{
-  if(req.method==="GET")return json({ok:true,system:"KHG HighLevel Native Email Campaign Runtime",version:"1",focus:FOCUS,secrets_returned:false});
+  if(req.method==="GET")return json({ok:true,system:"KHG HighLevel Native Email Campaign Runtime",version:"17",focus:"dynamic_daily_focus_roster",secrets_returned:false});
   if(req.method!=="POST")return json({ok:false,error:"method_not_allowed"},405);
   const body:any=await req.json().catch(()=>({}));
   const allowed=await consumeNonce(String(body?.nonce||""));
@@ -525,7 +584,7 @@ Deno.serve(async(req)=>{
       const r=await probeEntity(entity); return json(r,r.ready?200:207);
     }
     if(action==="probe_all"){
-      const results=[]; for(const e of FOCUS)results.push(await probeEntity(e));
+      const results=[]; for(const e of await managedEntityKeys())results.push(await probeEntity(e));
       await db.from("crm_legacy_ghl_runtime_call_log").insert({runtime_slug:"ghl-email-campaign-runtime-v1",action:"probe_all",disposition:"observed",request_metadata:{results,secrets_returned:false},occurred_at:new Date().toISOString()});
       return json({ok:true,results,secrets_returned:false});
     }
@@ -544,6 +603,11 @@ Deno.serve(async(req)=>{
       const entity=String(body?.entity_key||""); if(!entity)return json({ok:false,error:"entity_key_required"},400);
       const r=await audienceProbe(entity,Array.isArray(body?.filters)?body.filters:[]);
       return json(r,r.ok?200:400);
+    }
+    if(action==="seed_draft_send"){
+      const entity=String(body?.entity_key||""); const draftId=String(body?.draft_id||"");
+      if(!entity||!draftId)return json({ok:false,error:"entity_key_and_draft_id_required"},400);
+      const r=await seedDraftSend(entity,draftId,String(body?.recipient||"thedoctordorsey@gmail.com")); return json(r,r.ok?200:409);
     }
     if(action==="manual_b2b_send"){
       const entity=String(body?.entity_key||""); if(!entity)return json({ok:false,error:"entity_key_required"},400);
