@@ -459,6 +459,58 @@ async function qaSend(entityKey:string,recipient:string){
   return {ok:sent.ok&&Boolean(messageId),entity_key:entityKey,recipient:email,from_address:profile.from_address,http_status:sent.status,provider_message_id:messageId||null,error:sent.ok?null:safe(sent.body?.message||sent.body?.error||"provider_message_id_missing")};
 }
 
+async function manualB2BSend(entityKey:string,p:any){
+  const email=String(p?.recipient_email||"").trim().toLowerCase();
+  const company=String(p?.company_name||"").trim().slice(0,180);
+  const candidateId=String(p?.candidate_id||"").trim().slice(0,120);
+  const subject=String(p?.subject||"").trim().slice(0,500);
+  const body=String(p?.text_body||"").trim().slice(0,8000);
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return {ok:false,error:"valid_recipient_email_required"};
+  if(!company||!candidateId||!subject||!body)return {ok:false,error:"company_candidate_subject_body_required"};
+  if(!FOCUS.includes(entityKey))return {ok:false,error:"entity_not_in_focus_scope"};
+  const rt=await runtime(entityKey);
+  const {data:profile}=await db.from("communication_sender_profiles").select("*")
+    .eq("brand_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
+  const {data:route}=await db.from("enterprise_entity_sender_routes").select("*")
+    .eq("entity_key",entityKey).eq("channel","email").eq("stream","marketing").maybeSingle();
+  if(!profile?.verified||!profile?.sending_enabled||profile?.connection_status!=="connected"||!profile?.from_address)
+    return {ok:false,error:"sender_profile_not_ready"};
+  if(route?.route_status!=="ready")return {ok:false,error:"sender_route_not_ready",route_status:route?.route_status};
+  const {data:sup}=await db.from("email_suppression").select("id").eq("email_norm",email)
+    .or("scope.eq.global,and(scope.eq.brand,brand_key.eq."+entityKey+")").limit(1);
+  if((sup||[]).length)return {ok:false,error:"recipient_suppressed"};
+  const {data:prior}=await db.from("communication_send_log").select("id,status,submitted_at")
+    .eq("brand_key",entityKey).eq("recipient",email).eq("campaign_key","manual-b2b:"+candidateId)
+    .in("status",["submitted","accepted","delivered"]).limit(1);
+  if((prior||[]).length)return {ok:false,error:"manual_send_already_exists"};
+  const up=await ghl(rt.token,"/contacts/upsert","POST",{
+    locationId:rt.locationId,
+    companyName:company,
+    email,
+    source:"KHG human-initiated provider outreach",
+    tags:["sos-provider","source-manual-outreach"],
+    createNewIfDuplicateAllowed:false
+  },"2021-07-28");
+  const contactId=String(up.body?.contact?.id||up.body?.id||"");
+  if(!up.ok||!contactId)return {ok:false,error:"contact_upsert_failed",http:up.status,detail:safe(up.body?.message||up.body?.error||JSON.stringify(up.body))};
+  const unsubscribe=await unsubscribeUrl(entityKey,email);
+  const html="<div style=\"font-family:Arial,sans-serif;max-width:620px;margin:32px auto;line-height:1.55;color:#111\"><p>"+body.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>")+"</p><p style=\"font-size:12px;color:#777;margin-top:28px\">One-to-one business outreach from S.O.S. <a href=\""+unsubscribe+"\">Unsubscribe</a></p></div>";
+  const sent=await ghl(rt.token,"/conversations/messages","POST",{
+    type:"Email",contactId,emailFrom:String(profile.from_address),emailTo:email,subject,html,message:body,status:"pending"
+  },"v3");
+  const messageId=String(sent.body?.messageId||sent.body?.id||sent.body?.message?.id||"");
+  const now=new Date().toISOString();
+  await db.from("communication_send_log").insert({
+    channel:"email",brand_key:entityKey,stream:"marketing",sender_profile_id:profile.id,
+    provider:"highlevel_conversation",provider_message_id:messageId||null,recipient:email,
+    status:sent.ok&&messageId?"accepted":"failed",subject,body_preview:body.slice(0,240),
+    campaign_key:"manual-b2b:"+candidateId,error_message:sent.ok?null:safe(sent.body?.message||sent.body?.error||"provider_message_id_missing"),
+    metadata:{human_initiated_manual_email:true,one_to_one:true,candidate_id:candidateId,company_name:company,ghl_contact_id:contactId,http_status:sent.status,unsubscribe_link_signed:true,sequence_step:1,automation_allowed:false},
+    submitted_at:now,updated_at:now
+  });
+  return {ok:sent.ok&&Boolean(messageId),entity_key:entityKey,recipient:email,company_name:company,candidate_id:candidateId,from_address:profile.from_address,http_status:sent.status,provider_message_id:messageId||null,error:sent.ok?null:safe(sent.body?.message||sent.body?.error||"provider_message_id_missing")};
+}
+
 Deno.serve(async(req)=>{
   if(req.method==="GET")return json({ok:true,system:"KHG HighLevel Native Email Campaign Runtime",version:"1",focus:FOCUS,secrets_returned:false});
   if(req.method!=="POST")return json({ok:false,error:"method_not_allowed"},405);
@@ -492,6 +544,10 @@ Deno.serve(async(req)=>{
       const entity=String(body?.entity_key||""); if(!entity)return json({ok:false,error:"entity_key_required"},400);
       const r=await audienceProbe(entity,Array.isArray(body?.filters)?body.filters:[]);
       return json(r,r.ok?200:400);
+    }
+    if(action==="manual_b2b_send"){
+      const entity=String(body?.entity_key||""); if(!entity)return json({ok:false,error:"entity_key_required"},400);
+      const r=await manualB2BSend(entity,body); return json(r,r.ok?200:409);
     }
     if(action==="qa_send"){
       const entity=String(body?.entity_key||""); if(!entity)return json({ok:false,error:"entity_key_required"},400);
