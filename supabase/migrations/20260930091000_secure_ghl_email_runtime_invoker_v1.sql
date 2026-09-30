@@ -1,0 +1,40 @@
+create or replace function public.invoke_ghl_email_campaign_runtime_v1(
+  p_action text,
+  p_payload jsonb default '{}'::jsonb
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_nonce uuid := pg_catalog.gen_random_uuid();
+  v_request_id bigint;
+  v_body jsonb;
+begin
+  if p_action not in ('repair_fenyx','probe','probe_all','dry_run','dispatch','dispatch_ready','reconcile','reconcile_all') then
+    raise exception 'unsupported action';
+  end if;
+
+  insert into public.runtime_bootstrap_nonces(nonce,purpose,expires_at)
+  values(v_nonce,'ghl_email_campaign_runtime_v1',now()+interval '5 minutes');
+
+  v_body := coalesce(p_payload,'{}'::jsonb)
+    || jsonb_build_object('action',p_action,'nonce',v_nonce);
+
+  select net.http_post(
+    url := 'https://wfkohcwxxsrhcxhepfql.supabase.co/functions/v1/ghl-email-campaign-runtime-v1',
+    headers := jsonb_build_object('Content-Type','application/json'),
+    body := v_body,
+    timeout_milliseconds := 120000
+  )
+  into v_request_id;
+
+  return v_request_id;
+end;
+$$;
+
+revoke all on function public.invoke_ghl_email_campaign_runtime_v1(text,jsonb) from public;
+revoke all on function public.invoke_ghl_email_campaign_runtime_v1(text,jsonb) from anon;
+revoke all on function public.invoke_ghl_email_campaign_runtime_v1(text,jsonb) from authenticated;
+grant execute on function public.invoke_ghl_email_campaign_runtime_v1(text,jsonb) to service_role;
