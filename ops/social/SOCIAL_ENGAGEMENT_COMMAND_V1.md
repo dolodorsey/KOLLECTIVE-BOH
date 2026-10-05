@@ -9,10 +9,10 @@ First entity: **Dr. Dorsey / @DOLODORSEY**.
 ## Core loop
 
 1. Select the next 100 qualified accounts from the entity's verified audience pool.
-2. Work in 20-account research blocks.
+2. Process the audience continuously in large background batches; use 20-row dashboard views only for readability.
 3. Review the live account/post context before any action.
 4. Prefer a specific public comment when there is something genuine to add.
-5. Consider a DM only after a meaningful signal (public interaction, reply, story signal, clear existing relationship context, or another legitimate reason).
+5. Consider a DM only after a meaningful signal (public interaction, reply, story signal, clear existing relationship context, or another legitimate reason). Do not attempt to DM every account.
 6. Apply the entity's DM approval policy.
 7. Record execution, replies, conversions, and proof.
 8. Use results to improve content and target selection.
@@ -23,12 +23,16 @@ First entity: **Dr. Dorsey / @DOLODORSEY**.
 - Growth pool: 70,860
 - Multi-signal warm pool: 2,944
 - Superfan pool: 165
-- Cycle size: 100
-- Research block: 20 accounts
-- Comment cap: 8/day
-- DM cap: 4/day
-- Total outbound touch cap: 12/day
-- Cooldown: 72 hours
+- Background audience scan target: 10,000/day
+- Live/context review target: 1,000/day
+- Direct-touch candidate target: 100/day
+- Current activation cycle target: 1,000 accounts
+- Dashboard views: 20 rows each for readability only; they are not daily limits
+- Contextual comment working cap: 25/day
+- Manual-approval DM working cap: 10/day
+- Total external touch working cap: 35/day
+- Cooldown: 48 hours
+- Provider warnings/action blocks trigger immediate backoff
 - Maximum unanswered DM follow-ups: 1
 - DM mode: manual approval
 - Inbound @DOLODORSEY DM replies remain founder-manual
@@ -74,3 +78,15 @@ For each entity:
 5. seed one 100-account cycle;
 6. verify dashboard and proof;
 7. only then move to the next entity.
+
+
+## Background workforce
+
+This lane is a standing background responsibility.
+
+- Muse: live-context review, comment/DM drafting, reply monitoring
+- Dot: scoring, dedupe, cooldown, proof, handoff
+- ChatGPT: strategy, QA, pattern synthesis, next-wave decisions
+- Claude: second-pass pattern/quality review when runtime is available
+
+The recurring internal operation is `background-v1:dr-dorsey:audience-engagement-engine` and runs hourly. Internal scoring/research continues even when external social execution is blocked.
