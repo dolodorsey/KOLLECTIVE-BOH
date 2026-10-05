@@ -152,6 +152,184 @@ create trigger trg_social_engagement_apply_cadence_event
 after insert on public.social_engagement_cadence_events
 for each row execute function public.social_engagement_apply_cadence_event();
 
--- Runtime state and ramp-review views are defined in production and consumed by Kollective Command:
--- public.v_social_engagement_cadence_state_v1
--- public.v_social_engagement_ramp_review_v1
+create or replace view public.v_social_engagement_cadence_state_v1
+with (security_invoker=true)
+as
+with policy as (
+  select * from public.social_engagement_cadence_policies
+),
+counts as (
+  select
+    p.entity_key,
+    count(a.id) filter (
+      where a.executed_at >= date_trunc('day', now() at time zone p.timezone) at time zone p.timezone
+        and a.action_type='comment'
+    ) as comments_today,
+    count(a.id) filter (
+      where a.executed_at >= date_trunc('day', now() at time zone p.timezone) at time zone p.timezone
+        and a.action_type in ('story_reply','story_reaction')
+    ) as stories_today,
+    count(a.id) filter (
+      where a.executed_at >= date_trunc('day', now() at time zone p.timezone) at time zone p.timezone
+        and a.action_type='dm'
+    ) as dms_today,
+    count(a.id) filter (
+      where a.executed_at >= date_trunc('day', now() at time zone p.timezone) at time zone p.timezone
+    ) as total_today,
+    count(a.id) filter (where a.executed_at >= now()-interval '60 minutes') as total_60m,
+    count(a.id) filter (where a.executed_at >= now()-interval '4 hours') as total_4h,
+    max(a.executed_at) as last_external_action_at,
+    max(a.executed_at) filter (where a.action_type='dm') as last_dm_at
+  from policy p
+  left join public.social_engagement_actions a on a.entity_key=p.entity_key
+  group by p.entity_key
+),
+warnings as (
+  select
+    p.entity_key,
+    max(e.occurred_at) filter (where e.event_type in ('provider_warning','action_block','rate_limit')) as last_warning_at,
+    count(e.id) filter (
+      where e.event_type in ('provider_warning','action_block','rate_limit')
+        and e.occurred_at >= p.phase_started_at
+    ) as warnings_in_phase
+  from policy p
+  left join public.social_engagement_cadence_events e on e.entity_key=p.entity_key
+  group by p.entity_key
+)
+select
+  p.*,
+  coalesce(c.comments_today,0) as comments_today,
+  coalesce(c.stories_today,0) as stories_today,
+  coalesce(c.dms_today,0) as dms_today,
+  coalesce(c.total_today,0) as total_today,
+  coalesce(c.total_60m,0) as total_60m,
+  coalesce(c.total_4h,0) as total_4h,
+  c.last_external_action_at,
+  c.last_dm_at,
+  w.last_warning_at,
+  coalesce(w.warnings_in_phase,0) as warnings_in_phase,
+  case
+    when p.phase='paused' then false
+    when p.paused_until is not null and p.paused_until > now() then false
+    when coalesce(c.total_today,0) >= p.total_external_cap_day then false
+    when coalesce(c.total_60m,0) >= p.rolling_60m_cap then false
+    when coalesce(c.total_4h,0) >= p.rolling_4h_cap then false
+    when c.last_external_action_at is not null and c.last_external_action_at > now() - make_interval(mins=>p.min_gap_minutes) then false
+    when (now() at time zone p.timezone)::time < p.proactive_start_local then false
+    when (now() at time zone p.timezone)::time > p.proactive_end_local then false
+    else true
+  end as proactive_action_allowed,
+  case
+    when p.phase='paused' then 'phase_paused'
+    when p.paused_until is not null and p.paused_until > now() then 'temporary_pause'
+    when coalesce(c.total_today,0) >= p.total_external_cap_day then 'daily_total_cap'
+    when coalesce(c.total_60m,0) >= p.rolling_60m_cap then 'rolling_60m_cap'
+    when coalesce(c.total_4h,0) >= p.rolling_4h_cap then 'rolling_4h_cap'
+    when c.last_external_action_at is not null and c.last_external_action_at > now() - make_interval(mins=>p.min_gap_minutes) then 'minimum_gap'
+    when (now() at time zone p.timezone)::time < p.proactive_start_local then 'before_proactive_window'
+    when (now() at time zone p.timezone)::time > p.proactive_end_local then 'after_proactive_window'
+    else 'allowed'
+  end as gate_reason,
+  (
+    coalesce(c.comments_today,0) < p.comment_cap_day
+    and p.phase <> 'paused'
+    and not (p.paused_until is not null and p.paused_until > now())
+    and coalesce(c.total_today,0) < p.total_external_cap_day
+    and coalesce(c.total_60m,0) < p.rolling_60m_cap
+    and coalesce(c.total_4h,0) < p.rolling_4h_cap
+    and (c.last_external_action_at is null or c.last_external_action_at <= now() - make_interval(mins=>p.min_gap_minutes))
+    and (now() at time zone p.timezone)::time between p.proactive_start_local and p.proactive_end_local
+  ) as comment_allowed,
+  (
+    coalesce(c.stories_today,0) < p.story_cap_day
+    and p.phase <> 'paused'
+    and not (p.paused_until is not null and p.paused_until > now())
+    and coalesce(c.total_today,0) < p.total_external_cap_day
+    and coalesce(c.total_60m,0) < p.rolling_60m_cap
+    and coalesce(c.total_4h,0) < p.rolling_4h_cap
+    and (c.last_external_action_at is null or c.last_external_action_at <= now() - make_interval(mins=>p.min_gap_minutes))
+    and (now() at time zone p.timezone)::time between p.proactive_start_local and p.proactive_end_local
+  ) as story_allowed,
+  (
+    coalesce(c.dms_today,0) < p.dm_cap_day
+    and p.phase <> 'paused'
+    and not (p.paused_until is not null and p.paused_until > now())
+    and coalesce(c.total_today,0) < p.total_external_cap_day
+    and coalesce(c.total_60m,0) < p.rolling_60m_cap
+    and coalesce(c.total_4h,0) < p.rolling_4h_cap
+    and (c.last_external_action_at is null or c.last_external_action_at <= now() - make_interval(mins=>p.min_gap_minutes))
+    and (c.last_dm_at is null or c.last_dm_at <= now() - make_interval(mins=>p.dm_min_gap_minutes))
+    and (now() at time zone p.timezone)::time between p.proactive_start_local and p.proactive_end_local
+  ) as dm_allowed
+from policy p
+left join counts c on c.entity_key=p.entity_key
+left join warnings w on w.entity_key=p.entity_key;
+
+grant select on public.v_social_engagement_cadence_state_v1 to authenticated;
+grant select on public.v_social_engagement_cadence_state_v1 to service_role;
+
+create or replace view public.v_social_engagement_ramp_review_v1
+with (security_invoker=true)
+as
+with p as (
+  select * from public.social_engagement_cadence_policies
+),
+e as (
+  select
+    p.entity_key,
+    count(a.id) filter (
+      where a.executed_at >= p.phase_started_at
+        and a.external_id is not null
+    ) as provider_backed_actions_in_phase,
+    count(a.id) filter (
+      where a.executed_at >= p.phase_started_at
+        and a.replied_at is not null
+    ) as replies_in_phase,
+    count(a.id) filter (
+      where a.executed_at >= p.phase_started_at
+        and a.status='converted'
+    ) as conversions_in_phase
+  from p
+  left join public.social_engagement_actions a on a.entity_key=p.entity_key
+  group by p.entity_key
+),
+w as (
+  select
+    p.entity_key,
+    count(c.id) filter (
+      where c.event_type in ('provider_warning','action_block','rate_limit')
+        and c.occurred_at >= p.phase_started_at
+    ) as risk_events_in_phase
+  from p
+  left join public.social_engagement_cadence_events c on c.entity_key=p.entity_key
+  group by p.entity_key
+)
+select
+  p.entity_key,
+  p.phase,
+  p.phase_started_at,
+  p.next_review_at,
+  e.provider_backed_actions_in_phase,
+  e.replies_in_phase,
+  e.conversions_in_phase,
+  w.risk_events_in_phase,
+  case
+    when p.phase='ramp_0'
+      and now() >= p.phase_started_at + interval '72 hours'
+      and e.provider_backed_actions_in_phase >= 15
+      and w.risk_events_in_phase=0
+      then 'eligible_for_ramp_1'
+    when p.phase='ramp_1'
+      and now() >= p.phase_started_at + interval '96 hours'
+      and e.provider_backed_actions_in_phase >= 30
+      and w.risk_events_in_phase=0
+      then 'eligible_for_steady_safe'
+    when p.phase='paused' then 'paused_review_required'
+    else 'hold_current_phase'
+  end as ramp_recommendation
+from p
+left join e on e.entity_key=p.entity_key
+left join w on w.entity_key=p.entity_key;
+
+grant select on public.v_social_engagement_ramp_review_v1 to authenticated;
+grant select on public.v_social_engagement_ramp_review_v1 to service_role;
