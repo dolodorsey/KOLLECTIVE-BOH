@@ -90,3 +90,54 @@ This lane is a standing background responsibility.
 - Claude: second-pass pattern/quality review when runtime is available
 
 The recurring internal operation is `background-v1:dr-dorsey:audience-engagement-engine` and runs hourly. Internal scoring/research continues even when external social execution is blocked.
+
+
+## Dr. Dorsey voice + anti-repetition upgrade (2026-10-05)
+
+Current production controls:
+- 65 active Dorsey context/voice patterns in `social_engagement_voice_patterns`
+- 23 action choices in `social_engagement_action_menu`
+- exact-copy fingerprinting
+- token-overlap similarity QA
+- repeated sentence-structure QA
+- similarity >= 0.72 => blocked and returned to `needs_context`
+- similarity >= 0.50 => review
+- repeated recent structure => review
+- copy QA dashboard view: `v_social_engagement_similarity_guard_v2`
+
+A draft cannot be generated from the voice bank alone. It must be attached to:
+- a current post detail;
+- a current Story detail;
+- a current account/business signal; or
+- verified prior relationship context.
+
+No-action, watch, like-only, save-only and revisit-later are valid decisions. The system is not required to comment on every high-scoring target.
+
+### Learning loop
+
+Production event ledger: `social_engagement_learning_events`
+
+Proof-weight events:
+- executed: +0.10
+- reply: +1.50
+- DM reply: +2.00
+- follow: +4.00
+- conversion: +3.00
+
+Aggregate learned weights:
+`v_social_engagement_learning_weights_v1`
+
+The learned weight applies to:
+`context_key + voice_mode + action_type`
+
+It is an optimization signal only. Live-context fit, brand isolation, DNC/opt-out, platform safety, copy quality and verified execution proof remain higher-priority gates.
+
+### Dorsey processing cadence
+
+- initial lightweight score/segment pass: up to 5,000 warm accounts/day
+- steady-state refresh after full pass: about 1,000/day
+- live-context review: about 300/day
+- direct-touch candidates ranked: about 60/day
+- comment drafts: up to 30/day
+- DM drafts: up to 8/day, meaningful-signal + manual-approval only
+- external touch caps remain separate from internal processing
