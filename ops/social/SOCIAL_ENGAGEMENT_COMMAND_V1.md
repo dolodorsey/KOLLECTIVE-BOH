@@ -185,3 +185,64 @@ For each next entity:
 7. verify dashboard + proof;
 8. learn from real outcomes;
 9. only then scale or move to the next entity.
+
+
+## Safe external cadence
+
+The Dr. Dorsey engine separates **internal processing speed** from **external platform activity**. The 70,860-account audience can be scored/researched at data speed, but proactive Instagram actions must pass the live cadence gate.
+
+Production source of truth:
+- `social_engagement_cadence_policies`
+- `social_engagement_cadence_events`
+- `v_social_engagement_cadence_state_v1`
+- `v_social_engagement_ramp_review_v1`
+
+### Ramp 0 — active starting phase
+
+This is a conservative internal safety policy, **not an official Instagram limit**.
+
+- comments: max 6/day
+- Story replies/reactions: max 4/day
+- signal-based DMs: max 1/day
+- total proactive external actions: max 10/day
+- max 2 proactive actions in any rolling 60 minutes
+- max 4 proactive actions in any rolling 4 hours
+- at least 20 minutes between proactive external actions
+- at least 120 minutes between DMs
+- 72-hour target cooldown
+- max 2 proactive touches per target in 7 days
+- proactive execution window: 09:00–23:00 America/New_York
+- DMs remain manual-approval only
+- no cold mass DMs
+- no burst execution
+- no rate-limit evasion
+
+### Ramp review
+
+Ramp 0 may move to Ramp 1 only after:
+- at least 72 clean hours;
+- at least 15 provider-backed executed actions;
+- zero provider-warning, action-block, or rate-limit events.
+
+Ramp 1 may move to Steady Safe only after:
+- at least 96 additional clean hours;
+- at least 30 provider-backed executed actions in the phase;
+- zero risk events.
+
+Advance at most one phase at a time. Drafts, queue rows, scheduled states, heartbeats, or inferred success do not qualify.
+
+### Backoff
+
+Any provider warning, rate-limit signal, action block, or material quality concern immediately pauses proactive execution. Internal scoring, research, QA, watch-listing, and drafting may continue. A provider risk event is written to `social_engagement_cadence_events`; the policy automatically enters a pause state. Resume only after the pause/review is cleared.
+
+### Dashboard
+
+Kollective Command `/ops-os/engagement` displays:
+- cadence phase;
+- OPEN/HOLD state;
+- comment / Story / DM / total usage;
+- rolling 60-minute and 4-hour usage;
+- minimum gaps;
+- current gate reason.
+
+The dashboard blocks manual “Mark Executed” actions when the current cadence gate is closed.
