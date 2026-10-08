@@ -1,188 +1,63 @@
-# KHG AUTONOMY OS
+# THE KOLLECTIVE — CURRENT AUTONOMY & EXECUTION OS
+**Effective:** 2026-10-08 | **Owner:** Founder's Office | **Authority:** Latest founder-approved decisions.
 
-Production control-plane reference for The Kollective Hospitality Group.
+## Canonical authority
+1. Latest explicit founder decision.
+2. Current approved entity operating plan.
+3. Current enterprise operating standard.
+4. Historical guidance (reference only).
 
-## Canonical Backend
+Current runtime authority: Supabase `KOLLECTIVE BOH` (`wfkohcwxxsrhcxhepfql`), `enterprise_prompt_os_documents.global_execution_standard_v1` current version. The legacy keys `focus_14d_sprint_master_v1` and `multi_agent_daily_command_schedule_v1` are retained as compatibility pointers but their former mandatory cadence is superseded.
 
-Supabase project: `KOLLECTIVE BOH` (`wfkohcwxxsrhcxhepfql`).
+Never allow a historical sprint, fixed clock or generic role schedule to override the current entity plan. Do not treat an archived file as an active SOP.
 
-### Canonical enterprise identity
+## Enterprise structure
+- The Kollective controls shared infrastructure, permitted rollups and governance.
+- Every operating brand is independent in identity, assets, audience, GHL location, sender, offers, operations, financial tracking, proof and approvals.
+- Inner Circle is the venue partnership / revenue enhancement operating engine. Its managed companies keep independent data and simpler subdashboards.
+- GOOD TIMES has its own full operating command dashboard and customer application.
+- Existing valid brand-specific product and creative standards remain in place unless superseded.
 
-Use `enterprise_directory_records` as the enterprise entity source of truth.
+## Who operates what
+- **Supabase:** entity directory, data, governed Prompt OS, tasks, execution records, approvals and receipts.
+- **GitHub:** source code, versioned instruction mirror, QA workflows and rollback history.
+- **Vercel:** project configuration, deployment and runtime evidence, NOT proof of commercial execution.
+- **GHL:** independently configured CRM/pipeline and approved channels per brand.
+- **ChatGPT:** strategic intelligence, targeted research, specs, internal actions, independent QA and handoffs; never external sends.
+- **Claude:** scoped engineering, code repair, deployment/testing and QA; never duplicate sends.
+- **Dot:** assigned research/operations/management support within the new controls.
+- **Muse:** only designated external send/publish operator after explicit founder approval of each exact packet.
 
-Supporting canonical tables:
-- `company_directory_profiles`
-- `company_operating_profiles`
-- `company_annual_plans`
-- `company_channel_plans`
-- `company_team_assignments`
-- `company_platform_accounts`
-- `execution_portfolios`
-- `execution_portfolio_members`
-- `entity_owners`
+Neither n8n nor ClickUp is a default operating dependency. Do not shut down a discovered live integration until its purpose and dependencies are verified.
 
-Do not collapse parent/child/sibling brands. Every entity remains independently accountable, measured, marketed, approved, and reported.
+## Entity-first execution
+Complete each entity operating plan **before** distributing actions into a schedule. Begin with **Inner Circle** for this restructuring. Plan actual relevant business functions; mark nonapplicable lanes as such. Define owner, concrete deliverable, output metric, conversion/operating path, dependency, due time if meaningful, approval and native evidence.
 
-## Autonomous Control Plane
+Never split a single action across artificial time slots, generate generic repetitive reviews, or mandate identical activities across entities. Readiness checks are allowed only if they detect a meaningful issue and produce a correction or decision.
 
-Core tables:
-- `enterprise_departments`
-- `agent_blueprints`
-- `agents`
-- `enterprise_objectives`
-- `tasks`
-- `scheduled_operations`
-- `enterprise_incidents`
-- `agent_run_log`
-- `enterprise_skill_registry`
-- `agent_skill_assignments`
-- `enterprise_action_policies`
-- `platform_resource_registry`
+## External communications: standing hold
+ALL unapproved outbound emails, SMS, social posts, comments, DMs, calls, automated replies, provider test sends and external publishes remain on hold. No approval is inherited from credentials, previous targets or a scheduled record.
+Only Muse may execute on the exact verified sender, audience, copy and channel **after** founder approval of that version. Modifications require reapproval.
+Enforce consent, DNC, suppression, compliance, account isolation and provider-native receipts. ChatGPT/Dot/Claude only research, prepare, QA, and hand off. Do not automatically restart legacy send queues.
 
-Status view:
-- `enterprise_autonomy_status`
+Supabase `enterprise_action_policies` entries `external-send` and `public-publish` require human approval and designate Muse. A stored policy is NOT a guarantee every external provider is technically gated: audit each actual pathway before considering it safe.
 
-Execution RPCs:
-- `run_enterprise_autonomy_tick()`
-- `run_enterprise_health_sweep()`
-- `claim_next_agent_task()`
-- `finish_agent_task()`
-- `release_expired_agent_task_leases()`
-- `run_enterprise_mac_maintenance()`
+## Reliable execution and completion
+Maintain separate statuses: planned, drafted, configured, queued, deployed, tested, verified, executed, blocked. Only use 'executed' when provider/production evidence supports it; never invent activity. One task has one active writer, a dedupe key, next action, outcome and evidence location.
 
-Authenticated dispatcher:
-- Edge Function `enterprise-agent-dispatcher`
+For cleanup classify as KEEP, UPGRADE, CONSOLIDATE, DISABLE, ARCHIVE or DELETE. Never delete due to age alone. Preserve customer data, compliance history, receipts and contracts. Snapshot first; test and record rollback. No blanket deletion or surprise reactivation.
 
-## Agent Hierarchy
+## Live operational differences to respect
+- The `khg-enterprise-autonomy-tick` pg_cron job was disabled at audit (2026-10-08); do **not** advertise it as currently running or reactivate without review.
+- The legacy `scheduled_operations` registry contained hundreds of paused records and a four-hour all-entity audit program; recheck state, usefulness and proof before treating these as tasks.
+- Keep safety/consent reconciliation and verified internal QA distinct from outward communication dispatch.
+- GitHub action `.github/workflows/current-architecture.yml` is an internal code QA workflow, not business execution or a reason to start sends.
+- All other Supabase projects and Vercel projects remain independent production resources until individually verified.
 
-1. Enterprise Command
-2. Department Governors
-3. Division Governors
-4. Entity GM Agents
-5. Event Commanders where applicable
-6. Entity specialist agents: Finance, Growth, Revenue, Operations, Compliance, Creative, Data, People
-7. Advanced Growth Fleet: Marketing Strategy, Social Media, Engagement, Outreach, Sponsorship, Grants, Ambassador/Influencer, Lead Intelligence, Growth Data, Marketing Automation
-8. Platform and Security Watchdogs
+## Next work sequence
+1. Inventory exact legacy references and execution pathways per system.
+2. Back up and disable proven redundant or unapproved triggers; do not remove valuable data or QA blindly.
+3. Build Inner Circle's complete company operation, then its coherent schedule and managed-entity subdashboards.
+4. Continue one entity at a time and verify each migration with actual application/production receipts.
 
-Agents may coordinate shared systems, but may not silently merge independent entity data or reporting.
-
-## Scheduler
-
-`pg_cron` is enabled.
-
-Active jobs:
-- `khg-enterprise-autonomy-tick` — every 5 minutes
-- `khg-agent-lease-reaper` — every 10 minutes
-- `khg-mac-maintenance` — daily
-
-Recurring enterprise operations are stored in `scheduled_operations`; do not rely on humans remembering to run them.
-
-## Advanced Growth OS
-
-Marketing and growth are operated as a measurable entity-isolated system, not a collection of disconnected posts or outreach lists.
-
-Canonical Growth OS tables:
-- `growth_programs`
-- `growth_audience_segments`
-- `growth_content_operations`
-- `growth_social_engagement_targets`
-- `growth_relationships`
-- `growth_sponsor_opportunities`
-- `growth_grant_opportunities`
-- `growth_ambassador_programs`
-- `growth_ambassador_members`
-- `growth_signal_events`
-- `growth_data_usage_registry`
-- `growth_attribution_touchpoints`
-- `growth_experiments`
-- `growth_automation_playbooks`
-- `growth_automation_runs`
-- `growth_capability_profiles`
-- `growth_source_performance`
-- `growth_pipeline_slas`
-- `growth_daily_scorecards`
-
-Command views:
-- `v_growth_lead_command`
-- `v_growth_relationship_command`
-- `v_growth_source_economics`
-- `v_growth_entity_command_center`
-
-Every operating entity has a `growth-engine:<entity_key>` objective and an always-on growth program. Capability profiles decide whether sponsors, grants, ambassadors/influencers and affiliate systems are applicable so the scheduler does not blindly create irrelevant work.
-
-### Growth attack cadence
-- marketing strategy — daily
-- social programming — daily
-- strategic engagement — morning, afternoon and evening
-- qualified outreach — daily
-- sponsor pipeline — daily where applicable
-- grant pipeline — daily where applicable
-- ambassador/influencer pipeline — daily where applicable
-- lead/intent sourcing — every 3 hours
-- data/attribution audit — every 6 hours
-- growth automation QA — every 6 hours
-
-### Growth data rule
-Every dataset must declare source type, allowed and prohibited purposes, consent/contact-use rules, retention, sharing, enrichment and cross-entity permissions before automation can rely on it. Cross-entity person-level use is denied by default.
-
-### Growth automation standard
-All playbooks follow: trigger → entity/data-rights validation → normalize → dedupe/idempotency → permitted enrichment → score/route → action gate → result write → evidence → retry/dead-letter → escalation.
-
-Automation is not complete until successful runs, failure handling, evidence and no-dead-end routing are proven.
-
-## Action Guardrails
-
-`enterprise_action_policies` is authoritative.
-
-Default posture:
-- internal reads/research: automatic
-- reversible internal writes: automatic + logged
-- external drafts: automatic
-- external sends/public publishing: channel/policy gated
-- financial commitments: human approval
-- contracts/legal/regulatory actions: human approval
-- regulated-category actions: human approval
-- destructive infrastructure changes: human approval + archive/rollback first
-- cross-brand customer/prospect data: denied by default
-
-## Legacy / Migration Rules
-
-### `brand_configurations`
-Retain read-only until old BOH code is migrated. Sender fields are deprecated. Canonical sender truth is `communication_sender_profiles`.
-
-### `brands`
-Legacy empty generic brand table. Do not add new records. Migrate remaining foreign keys before dropping.
-
-### `entities` / `entity_members`
-Legacy/mid-generation application authorization layer still used by existing BOH screens. Do not remove until UI/RBAC is migrated to the enterprise directory/team assignment model.
-
-### `webhook_registry`
-Legacy zero-row workflow registry includes n8n-era endpoint structure. Do not build new workflows on it. Migrate any remaining UI dependency to the autonomous control plane, then archive.
-
-### `orgs`
-Legacy duplicate of canonical `organizations`. Migrate `activity_log` dependency before archive.
-
-### early generic BOH tables
-`users`, `locations`, `user_locations`, `chats`, `alerts`, `incidents`, `training_modules`, and `user_training_progress` are legacy candidates. Preserve until dependency/code migration is verified; do not create new product logic on them.
-
-## Archive Policy
-
-Never delete merely because a resource is empty, old, or low-usage.
-
-A resource can be automatically archived only when the evidence is strong: canonical replacement exists, no active dependency is found, purpose was temporary/completed, or endpoint is already disabled. Otherwise mark `archive_candidate` or `retain_readonly` in `platform_resource_registry`.
-
-## Completion Standard
-
-The enterprise does not accept fake completion.
-
-A system is not complete if:
-- an agent exists but never runs
-- a scheduler exists but has no successful run
-- a queue only accumulates work
-- a sender is enabled but not connected
-- a website exists but the conversion path fails
-- an objective has no owner or attack cadence
-- an archive candidate still receives production traffic
-- automation depends on a human remembering to start it
-
-Every completed autonomous task must produce evidence, result, blocker state, owner, and next action.
+**Operating outcome:** measurable delivery, no fictitious completion, no unapproved sends, fully isolated brands, clean live system ownership.
