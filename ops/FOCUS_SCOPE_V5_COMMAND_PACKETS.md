@@ -1,3 +1,7 @@
+> **SUPERSEDED — 2026-10-08. HISTORICAL REFERENCE ONLY.** Do not generate new mandatory daily tasks, fixed hourly command blocks, automatic outreach, sends or publishes from this file. Current authority: `AUTONOMY-OS.md` and Supabase `enterprise_prompt_os_documents.global_execution_standard_v1` (current version). Entity-first planning now precedes scheduling; Muse requires exact founder approval before external execution.
+
+---
+
 # Focus Scope v5 — Command Packets
 
 **Effective:** 2026-10-01  
