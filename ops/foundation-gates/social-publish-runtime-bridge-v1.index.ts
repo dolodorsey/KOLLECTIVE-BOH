@@ -10,7 +10,7 @@ const safe=(v:unknown,n=700)=>String(v??"").replace(/Bearer\s+\S+/gi,"Bearer [re
 async function hmac(value:string){const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(SK),{name:"HMAC",hash:"SHA-256"},false,["sign"]);const sig=await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(value));return Array.from(new Uint8Array(sig)).map(b=>b.toString(16).padStart(2,"0")).join("")}
 async function internalKey(){const {data}=await db.rpc("get_reasoning_runtime_config",{p_key:"reasoning_internal_key"});return String(data||"")}
 function equal(a:string,b:string){if(!a||!b||a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)d|=a.charCodeAt(i)^b.charCodeAt(i);return d===0}
-function mediaUrls(refs:any){const rows=Array.isArray(refs)?refs:[refs];return rows.flatMap((r:any)=>{if(typeof r==="string")return [r];if(!r||typeof r!=="object")return [];for(const k of ["url","public_url","href","asset_url","media_url"]){if(typeof r[k]==="string"&&r[k].startsWith("https://"))return [r[k]]}return []}).filter((x:string)=>x.startsWith("https://"))}
+function mediaUrls(refs:any){const rows=Array.isArray(refs)?refs:[refs];return rows.filter((r:any)=>!r||typeof r!=="object"||r.usage_role!=="source_reference").flatMap((r:any)=>{if(typeof r==="string")return [r];if(!r||typeof r!=="object")return [];for(const k of ["url","public_url","href","asset_url","media_url"]){if(typeof r[k]==="string"&&r[k].startsWith("https://"))return [r[k]]}return []}).filter((x:string)=>x.startsWith("https://"))}
 function mediaUserTags(meta:any){const raw=Array.isArray(meta?.media_user_tags)?meta.media_user_tags:(Array.isArray(meta?.partner_tags)?meta.partner_tags:[]);return [...new Set(raw.map((v:any)=>typeof v==="string"?v:v?.username).filter(Boolean).map((v:any)=>String(v).replace(/^@/,"").trim().toLowerCase()).filter(Boolean))].slice(0,20)}
 async function latestReceipt(contentId:string){const {data}=await db.from("social_execution_receipts").select("id,provider_status,external_id,permalink,occurred_at").eq("content_operation_id",contentId).order("occurred_at",{ascending:false}).limit(1).maybeSingle();return data}
 async function upsertProof(row:any,rec:any){
@@ -75,8 +75,19 @@ Deno.serve(async(req)=>{
  if(qerr)return json({ok:false,error:"boh_schedule_query_failed",detail:safe(qerr.message)},500);
  if(!rows?.length)return json({ok:true,eligible:0,processed:0,published_verified:0,blocked:0,message:"no_ready_to_publish_rows",at:new Date().toISOString()});
 
- const rowMap=new Map(rows.map((r:any)=>[String(r.id),r]));
- const jobs=rows.map((r:any)=>({
+
+ const allowedRows:any[]=[];const blockedPreflight:any[]=[];
+ for(const row of rows){
+   const {data:check,error:checkError}=await db.rpc("khg_marketing_release_preflight",{p_content_id:row.id});
+   if(checkError||!check?.ok){
+     blockedPreflight.push({content_operation_id:row.id,status:"blocked",reason:check?.code||"SOURCE_PREFLIGHT_UNAVAILABLE"});
+     continue;
+   }
+   allowedRows.push(row);
+ }
+ if(!allowedRows.length)return json({ok:true,eligible:0,processed:0,published_verified:0,blocked:blockedPreflight.length,preflight_rejections:blockedPreflight,message:"pre_dispatch_source_gate_blocked",at:new Date().toISOString()});
+ const rowMap=new Map(allowedRows.map((r:any)=>[String(r.id),r]));
+ const jobs=allowedRows.map((r:any)=>({
    content_operation_id:String(r.id),
    entity_key:String(r.entity_key),
    ig_handle:String(r.ig_handle||""),
@@ -109,5 +120,5 @@ Deno.serve(async(req)=>{
      }
    }catch(e){applied.push({content_operation_id:row.id,status:"apply_error",error:safe(e instanceof Error?e.message:e)})}
  }
- return json({ok:true,eligible:rows.length,processed:receipts.length,published_verified:applied.filter(x=>x.status==="published_verified").length,blocked:applied.filter(x=>x.status==="blocked"||x.status==="apply_error").length,provider_dispatch:result?.dispatch||null,applied,at:new Date().toISOString()});
+ return json({ok:true,eligible:allowedRows.length,preflight_rejections:blockedPreflight,processed:receipts.length,published_verified:applied.filter(x=>x.status==="published_verified").length,blocked:applied.filter(x=>x.status==="blocked"||x.status==="apply_error").length,provider_dispatch:result?.dispatch||null,applied,at:new Date().toISOString()});
 });
