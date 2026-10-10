@@ -1,13 +1,13 @@
--- Source-controlled snapshot of already-deployed KHG foundation gates, captured 2026-10-10.
--- Live migration applied in Supabase KOLLECTIVE BOH; this branch is an audit/rollback reference.
--- NOT for automatic replay on every deploy.
+-- Exact production function snapshot, captured after source gate V5 repair on 2026-10-10.
+-- Production migrations were applied through Supabase; this file records current deployed state.
+-- Do not apply blindly over a newer schema.
 
 CREATE OR REPLACE FUNCTION public.enforce_canonical_creative_source()
  RETURNS trigger
  LANGUAGE plpgsql
  SET search_path TO 'pg_catalog', 'public'
 AS $function$
-DECLARE law jsonb;packet jsonb;banned text;needs_gate boolean;qat timestamptz;
+DECLARE law jsonb;packet jsonb;banned text;needs_gate boolean;qat timestamptz;score numeric;
 BEGIN
  SELECT to_jsonb(l) INTO law FROM public.marketing_asset_source_laws l WHERE law_key='ig_primary_drive_asset_source_v1' AND status='active';
  IF law IS NULL THEN RAISE EXCEPTION 'CANONICAL_SOURCE_POLICY_UNAVAILABLE'; END IF;
@@ -26,7 +26,7 @@ BEGIN
   OR NEW.metadata->>'launch_authorized'='true' OR NEW.metadata->>'package_approved'='true';
  IF needs_gate THEN
   packet:=law#>ARRAY['source_registry','verified_packages',NEW.id::text];
-  BEGIN qat:=nullif(packet->>'qa_at','')::timestamptz; EXCEPTION WHEN OTHERS THEN qat:=null; END;
+  BEGIN qat:=nullif(packet->>'qa_at','')::timestamptz;score:=nullif(packet->>'quality_score','')::numeric; EXCEPTION WHEN OTHERS THEN qat:=null;score:=null; END;
   IF packet IS NULL OR packet->>'caption' IS DISTINCT FROM NEW.caption_draft
    OR packet->'asset_refs' IS DISTINCT FROM NEW.asset_refs
    OR packet->>'enterprise_entity_id' IS DISTINCT FROM NEW.enterprise_entity_id::text
@@ -34,7 +34,7 @@ BEGIN
    OR nullif(packet->>'reviewer','') IS NULL OR nullif(packet->>'author','') IS NULL
    OR packet->>'reviewer'=packet->>'author'
    OR packet->>'qa_result' IS DISTINCT FROM 'passed'
-   OR qat IS NULL OR qat<timestamptz '2026-10-10T03:00:00Z' THEN
+   OR qat IS NULL OR qat<timestamptz '2026-10-10T03:00:00Z' OR score IS NULL OR score<95 OR packet->>'critical_defects' IS DISTINCT FROM '0' OR packet->>'brand_fidelity_pass' IS DISTINCT FROM 'true' THEN
     RAISE EXCEPTION 'CANONICAL_INDEPENDENT_FRESH_EXACT_QA_REQUIRED';
   END IF;
  END IF;
@@ -164,6 +164,83 @@ BEGIN
  END LOOP;
  IF n=0 OR finals=0 THEN RAISE EXCEPTION 'SOURCE_GATE_FRESH_FINAL_CREATIVE_REQUIRED'; END IF;
  RETURN NEW;
+END;$function$
+;
+
+CREATE OR REPLACE FUNCTION public.khg_marketing_release_preflight(p_content_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SET search_path TO 'pg_catalog', 'public'
+AS $function$
+DECLARE g public.growth_content_operations%rowtype;policy record;packet jsonb;ref jsonb;fid text;purpose text;item record;
+       fresh integer:=0;epoch timestamptz:=timestamptz '2026-10-10T03:00:00Z';stamp timestamptz;quality numeric;
+       brand text;sourcebrand text;
+BEGIN
+ SELECT * INTO g FROM public.growth_content_operations WHERE id=p_content_id;
+ IF NOT FOUND THEN RETURN jsonb_build_object('ok',false,'code','CONTENT_MISSING'); END IF;
+ IF g.publish_status<>'scheduled' OR g.compliance_status<>'clear'
+ OR g.scheduled_at IS NULL OR g.metadata->>'launch_authorized' IS DISTINCT FROM 'true'
+ THEN RETURN jsonb_build_object('ok',false,'code','NOT_APPROVED_SCHEDULED'); END IF;
+ IF g.created_at < epoch THEN RETURN jsonb_build_object('ok',false,'code','BEFORE_FOUNDATION_CUTOFF'); END IF;
+ SELECT source_registry,enforcement_rules INTO policy FROM public.marketing_asset_source_laws
+ WHERE law_key='ig_primary_drive_asset_source_v1' AND status='active';
+ IF NOT FOUND THEN RETURN jsonb_build_object('ok',false,'code','POLICY_MISSING'); END IF;
+ packet:=policy.source_registry#>ARRAY['verified_packages',g.id::text];
+ IF packet IS NULL OR packet->>'caption' IS DISTINCT FROM g.caption_draft
+ OR packet->'asset_refs' IS DISTINCT FROM g.asset_refs
+ OR packet->>'enterprise_entity_id' IS DISTINCT FROM g.enterprise_entity_id::text
+ OR packet->>'content_type' IS DISTINCT FROM g.content_type
+ OR packet->>'qa_result' IS DISTINCT FROM 'passed'
+ OR nullif(packet->>'reviewer','') IS NULL OR nullif(packet->>'author','') IS NULL
+ OR packet->>'reviewer'=packet->>'author'
+ OR packet->>'brand_fidelity_pass' IS DISTINCT FROM 'true'
+ OR packet->>'critical_defects' IS DISTINCT FROM '0'
+ THEN RETURN jsonb_build_object('ok',false,'code','EXACT_INDEPENDENT_QA_INCOMPLETE'); END IF;
+ BEGIN
+   IF (packet->>'qa_at')::timestamptz<epoch THEN RETURN jsonb_build_object('ok',false,'code','STALE_QA'); END IF;
+   quality:=(packet->>'quality_score')::numeric;
+ EXCEPTION WHEN OTHERS THEN RETURN jsonb_build_object('ok',false,'code','QA_EVIDENCE_INVALID'); END;
+ IF quality IS NULL OR quality<95 OR (packet->>'qa_at') IS NULL
+ THEN RETURN jsonb_build_object('ok',false,'code','GRAPHIC_QA_BELOW_95'); END IF;
+ SELECT entity_key INTO brand FROM public.enterprise_directory_records WHERE id=g.enterprise_entity_id;
+ IF brand IS NULL THEN RETURN jsonb_build_object('ok',false,'code','BRAND_UNKNOWN'); END IF;
+ IF jsonb_typeof(g.asset_refs)<>'array' OR jsonb_array_length(g.asset_refs)=0
+ THEN RETURN jsonb_build_object('ok',false,'code','ASSET_REFS_REQUIRED'); END IF;
+ FOR ref IN SELECT value FROM jsonb_array_elements(g.asset_refs) LOOP
+   fid:=coalesce(nullif(ref->>'file_id',''),nullif(ref->>'drive_file_id',''),
+            substring(ref->>'url' FROM '/d/([A-Za-z0-9_-]{20,})'));
+   purpose:=coalesce(nullif(ref->>'usage_role',''),'final');
+   IF fid IS NULL OR purpose NOT IN('final','source_reference')
+      THEN RETURN jsonb_build_object('ok',false,'code','BAD_ASSET_REFERENCE'); END IF;
+   SELECT a.metadata,a.lifecycle_status,a.entity_key AS asset_brand,
+      f.entity_key AS folder_brand,f.root_drive_folder_id,f.publish_enabled,f.rules
+      INTO item FROM public.marketing_drive_assets a
+      JOIN public.marketing_drive_folders f ON f.drive_folder_id=a.drive_folder_id
+      WHERE a.drive_file_id=fid;
+   IF NOT FOUND OR item.root_drive_folder_id IS DISTINCT FROM '1OjxHeuwZnD6_vI4WOGz8i4BJ61BsR9Ya'
+      OR item.publish_enabled IS DISTINCT FROM TRUE OR coalesce(item.rules->>'hold_reason','')<>''
+      OR item.lifecycle_status IN('blocked','retired','hold')
+   THEN RETURN jsonb_build_object('ok',false,'code','ASSET_NOT_CANONICAL','file_id',fid); END IF;
+   sourcebrand:=coalesce(item.asset_brand,item.folder_brand);
+   IF nullif(ref->>'source_brand','') IS NULL
+   OR (sourcebrand IS NOT NULL AND lower(ref->>'source_brand')<>lower(sourcebrand))
+   THEN RETURN jsonb_build_object('ok',false,'code','SOURCE_BRAND_ATTRIBUTION_MISMATCH','file_id',fid); END IF;
+   IF sourcebrand IS NOT NULL AND lower(sourcebrand)<>lower(brand)
+      AND ref->>'cross_promotion_approved' IS DISTINCT FROM 'true'
+   THEN RETURN jsonb_build_object('ok',false,'code','CROSS_BRAND_ASSET_NOT_APPROVED','file_id',fid); END IF;
+   IF purpose='source_reference' THEN CONTINUE; END IF;
+   fresh:=fresh+1;
+   IF item.metadata->>'source_epoch_ok' IS DISTINCT FROM 'true'
+     OR item.metadata->>'drive_metadata_verified_by' IS DISTINCT FROM 'google_drive_connector'
+     OR nullif(item.metadata->>'drive_ancestry_verified_at','') IS NULL
+     OR nullif(item.metadata->>'drive_created_time_verified_utc','') IS NULL
+   THEN RETURN jsonb_build_object('ok',false,'code','UNVERIFIED_FINAL','file_id',fid); END IF;
+   BEGIN stamp:=(item.metadata->>'drive_created_time_verified_utc')::timestamptz;
+   EXCEPTION WHEN OTHERS THEN RETURN jsonb_build_object('ok',false,'code','BAD_FINAL_CREATION_TIME','file_id',fid); END;
+   IF stamp<epoch THEN RETURN jsonb_build_object('ok',false,'code','OLD_FINAL_ASSET','file_id',fid); END IF;
+ END LOOP;
+ IF fresh=0 THEN RETURN jsonb_build_object('ok',false,'code','NO_FRESH_FINAL_CREATIVE'); END IF;
+ RETURN jsonb_build_object('ok',true,'code','QA_APPROVED_RELEASE_CANDIDATE','content_id',p_content_id,'final_count',fresh);
 END;$function$
 ;
 
