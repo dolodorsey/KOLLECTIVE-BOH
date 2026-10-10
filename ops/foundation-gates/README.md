@@ -15,7 +15,7 @@ Founder authorized repair of all five foundation controls. Canonical creative so
 9. Deployed Supabase `social-publish-runtime-bridge-v1` version **9**. It invokes release preflight per job BEFORE forwarding to the Meta gateway. No job is forwarded when the preflight fails or errors. Older `source_reference` inputs are excluded from the media payload. Provider job proof and well-formed Instagram permalink are required before the bridge records publication.
 
 ## REQUIRED: Reindex new fresh creative (Claude)
-The source registry is intentionally fail-closed. For each real fresh MARKETING file, Claude's `re-index marketing` run must verify Google Drive `files.get` createdTime, ancestry up to the exact canonical root, excluded archive path, file ID, brand owner and no unapproved source reuse. Set `metadata.drive_metadata_verified_by='google_drive_connector'`, `metadata.drive_created_time_verified_utc`, `metadata.drive_ancestry_verified_at`, and only then `source_epoch_ok=true` if createdTime is on/after cutoff. Old logos/products may be reference-only in a newly produced original, not final publishable media.
+The source registry is intentionally fail-closed. For each real fresh MARKETING file, Claude's `re-index marketing` run must verify Google Drive `files.get` createdTime, ancestry up to the exact canonical root, excluded archive path, file ID, brand owner and no unapproved source reuse. Set `metadata.drive_metadata_verified_by='google_drive_connector'`, `metadata.drive_created_time_verified_utc`, `metadata.drive_modified_time_verified_utc`, `metadata.drive_ancestry_verified_at`, `metadata.original_creative_produced_at_utc`, and `metadata.fresh_creative_reviewed_by` from independently checked evidence. Only then may `source_epoch_ok=true` be considered for **new final creative**, after cutoff and provenance checks. A copied/edited old file is not fresh merely because Drive assigns a newer creation timestamp. Old logos/products may be reference-only in a newly produced original, not final publishable media.
 
 The QA package in `marketing_asset_source_laws.source_registry.verified_packages[content_operation_id]` must match exact caption, asset_refs, entity and content type; include author/reviewer (distinct), `qa_result='passed'`, `qa_at`, `quality_score>=95`, `critical_defects=0`, `brand_fidelity_pass=true`. The publishing bridge also requires `asset_refs[].source_brand` and explicit cross-promotion consent if brands differ.
 
@@ -57,3 +57,10 @@ Prepared/approved/scheduled/publishing/published/collected are distinct. Always 
 2. Independently QA newly produced graphics in their own final files (no contact sheets; native generation; real logos and products, faces unchanged); record exact QA packages.
 3. Prove at least one approved **non-publishing** dry run through bridge/Gateway checks, then perform a separately authorized controlled production publish test if founder requests it. Do not auto-publish.
 4. Test website/app current build on mobile and desktop with customer paths, zero critical regressions, and a measured >=98/100 score before certifying Web/App Release Guardian.
+
+
+## GitHub PR review & CI (2026-10-10)
+- `.github/workflows/khg-foundation-gates.yml` executes `node --test ops/foundation-gates/verify-foundation-contract.mjs` for changes to the foundation gates.
+- Tests check committed SQL/bridge/gateway release requirements and ensure no common credential patterns are added. They are **static contract checks only**, not full database, Meta provider, image-production or visual regression tests.
+- Required reviewer checklist: verify zero exposed secrets, current exact production-snapshot parity, fail-closed behavior, no approval-state bypass, source-reference handling, DORSEY retired-content block, and no unintended Vercel changes.
+- **No automatic merge or production redeployment from this documentation PR.** Separate human-approved production release requires independent live evidence.
