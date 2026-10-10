@@ -93,7 +93,7 @@ Deno.serve(async(req)=>{
    ig_handle:String(r.ig_handle||""),
    content_type:String(r.content_type||""),
    caption:String(r.caption_draft||""),
-   media_urls:(Array.isArray(r.metadata?.provider_media_urls)&&r.metadata.provider_media_urls.some((x:any)=>typeof x==="string"&&x.startsWith("https://")))?r.metadata.provider_media_urls:mediaUrls(r.asset_refs),
+   media_urls:mediaUrls(r.asset_refs),
    user_tags:mediaUserTags(r.metadata),
    scheduled_at:r.scheduled_at,
    content_pillar:r.content_pillar||null,
