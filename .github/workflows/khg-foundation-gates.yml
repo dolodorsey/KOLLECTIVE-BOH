@@ -1,0 +1,28 @@
+name: KHG Foundation Gate Contracts
+
+on:
+  pull_request:
+    paths:
+      - 'ops/foundation-gates/**'
+      - '.github/workflows/khg-foundation-gates.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  foundation-contracts:
+    name: Foundation contract checks (static only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate committed release-gate protections
+        run: node --test ops/foundation-gates/verify-foundation-contract.mjs
+      - name: Report limitations
+        run: |
+          echo "Static source/approval/publishing contracts checked."
+          echo "This does not certify live Supabase, Meta, native image generation, or 98/100 app QA."
