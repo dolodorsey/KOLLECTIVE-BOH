@@ -1,6 +1,5 @@
--- Exact production function snapshot, captured after source gate V5 repair on 2026-10-10.
--- Production migrations were applied through Supabase; this file records current deployed state.
--- Do not apply blindly over a newer schema.
+-- KHG Foundation Production Gate Snapshot — 2026-10-10.
+-- Apply only after independent review. Functions already deployed in BOH.
 
 CREATE OR REPLACE FUNCTION public.enforce_canonical_creative_source()
  RETURNS trigger
@@ -91,7 +90,7 @@ CREATE OR REPLACE FUNCTION public.enforce_marketing_asset_tree()
  LANGUAGE plpgsql
  SET search_path TO 'pg_catalog', 'public'
 AS $function$
-DECLARE f record;stamp timestamptz;epoch constant timestamptz:='2026-10-10T03:00:00Z';
+DECLARE f record;stamp timestamptz;file_modified timestamptz;original_created timestamptz;epoch constant timestamptz:='2026-10-10T03:00:00Z';
 BEGIN
  SELECT root_drive_folder_id,publish_enabled,rules INTO f FROM public.marketing_drive_folders WHERE drive_folder_id=NEW.drive_folder_id;
  NEW.metadata:=coalesce(NEW.metadata,'{}'::jsonb);
@@ -103,16 +102,19 @@ BEGIN
  IF NEW.metadata->>'source_epoch_ok'='true' THEN
   IF coalesce(NEW.metadata->>'drive_metadata_verified_by','')<>'google_drive_connector'
    OR nullif(NEW.metadata->>'drive_created_time_verified_utc','') IS NULL
+   OR nullif(NEW.metadata->>'drive_modified_time_verified_utc','') IS NULL
+   OR nullif(NEW.metadata->>'original_creative_produced_at_utc','') IS NULL
+   OR nullif(NEW.metadata->>'fresh_creative_reviewed_by','') IS NULL
    OR nullif(NEW.metadata->>'drive_ancestry_verified_at','') IS NULL THEN
     NEW.metadata:=NEW.metadata||jsonb_build_object('source_epoch_ok',false,'eligibility_hold','NEEDS_VERIFIED_DRIVE_METADATA');
     RETURN NEW;
   END IF;
-  BEGIN stamp:=(NEW.metadata->>'drive_created_time_verified_utc')::timestamptz;
+  BEGIN stamp:=(NEW.metadata->>'drive_created_time_verified_utc')::timestamptz; file_modified:=(NEW.metadata->>'drive_modified_time_verified_utc')::timestamptz;original_created:=(NEW.metadata->>'original_creative_produced_at_utc')::timestamptz;
   EXCEPTION WHEN OTHERS THEN
     NEW.metadata:=NEW.metadata||jsonb_build_object('source_epoch_ok',false,'eligibility_hold','INVALID_DRIVE_CREATION_TIMESTAMP');
     RETURN NEW;
   END;
-  IF stamp<epoch THEN
+  IF stamp<epoch OR file_modified<epoch OR original_created<epoch OR original_created>file_modified THEN
     NEW.metadata:=NEW.metadata||jsonb_build_object('source_epoch_ok',false,'eligibility_hold','PRE_CUTOFF_REFERENCE_ONLY');
   END IF;
  END IF;
@@ -125,7 +127,7 @@ CREATE OR REPLACE FUNCTION public.enforce_marketing_source_epoch()
  LANGUAGE plpgsql
  SET search_path TO 'pg_catalog', 'public'
 AS $function$
-DECLARE epoch timestamptz;ref jsonb;fid text;role text;a record;stamped timestamptz;finals int:=0;n int:=0;
+DECLARE epoch timestamptz;ref jsonb;fid text;role text;a record;stamped timestamptz;file_modified timestamptz;original_created timestamptz;finals int:=0;n int:=0;
 BEGIN
  SELECT (source_registry#>>'{source_epoch,epoch}')::timestamptz INTO epoch FROM public.marketing_asset_source_laws
  WHERE law_key='ig_primary_drive_asset_source_v1' AND status='active';
@@ -155,12 +157,15 @@ BEGIN
   IF a.metadata->>'source_epoch_ok' IS DISTINCT FROM 'true'
    OR a.metadata->>'drive_metadata_verified_by' IS DISTINCT FROM 'google_drive_connector'
    OR nullif(a.metadata->>'drive_ancestry_verified_at','') IS NULL
-   OR nullif(a.metadata->>'drive_created_time_verified_utc','') IS NULL THEN
+   OR nullif(a.metadata->>'drive_created_time_verified_utc','') IS NULL
+   OR nullif(a.metadata->>'drive_modified_time_verified_utc','') IS NULL
+   OR nullif(a.metadata->>'original_creative_produced_at_utc','') IS NULL
+   OR nullif(a.metadata->>'fresh_creative_reviewed_by','') IS NULL THEN
    RAISE EXCEPTION 'SOURCE_GATE_UNVERIFIED_FINAL_ASSET:%',fid;
   END IF;
-  BEGIN stamped:=(a.metadata->>'drive_created_time_verified_utc')::timestamptz;
+  BEGIN stamped:=(a.metadata->>'drive_created_time_verified_utc')::timestamptz;file_modified:=(a.metadata->>'drive_modified_time_verified_utc')::timestamptz;original_created:=(a.metadata->>'original_creative_produced_at_utc')::timestamptz;
   EXCEPTION WHEN OTHERS THEN RAISE EXCEPTION 'SOURCE_GATE_INVALID_FINAL_TIMESTAMP:%',fid; END;
-  IF stamped<epoch THEN RAISE EXCEPTION 'SOURCE_GATE_PRE_CUTOFF_FINAL_ASSET:%',fid; END IF;
+  IF stamped<epoch OR file_modified<epoch OR original_created<epoch OR original_created>file_modified THEN RAISE EXCEPTION 'SOURCE_GATE_PRE_CUTOFF_FINAL_ASSET:%',fid; END IF;
  END LOOP;
  IF n=0 OR finals=0 THEN RAISE EXCEPTION 'SOURCE_GATE_FRESH_FINAL_CREATIVE_REQUIRED'; END IF;
  RETURN NEW;
@@ -173,7 +178,7 @@ CREATE OR REPLACE FUNCTION public.khg_marketing_release_preflight(p_content_id u
  SET search_path TO 'pg_catalog', 'public'
 AS $function$
 DECLARE g public.growth_content_operations%rowtype;policy record;packet jsonb;ref jsonb;fid text;purpose text;item record;
-       fresh integer:=0;epoch timestamptz:=timestamptz '2026-10-10T03:00:00Z';stamp timestamptz;quality numeric;
+       fresh integer:=0;epoch timestamptz:=timestamptz '2026-10-10T03:00:00Z';stamp timestamptz;file_modified timestamptz;original_created timestamptz;quality numeric;
        brand text;sourcebrand text;
 BEGIN
  SELECT * INTO g FROM public.growth_content_operations WHERE id=p_content_id;
@@ -234,16 +239,18 @@ BEGIN
      OR item.metadata->>'drive_metadata_verified_by' IS DISTINCT FROM 'google_drive_connector'
      OR nullif(item.metadata->>'drive_ancestry_verified_at','') IS NULL
      OR nullif(item.metadata->>'drive_created_time_verified_utc','') IS NULL
+     OR nullif(item.metadata->>'drive_modified_time_verified_utc','') IS NULL
+     OR nullif(item.metadata->>'original_creative_produced_at_utc','') IS NULL
+     OR nullif(item.metadata->>'fresh_creative_reviewed_by','') IS NULL
    THEN RETURN jsonb_build_object('ok',false,'code','UNVERIFIED_FINAL','file_id',fid); END IF;
-   BEGIN stamp:=(item.metadata->>'drive_created_time_verified_utc')::timestamptz;
+   BEGIN stamp:=(item.metadata->>'drive_created_time_verified_utc')::timestamptz;file_modified:=(item.metadata->>'drive_modified_time_verified_utc')::timestamptz;original_created:=(item.metadata->>'original_creative_produced_at_utc')::timestamptz;
    EXCEPTION WHEN OTHERS THEN RETURN jsonb_build_object('ok',false,'code','BAD_FINAL_CREATION_TIME','file_id',fid); END;
-   IF stamp<epoch THEN RETURN jsonb_build_object('ok',false,'code','OLD_FINAL_ASSET','file_id',fid); END IF;
+   IF stamp<epoch OR file_modified<epoch OR original_created<epoch OR original_created>file_modified THEN RETURN jsonb_build_object('ok',false,'code','OLD_FINAL_ASSET','file_id',fid); END IF;
  END LOOP;
  IF fresh=0 THEN RETURN jsonb_build_object('ok',false,'code','NO_FRESH_FINAL_CREATIVE'); END IF;
  RETURN jsonb_build_object('ok',true,'code','QA_APPROVED_RELEASE_CANDIDATE','content_id',p_content_id,'final_count',fresh);
 END;$function$
 ;
-
 CREATE OR REPLACE VIEW public.v_marketing_instagram_schedule AS  SELECT g.id,
     g.content_key,
     g.enterprise_entity_id,
@@ -276,15 +283,14 @@ CREATE OR REPLACE VIEW public.v_marketing_instagram_schedule AS  SELECT g.id,
             WHEN e.entity_key = 'dr-dorsey'::text AND COALESCE(g.content_pillar, ''::text) ~* 'mini[ -]?me'::text THEN 'founder_prohibited_content'::text
             WHEN g.publish_status = 'published'::text THEN 'published'::text
             WHEN COALESCE((g.metadata ->> 'launch_authorized'::text)::boolean, false) = false AND (g.publish_status = ANY (ARRAY['scheduled'::text, 'approved'::text])) THEN 'owner_approval_required'::text
-            WHEN e.entity_key = 'dr-dorsey'::text AND (g.content_pillar = ANY (ARRAY['mini-me'::text, 'hakuna-matata'::text, 'hakuna-matata-parable'::text])) AND NOT (COALESCE((g.metadata ->> 'parable_asset_verified'::text)::boolean, false) = true AND jsonb_typeof(g.asset_refs) = 'array'::text AND jsonb_array_length(g.asset_refs) = 5) THEN 'parable_asset_review_required'::text
             WHEN g.publish_status = 'scheduled'::text AND g.compliance_status = 'clear'::text AND g.scheduled_at IS NOT NULL THEN 'ready'::text
             WHEN g.publish_status = 'approved'::text AND g.compliance_status = 'clear'::text THEN 'approved'::text
             WHEN g.compliance_status = ANY (ARRAY['review_required'::text, 'restricted'::text, 'rejected'::text]) THEN 'compliance_attention'::text
             WHEN g.publish_status = ANY (ARRAY['review'::text, 'briefed'::text, 'in_production'::text, 'idea'::text]) THEN 'needs_review'::text
             ELSE COALESCE(g.publish_status, 'needs_review'::text)
         END AS review_state,
-    g.publish_status = 'scheduled'::text AND g.compliance_status = 'clear'::text AND g.scheduled_at IS NOT NULL AND g.asset_refs IS NOT NULL AND g.asset_refs <> 'null'::jsonb AND COALESCE((g.metadata ->> 'launch_authorized'::text)::boolean, false) = true AND NOT (e.entity_key = 'dr-dorsey'::text AND (g.content_pillar = ANY (ARRAY['mini-me'::text, 'hakuna-matata'::text, 'hakuna-matata-parable'::text])) AND NOT (COALESCE((g.metadata ->> 'parable_asset_verified'::text)::boolean, false) = true AND jsonb_typeof(g.asset_refs) = 'array'::text AND jsonb_array_length(g.asset_refs) = 5)) AND NOT (e.entity_key = 'dr-dorsey'::text AND COALESCE(g.content_pillar, ''::text) ~* 'mini[ -]?me'::text) AS ready_to_publish,
-    (g.publish_status = ANY (ARRAY['review'::text, 'briefed'::text, 'in_production'::text, 'idea'::text])) OR COALESCE(g.compliance_status, 'pending'::text) <> 'clear'::text OR (g.publish_status = ANY (ARRAY['scheduled'::text, 'approved'::text])) AND COALESCE((g.metadata ->> 'launch_authorized'::text)::boolean, false) = false OR e.entity_key = 'dr-dorsey'::text AND (g.content_pillar = ANY (ARRAY['mini-me'::text, 'hakuna-matata'::text, 'hakuna-matata-parable'::text])) AND NOT (COALESCE((g.metadata ->> 'parable_asset_verified'::text)::boolean, false) = true AND jsonb_typeof(g.asset_refs) = 'array'::text AND jsonb_array_length(g.asset_refs) = 5) OR e.entity_key = 'dr-dorsey'::text AND COALESCE(g.content_pillar, ''::text) ~* 'mini[ -]?me'::text AS requires_owner_review,
+    g.publish_status = 'scheduled'::text AND g.compliance_status = 'clear'::text AND g.scheduled_at IS NOT NULL AND g.asset_refs IS NOT NULL AND g.asset_refs <> 'null'::jsonb AND COALESCE((g.metadata ->> 'launch_authorized'::text)::boolean, false) = true AND NOT (e.entity_key = 'dr-dorsey'::text AND COALESCE(g.content_pillar, ''::text) ~* 'mini[ -]?me'::text) AS ready_to_publish,
+    (g.publish_status = ANY (ARRAY['review'::text, 'briefed'::text, 'in_production'::text, 'idea'::text])) OR COALESCE(g.compliance_status, 'pending'::text) <> 'clear'::text OR (g.publish_status = ANY (ARRAY['scheduled'::text, 'approved'::text])) AND COALESCE((g.metadata ->> 'launch_authorized'::text)::boolean, false) = false OR e.entity_key = 'dr-dorsey'::text AND COALESCE(g.content_pillar, ''::text) ~* 'mini[ -]?me'::text AS requires_owner_review,
     g.created_at,
     g.updated_at
    FROM growth_content_operations g
