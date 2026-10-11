@@ -1,6 +1,6 @@
--- KHG Foundation Production Gate Snapshot — 2026-10-10.
--- Apply only after independent review. Functions already deployed in BOH.
-
+-- Exact KHG source/approval/release SQL snapshots from KOLLECTIVE BOH, reviewed 2026-10-10.
+-- These functions were deployed separately. This file is NOT an automatic migration.
+-- Requires independently reviewed production metadata and storage/byte-digest checks.
 CREATE OR REPLACE FUNCTION public.enforce_canonical_creative_source()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -90,36 +90,95 @@ CREATE OR REPLACE FUNCTION public.enforce_marketing_asset_tree()
  LANGUAGE plpgsql
  SET search_path TO 'pg_catalog', 'public'
 AS $function$
-DECLARE f record;stamp timestamptz;file_modified timestamptz;original_created timestamptz;epoch constant timestamptz:='2026-10-10T03:00:00Z';
+DECLARE
+  f record;
+  stamp timestamptz;
+  file_modified timestamptz;
+  original_created timestamptz;
+  epoch constant timestamptz := '2026-10-10T03:00:00Z';
+  has_proof boolean;
+  must_hold_publication boolean;
 BEGIN
- SELECT root_drive_folder_id,publish_enabled,rules INTO f FROM public.marketing_drive_folders WHERE drive_folder_id=NEW.drive_folder_id;
- NEW.metadata:=coalesce(NEW.metadata,'{}'::jsonb);
- IF f IS NULL OR f.root_drive_folder_id IS DISTINCT FROM '1OjxHeuwZnD6_vI4WOGz8i4BJ61BsR9Ya'
-  OR f.publish_enabled IS DISTINCT FROM TRUE OR coalesce(f.rules->>'hold_reason','')<>'' THEN
-  NEW.metadata:=NEW.metadata||jsonb_build_object('source_epoch_ok',false,'eligibility_hold','NOT_AUTHORIZED_MARKETING_FOLDER');
+  NEW.metadata := coalesce(NEW.metadata, '{}'::jsonb);
+  SELECT root_drive_folder_id, publish_enabled, rules INTO f
+  FROM public.marketing_drive_folders
+  WHERE drive_folder_id = NEW.drive_folder_id;
+
+  -- Canonical-root membership and explicit source exclusion are hard gates.
+  IF f IS NULL
+     OR f.root_drive_folder_id IS DISTINCT FROM '1OjxHeuwZnD6_vI4WOGz8i4BJ61BsR9Ya'
+     OR coalesce(f.rules->>'hold_reason','') <> '' THEN
+    NEW.metadata := NEW.metadata || jsonb_build_object(
+      'source_epoch_ok', false,
+      'source_folder_registry_ok', false,
+      'eligibility_hold', 'NOT_AUTHORIZED_MARKETING_FOLDER',
+      'publication_hold', true,
+      'provider_execution_authorized', false);
+    RETURN NEW;
+  END IF;
+
+  -- A source folder can be registered and reviewed without being enabled for publication.
+  NEW.metadata := NEW.metadata || jsonb_build_object('source_folder_registry_ok', true);
+  must_hold_publication := f.publish_enabled IS DISTINCT FROM TRUE
+     OR coalesce(f.rules->>'publishing_hold','') = 'true'
+     OR coalesce(f.rules->>'outreach_hold','') = 'true';
+
+  IF must_hold_publication THEN
+    NEW.metadata := NEW.metadata || jsonb_build_object(
+      'publication_hold', true,
+      'publication_hold_reason', 'FOLDER_PUBLISHING_NOT_AUTHORIZED',
+      'provider_execution_authorized', false);
+  END IF;
+
+  -- Never automatically promote old or unreviewed assets to true.
+  has_proof :=
+      coalesce(NEW.metadata->>'drive_metadata_verified_by','') = 'google_drive_connector'
+      AND nullif(NEW.metadata->>'drive_created_time_verified_utc','') IS NOT NULL
+      AND nullif(NEW.metadata->>'drive_modified_time_verified_utc','') IS NOT NULL
+      AND nullif(NEW.metadata->>'original_creative_produced_at_utc','') IS NOT NULL
+      AND nullif(NEW.metadata->>'fresh_creative_reviewed_by','') IS NOT NULL
+      AND nullif(NEW.metadata->>'drive_ancestry_verified_at','') IS NOT NULL;
+
+  IF NEW.metadata->>'source_epoch_ok' = 'true' THEN
+    IF NOT has_proof THEN
+      NEW.metadata := NEW.metadata || jsonb_build_object(
+        'source_epoch_ok',false,
+        'eligibility_hold','NEEDS_VERIFIED_DRIVE_METADATA_AND_CREATIVE_REVIEW');
+    ELSE
+      BEGIN
+        stamp := (NEW.metadata->>'drive_created_time_verified_utc')::timestamptz;
+        file_modified := (NEW.metadata->>'drive_modified_time_verified_utc')::timestamptz;
+        original_created := (NEW.metadata->>'original_creative_produced_at_utc')::timestamptz;
+      EXCEPTION WHEN OTHERS THEN
+        NEW.metadata := NEW.metadata || jsonb_build_object(
+          'source_epoch_ok',false,'eligibility_hold','INVALID_DRIVE_CREATION_TIMESTAMP');
+        has_proof := false;
+      END;
+
+      IF has_proof AND
+         (stamp < epoch OR file_modified < epoch OR original_created < epoch OR original_created > file_modified) THEN
+        NEW.metadata := NEW.metadata || jsonb_build_object(
+          'source_epoch_ok',false,'eligibility_hold','PRE_CUTOFF_REFERENCE_ONLY');
+      END IF;
+    END IF;
+  ELSIF NEW.metadata->>'eligibility_hold' = 'NOT_AUTHORIZED_MARKETING_FOLDER' THEN
+    NEW.metadata := NEW.metadata || jsonb_build_object(
+      'source_epoch_ok',false,
+      'eligibility_hold',CASE WHEN has_proof
+        THEN 'PENDING_EXPLICIT_SOURCE_REVALIDATION'
+        ELSE 'NEEDS_ORIGINAL_CREATIVE_ATTESTATION_AND_REVIEW' END);
+  END IF;
+
+  -- Do not let folder-provenance repair silently release a held publishing queue.
+  IF must_hold_publication AND NEW.metadata->>'source_epoch_ok' = 'true' THEN
+    NEW.metadata := NEW.metadata || jsonb_build_object(
+      'source_epoch_ok',false,
+      'eligibility_hold','FOLDER_PUBLISHING_NOT_AUTHORIZED');
+  END IF;
+
   RETURN NEW;
- END IF;
- IF NEW.metadata->>'source_epoch_ok'='true' THEN
-  IF coalesce(NEW.metadata->>'drive_metadata_verified_by','')<>'google_drive_connector'
-   OR nullif(NEW.metadata->>'drive_created_time_verified_utc','') IS NULL
-   OR nullif(NEW.metadata->>'drive_modified_time_verified_utc','') IS NULL
-   OR nullif(NEW.metadata->>'original_creative_produced_at_utc','') IS NULL
-   OR nullif(NEW.metadata->>'fresh_creative_reviewed_by','') IS NULL
-   OR nullif(NEW.metadata->>'drive_ancestry_verified_at','') IS NULL THEN
-    NEW.metadata:=NEW.metadata||jsonb_build_object('source_epoch_ok',false,'eligibility_hold','NEEDS_VERIFIED_DRIVE_METADATA');
-    RETURN NEW;
-  END IF;
-  BEGIN stamp:=(NEW.metadata->>'drive_created_time_verified_utc')::timestamptz; file_modified:=(NEW.metadata->>'drive_modified_time_verified_utc')::timestamptz;original_created:=(NEW.metadata->>'original_creative_produced_at_utc')::timestamptz;
-  EXCEPTION WHEN OTHERS THEN
-    NEW.metadata:=NEW.metadata||jsonb_build_object('source_epoch_ok',false,'eligibility_hold','INVALID_DRIVE_CREATION_TIMESTAMP');
-    RETURN NEW;
-  END;
-  IF stamp<epoch OR file_modified<epoch OR original_created<epoch OR original_created>file_modified THEN
-    NEW.metadata:=NEW.metadata||jsonb_build_object('source_epoch_ok',false,'eligibility_hold','PRE_CUTOFF_REFERENCE_ONLY');
-  END IF;
- END IF;
- RETURN NEW;
-END;$function$
+END
+$function$
 ;
 
 CREATE OR REPLACE FUNCTION public.enforce_marketing_source_epoch()
@@ -179,7 +238,7 @@ CREATE OR REPLACE FUNCTION public.khg_marketing_release_preflight(p_content_id u
 AS $function$
 DECLARE g public.growth_content_operations%rowtype;policy record;packet jsonb;ref jsonb;fid text;purpose text;item record;
        fresh integer:=0;epoch timestamptz:=timestamptz '2026-10-10T03:00:00Z';stamp timestamptz;file_modified timestamptz;original_created timestamptz;quality numeric;
-       brand text;sourcebrand text;
+       brand text;sourcebrand text;file_sha256 text;qa_sha256 text;manifest jsonb:='[]'::jsonb;
 BEGIN
  SELECT * INTO g FROM public.growth_content_operations WHERE id=p_content_id;
  IF NOT FOUND THEN RETURN jsonb_build_object('ok',false,'code','CONTENT_MISSING'); END IF;
@@ -226,7 +285,8 @@ BEGIN
       OR item.publish_enabled IS DISTINCT FROM TRUE OR coalesce(item.rules->>'hold_reason','')<>''
       OR item.lifecycle_status IN('blocked','retired','hold')
    THEN RETURN jsonb_build_object('ok',false,'code','ASSET_NOT_CANONICAL','file_id',fid); END IF;
-   sourcebrand:=coalesce(item.asset_brand,item.folder_brand);
+   sourcebrand:=nullif(trim(coalesce(item.asset_brand,item.folder_brand,'')),'');
+   IF sourcebrand IS NULL THEN RETURN jsonb_build_object('ok',false,'code','CANONICAL_SOURCE_BRAND_MISSING','file_id',fid); END IF;
    IF nullif(ref->>'source_brand','') IS NULL
    OR (sourcebrand IS NOT NULL AND lower(ref->>'source_brand')<>lower(sourcebrand))
    THEN RETURN jsonb_build_object('ok',false,'code','SOURCE_BRAND_ATTRIBUTION_MISMATCH','file_id',fid); END IF;
@@ -246,11 +306,22 @@ BEGIN
    BEGIN stamp:=(item.metadata->>'drive_created_time_verified_utc')::timestamptz;file_modified:=(item.metadata->>'drive_modified_time_verified_utc')::timestamptz;original_created:=(item.metadata->>'original_creative_produced_at_utc')::timestamptz;
    EXCEPTION WHEN OTHERS THEN RETURN jsonb_build_object('ok',false,'code','BAD_FINAL_CREATION_TIME','file_id',fid); END;
    IF stamp<epoch OR file_modified<epoch OR original_created<epoch OR original_created>file_modified THEN RETURN jsonb_build_object('ok',false,'code','OLD_FINAL_ASSET','file_id',fid); END IF;
+   file_sha256:=lower(coalesce(item.metadata->>'verified_content_sha256',''));
+   qa_sha256:=lower(coalesce(packet#>>ARRAY['final_sha256_by_drive_id',fid],''));
+   IF NOT (file_sha256 ~ '^[0-9a-f]{64}$')
+      OR qa_sha256 IS DISTINCT FROM file_sha256
+      OR nullif(item.metadata->>'content_sha256_verified_by','') IS NULL
+      OR nullif(item.metadata->>'content_sha256_verified_at','') IS NULL THEN
+      RETURN jsonb_build_object('ok',false,'code','FINAL_MEDIA_DIGEST_NOT_ATTESTED','file_id',fid);
+   END IF;
+   manifest:=manifest || jsonb_build_array(jsonb_build_object(
+     'file_id',fid,'sha256',file_sha256,'url','https://drive.google.com/file/d/'||fid||'/view'));
  END LOOP;
  IF fresh=0 THEN RETURN jsonb_build_object('ok',false,'code','NO_FRESH_FINAL_CREATIVE'); END IF;
- RETURN jsonb_build_object('ok',true,'code','QA_APPROVED_RELEASE_CANDIDATE','content_id',p_content_id,'final_count',fresh);
+ RETURN jsonb_build_object('ok',true,'code','QA_APPROVED_RELEASE_CANDIDATE','content_id',p_content_id,'final_count',fresh,'media_manifest',manifest);
 END;$function$
 ;
+
 CREATE OR REPLACE VIEW public.v_marketing_instagram_schedule AS  SELECT g.id,
     g.content_key,
     g.enterprise_entity_id,
