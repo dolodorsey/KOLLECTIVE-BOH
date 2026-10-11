@@ -11,6 +11,7 @@ const sql = read("2026-10-10-production-snapshot.sql");
 const bridge = read("social-publish-runtime-bridge-v1.index.ts");
 const verifier = read("ghl-bridge-verifier.index.ts");
 const gateway = read("boh-social-publish-runtime-v1.gateway.index.ts");
+const gatewaySql = read("mcp-gateway-bypass-guard.sql");
 const doc = read("README.md");
 
 test("canonical MARKETING root and 2026-10-10 cutoff are explicit", () => {
@@ -92,7 +93,7 @@ test("HMAC gateway rejects unsigned and mismatching live campaigns", () => {
   assert.match(verifier, /JSON\.stringify\(data\.media_manifest/);
 });
 test("no literal production credentials added to files", () => {
-  const combined = [sql, bridge, verifier, gateway, doc].join("\n");
+  const combined = [sql, bridge, verifier, gateway, gatewaySql, doc].join("\n");
   assert.doesNotMatch(combined, /sk-(?:proj|live)-[A-Za-z0-9_-]{20,}/);
   assert.doesNotMatch(combined, /ghp_[a-zA-Z0-9]{32,}/);
   assert.doesNotMatch(combined, /github_pat_[a-zA-Z0-9_]{32,}/);
@@ -126,4 +127,18 @@ test("provider gateway hashes bytes before immutable media staging", () => {
   assert.match(gateway, /upsert:false/);
   assert.match(gateway, /staged_existing_media_digest_mismatch/);
   assert.match(gateway, /media_staging:stagedMedia/);
+});
+
+test("stale idempotent BOH jobs require matching persisted media, schedule and account", () => {
+  assert.match(gateway, /stale_job_content_mismatch_or_missing_binding/);
+  assert.match(gateway, /String\(existing\.caption\|\|""\)===String\(input\.caption/);
+  assert.match(gateway, /JSON\.stringify\(approvedMedia\)===JSON\.stringify\(media\)/);
+  assert.match(gateway, /boh_approved_handle/);
+  assert.match(gateway, /media_binding_verified:true/);
+});
+test("provider dispatcher cannot publish unbound legacy BOH jobs", () => {
+  assert.match(gatewaySql, /boh_media_binding_missing_or_stale/);
+  assert.match(gatewaySql, /boh_media_binding_digest_or_url_mismatch/);
+  assert.match(gatewaySql, /media_binding_verified/);
+  assert.match(gatewaySql, /khg_dispatch_due_social_publish_jobs/);
 });
