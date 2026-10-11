@@ -73,3 +73,13 @@ Codex review found **P1: media URL not bound to canonical Drive bytes** and **P2
 - Preflight returns a canonical `media_manifest` containing exact Drive file ID, expected hash, and Drive URL. BOH publishing bridge **v10** uses that manifest rather than arbitrary asset URLs. HMAC verifier **v7** rechecks exact manifest, media, caption, brand, account, and schedule. MCP Gateway **v8** downloads by canonical Drive ID, recomputes SHA-256 on raw bytes, blocks mismatch, and stages under a content-addressed path with `upsert:false`; a duplicate path is re-verified by checksum.
 - `boh-social-publish-runtime-v1.gateway.index.ts` is the exact cross-project gateway snapshot for code review. It lives in Supabase project `dzlmtvodpyhetvektfuo`; the BOH functions live in `wfkohcwxxsrhcxhepfql`.
 - Source-code CI runs 19 contract checks. **Static checks alone do not prove real provider, app, or photo fidelity QA.** Continue HOLD for every publishing path until source reindex and independently attested digest evidence are available.
+
+ 
+## Review cycle 2: queued/idempotent legacy jobs (Codex P1)
+A second Codex review found that an **existing** `boh:<content_id>` gateway job could be reused even if its originally saved caption, media, or schedule differed from the newer verified approval. Fixed in the MCP Gateway project:
+- `boh-social-publish-runtime-v1` **v9** expands `currentJob()` to inspect persisted `caption`, `media_urls`, `publish_type`, `scheduled_for`, `requested_by`, and `provider_response.media_staging`.
+- For jobs with an existing idempotency key, the exact caption, post type, due time, previously approved Instagram handle, media URLs, Drive IDs and verified SHA-256s must match the currently verified manifest. Legacy jobs without this proof fail closed as `stale_job_content_mismatch_or_missing_binding`; no stale queued job is silently approved by updating `provider_response`.
+- For fresh jobs, the gateway records `media_binding_verified=true`, approved handle, verified manifest and staged media receipt together before dispatch.
+- `mcp-gateway-bypass-guard.sql` snapshots two **live** database protections in project `dzlmtvodpyhetvektfuo`: `khg_dispatch_social_publish` refuses unbound or mismatching BOH jobs, and `khg_dispatch_due_social_publish_jobs` excludes unbound BOH jobs.
+- At audit time **zero scheduled BOH jobs** existed. Existing published history was not rewritten. A source-control merge is **not** a live publish authorization.
+- 21 static contract tests now cover this issue; actual Meta provider publishing remains HOLD until separately approved.
