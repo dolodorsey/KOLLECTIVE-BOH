@@ -64,3 +64,12 @@ Prepared/approved/scheduled/publishing/published/collected are distinct. Always 
 - Tests check committed SQL/bridge/gateway release requirements and ensure no common credential patterns are added. They are **static contract checks only**, not full database, Meta provider, image-production or visual regression tests.
 - Required reviewer checklist: verify zero exposed secrets, current exact production-snapshot parity, fail-closed behavior, no approval-state bypass, source-reference handling, DORSEY retired-content block, and no unintended Vercel changes.
 - **No automatic merge or production redeployment from this documentation PR.** Separate human-approved production release requires independent live evidence.
+
+ 
+## Codex independent review remediation (October 10)
+Codex review found **P1: media URL not bound to canonical Drive bytes** and **P2: missing canonical source-brand attribution**. Both are addressed on this branch and in BOH/MCP Gateway:
+- P2: `khg_marketing_release_preflight(uuid)` returns `CANONICAL_SOURCE_BRAND_MISSING` when neither asset nor folder has a canonical entity brand. Supplying a non-empty caller brand cannot override null canonical attribution.
+- P1: publishable final media must have `marketing_drive_assets.metadata.verified_content_sha256`, `content_sha256_verified_by`, `content_sha256_verified_at`, plus matching SHA-256 in the independent QA packet under `final_sha256_by_drive_id[Drive file ID]`. Missing/mismatched evidence fails closed. **No historical asset has been assumed to have verified bytes.**
+- Preflight returns a canonical `media_manifest` containing exact Drive file ID, expected hash, and Drive URL. BOH publishing bridge **v10** uses that manifest rather than arbitrary asset URLs. HMAC verifier **v7** rechecks exact manifest, media, caption, brand, account, and schedule. MCP Gateway **v8** downloads by canonical Drive ID, recomputes SHA-256 on raw bytes, blocks mismatch, and stages under a content-addressed path with `upsert:false`; a duplicate path is re-verified by checksum.
+- `boh-social-publish-runtime-v1.gateway.index.ts` is the exact cross-project gateway snapshot for code review. It lives in Supabase project `dzlmtvodpyhetvektfuo`; the BOH functions live in `wfkohcwxxsrhcxhepfql`.
+- Source-code CI runs 19 contract checks. **Static checks alone do not prove real provider, app, or photo fidelity QA.** Continue HOLD for every publishing path until source reindex and independently attested digest evidence are available.
