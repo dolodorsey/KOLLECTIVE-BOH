@@ -53,7 +53,7 @@ async function stageProviderMedia(url:string,entityKey:string,contentId:string,e
   throw new Error(`drive_media_stage_failed:${fileId}:${last||"unknown"}`);
 }
 function publishType(job:any){const t=String(job?.content_type||"").trim().toLowerCase();const media=Array.isArray(job?.media_urls)?job.media_urls:[];if(t==="reel")return "reel";if(t==="story")return "story";if(t==="carousel")return "carousel";if(t==="image")return "image";if(["feed","feed_post","post","static"].includes(t))return media.length>1?"carousel":"image";return null}
-async function currentJob(key:string){const {data,error}=await db.from("social_publish_jobs").select("id,account_id,idempotency_key,status,publish_status,content_status,scheduled_for,provider_publish_id,provider_response,published_at,error,attempt_count,updated_at").eq("idempotency_key",key).order("created_at",{ascending:false}).limit(1).maybeSingle();if(error)throw error;return data}
+async function currentJob(key:string){const {data,error}=await db.from("social_publish_jobs").select("id,account_id,idempotency_key,status,publish_status,content_status,scheduled_for,provider_publish_id,provider_response,published_at,error,attempt_count,updated_at,caption,media_urls,publish_type,requested_by").eq("idempotency_key",key).order("created_at",{ascending:false}).limit(1).maybeSingle();if(error)throw error;return data}
 async function receipt(job:any,input:any){return {content_operation_id:input.content_operation_id,entity_key:input.entity_key,idempotency_key:input.idempotency_key,job_id:job?.id||null,status:job?.status||"not_created",publish_status:job?.publish_status||null,content_status:job?.content_status||null,provider_publish_id:job?.provider_publish_id||null,permalink:job?.provider_response?.permalink||null,published_at:job?.published_at||null,error:job?.error?safe(job.error):null,proof:Boolean(job?.provider_publish_id&&job?.provider_response?.permalink&&job?.published_at)}}
 
 Deno.serve(async(req)=>{
@@ -114,6 +114,7 @@ Deno.serve(async(req)=>{
 
    try{
      let existing=await currentJob(key);
+     const existedBeforeThisRequest=Boolean(existing);
      if(!existing){
        const note=String(input?.approval_note||`BOH launch-authorized exact-package QA for ${contentId}`).trim();
        const {data:jobId,error:scheduleError}=await db.rpc("khg_schedule_direct_social_publish_job",{
@@ -133,7 +134,25 @@ Deno.serve(async(req)=>{
        existing=jobId?await currentJob(key):null;
      }
      if(existing){
-       const taggedResponse={...(existing.provider_response||{}),media_user_tags:tags,entity_tagging_requested:true,entity_tagging_mode:"meta_user_tags+caption_mentions",source_media_urls:mediaSource,provider_media_urls:media,media_staging:stagedMedia};
+       const approvedMedia=Array.isArray(existing.media_urls)?existing.media_urls:[];
+       const retainedStages=Array.isArray(existing.provider_response?.media_staging)?existing.provider_response.media_staging:[];
+       const matchesApproved=
+         String(existing.caption||"")===String(input.caption||"") &&
+         String(existing.publish_type||"")===type &&
+         String(existing.requested_by||"")==="boh_social_bridge" &&
+         Date.parse(String(existing.scheduled_for||""))===Date.parse(String(input.scheduled_at||"")) &&
+         JSON.stringify(approvedMedia)===JSON.stringify(media) &&
+         (!existedBeforeThisRequest || (
+           existing.provider_response?.media_binding_verified===true &&
+           normalizeHandle(existing.provider_response?.boh_approved_handle||"")===handle &&
+           retainedStages.length===stagedMedia.length &&
+           retainedStages.every((p:any,i:number)=>
+             String(p?.file_id||"")===String(stagedMedia[i]?.file_id||"") &&
+             String(p?.sha256||"")===String(stagedMedia[i]?.sha256||"") &&
+             String(p?.url||"")===String(stagedMedia[i]?.url||"")
+           )));
+       if(!matchesApproved)throw new Error("stale_job_content_mismatch_or_missing_binding");
+       const taggedResponse={...(existing.provider_response||{}),media_user_tags:tags,entity_tagging_requested:true,entity_tagging_mode:"meta_user_tags+caption_mentions",source_media_urls:mediaSource,provider_media_urls:media,media_staging:stagedMedia,media_binding_verified:true,boh_approved_handle:handle,boh_verified_manifest:manifest,boh_verified_at:new Date().toISOString()};
        const {error:tagError}=await db.from("social_publish_jobs").update({provider_response:taggedResponse,updated_at:new Date().toISOString()}).eq("id",existing.id);
        if(tagError)throw new Error(`media_tag_persist_failed:${tagError.message}`);
        existing=await currentJob(key);
