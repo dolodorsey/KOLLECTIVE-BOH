@@ -1,7 +1,7 @@
 # SOCIAL OUTREACH — SEPARATE EXECUTION DIVISION (2026-10-13)
 
 Canonical KOLLECTIVE BOH: `wfkohcwxxsrhcxhepfql`.
-Live BOH bridge v37: read-only allowlist for three social worklist views.
+Live BOH bridge v38: read-only allowlist for three social worklist views.
 Front-end PR: dedicated `/social-outreach` route in `khg-dashboard`, distinct from `/inner-circle-outreach` and the general publishing calendar.
 
 ## Scope
