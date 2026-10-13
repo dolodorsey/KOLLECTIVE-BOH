@@ -73,3 +73,11 @@ A stored target is not a sent email. A draft is not delivered. A queued call is 
 
 ## Social Outreach separation
 Social engagement, ambassadors, influencers, LinkedIn initiatives, and replies belong to a distinct Social Outreach division. The 71-tab October 6 Social recovery workbook is a reference/template, not evidence of engagement execution. Maintain brand-owned social streams, provider receipts and non-automated founder DMs.
+
+## Email-to-call handoff operational rule
+- Email remains the primary route until an eligible verified decision-maker needs a call.
+- Only five documented exceptions may create a paused call task: requested callback, recorded bounce/rejection, email unavailable, positive reply, or founder-priority exception with evidence.
+- The owner assigns Caller A/B and date, adds an objective note, and confirms a direct phone plus verified department/decision authority.
+- A created task uses `call_status=paused`, `route_status=verified_email_to_call_handoff`, and cannot dial. Do not count it as an attempted or completed call.
+- Duplicate open assignments for the same account and POC are reused instead of created again.
+- 2026-10-13 database QA used a rolled-back handoff; 52 original paused tasks remained and no call was made.
