@@ -7,6 +7,8 @@
 - Existing `/marketing/outreach` and `/outreach-command` are retained unchanged.
 - External sends and dialing are NOT enabled. No automatic email, calls, DM, SMS or founder calendar invite is created here.
 - Original Google Drive workbooks are reference-only; not CRM write targets.
+- Legacy `partnership_outreach` contains 20 GOOD TIMES and 4 INNER CIRCLE accounts. The new dashboard strictly pins this visible lane to GOOD TIMES entity_key to prevent mixed-brand display. Inner Circle's four legacy entries remain preserved; handle them in their own entity-scoped route during follow-up, never relabel as GOOD TIMES.
+- NTF is assigned the distinct provisional `ntf` brand key. No matching NTF record currently exists in `enterprise_directory_records`, so registration and verified sender/CRM binding remain blocked; do not borrow The Kollective identity.
 - Source-of-truth activity events: `public.outreach_activity`; accounts: `public.outreach_accounts`; POCs: `public.outreach_account_contacts`; manual call assignments: `public.outreach_call_queue`.
 - All original Outreach lane policies remained paused during provisioning.
 
