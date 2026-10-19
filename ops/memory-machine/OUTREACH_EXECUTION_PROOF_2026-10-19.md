@@ -73,3 +73,12 @@ SELECT tgname FROM pg_trigger WHERE tgrelid='public.memory_machine_site_leads'::
 - Further rollback-only QA inserted two matching venue applications plus one sponsor inquiry in a single transaction. Within the transaction the router generated exactly **one** venue research account and **zero** sponsor-as-venue accounts. After rollback, synthetic lead and account residue was **0**.
 - Vercel live alias `https://memory-machine-sigma.vercel.app/` and `/for-venues` both returned HTTP **200**, served from the most recent READY production build. Later canceled deployments did not take the live alias offline.
 - Vercel project environment metadata returned **403**, and a local headless screenshot attempt was denied by network policy. No env access, desktop/mobile screenshot, actual form POST or new website deployment is asserted.
+
+## Final direct-readback checkpoint
+- GitHub PR #27 merged as \`b30176126492771e905ff2d220840d0716e8d197\`; automated "BOH Current Architecture" check succeeded on the PR head.
+- All 25 Wave 1 account records (24 of the new 100, plus pre-existing Fernbank) are now tagged in \`outreach_accounts.metadata.memory_machine_wave1_rank\`; \`priority_tier='wave1_research'\`. Rechecked: 25 tagged, **0 activated**. No venue was marked qualified or contacted.
+- Site lead \`venue_application\` and \`sponsor_inquiry\` now route to distinct internal \`outreach_accounts\` lanes. Both create a **blocked_scope** GHL contact import-review record for an accepted first-party inquiry; no GHL import or outbound send occurs. The \`memory_retrieval\` form never creates a commercial account or GHL job.
+- Three Memory Machine lane policies were read back as inactive: \`memory_machine_venue\`, \`memory_machine_sponsor\`, \`memory_machine_event_buyer\`.
+- Five existing Memory Machine Muse send streams were checked: all \`sender_verified=false\`, \`send_authorized=false\`, \`delivery_enabled=false\`.
+- There are **0** actual rows in \`memory_machine_site_leads\` and **0** actual Memory Machine GHL-import jobs at this checkpoint; end-to-end production form submission is **not** verified. Transactional QA was successful, no synthetic data persisted.
+- Google Sheet \`MEMORY MACHINE - PROGRAM QA\` was updated after the merge. All numbers are point-in-time snapshots, not a live two-way sync.
