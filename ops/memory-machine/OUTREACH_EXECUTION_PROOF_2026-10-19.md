@@ -64,3 +64,12 @@ SELECT tgname FROM pg_trigger WHERE tgrelid='public.memory_machine_site_leads'::
 - Sponsor/event-buyer expansion (30 sponsor targets + 20 event buyers) remains a sourcing target, not an imported or approved inventory count.
 
 **Operating principle:** `sourced != verified != authorized != sent != installed != collected`.
+
+
+## Additional program controls completed (same date)
+- Added inactive outreach lanes `memory_machine_sponsor` and `memory_machine_event_buyer`, each with exact Memory Machine-only sender requirements and external dispatch disabled.
+- Created empty, honest research batches `2026-10-19:memory-machine:sponsors:research-30` (target 30, actual 0) and `2026-10-19:memory-machine:event-buyers:research-20` (target 20, actual 0). These are research quotas, not fabricated contacts or outreach-ready audiences.
+- Added `MEMORY MACHINE - PROGRAM QA` tab to the existing Outreach Command Center, with 16 workstreams, evidence pointers, owners, blockers, and outbound gates. Supabase counts in the tab are a dated readback snapshot, not a live connector.
+- Further rollback-only QA inserted two matching venue applications plus one sponsor inquiry in a single transaction. Within the transaction the router generated exactly **one** venue research account and **zero** sponsor-as-venue accounts. After rollback, synthetic lead and account residue was **0**.
+- Vercel live alias `https://memory-machine-sigma.vercel.app/` and `/for-venues` both returned HTTP **200**, served from the most recent READY production build. Later canceled deployments did not take the live alias offline.
+- Vercel project environment metadata returned **403**, and a local headless screenshot attempt was denied by network policy. No env access, desktop/mobile screenshot, actual form POST or new website deployment is asserted.
