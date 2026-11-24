@@ -1,6 +1,6 @@
 # AWS Communications integration — 2026-11-24
 
-Status: infrastructure audited; safety repairs deployed; access setup and delivery integration blocked pending security-access confirmation. Production messaging remains disabled.
+Status: infrastructure audited; safety repairs deployed; access setup and delivery integration approved but blocked by authenticated computer unavailability. Production messaging remains disabled.
 
 ## Verified environment
 - AWS account 875476617776, region us-east-1; authenticated console and CloudShell.
@@ -41,12 +41,12 @@ Status: infrastructure audited; safety repairs deployed; access setup and delive
 - Supabase post-test readback: AWS send rows=0; email events=0; SMS events=0; enabled profiles=0.
 - This is not successful end-to-end delivery testing. No real or simulator message was sent.
 
-## Concrete access change awaiting confirmation
+## Approved access change — execution blocked
 Create programmatic IAM user kollective-communications-integration with ops/aws/kollective-communications-readiness-policy.json; no console password, no IAM administration, no purchases, us-east-1 readiness reads only, explicit deny on SES/SMS/SNS sends. Store its key only in Supabase server-side Edge secrets, never public tables, browser clients or GitHub.
 
 Repair the SES SNS policy to its actual non-FIFO ARN with tightly scoped SES service publishing permission (source account 875476617776 and khg-* configuration set ARNs); connect its signed HTTPS webhook; configure SES event destinations. SMS additionally needs a dedicated tracking topic with tightly scoped service permissions and its topic ARN in server-side secrets before the currently closed SMS webhook will accept events.
 
-These operations create persistent security-sensitive access and require action-time confirmation under computer-use policy. Credential entry may require a secure user handoff. Production sending and provider test messages require separate explicit approval, including exact sender, recipient and content.
+The user explicitly approved the restricted setup through the AWS access approval control. Immediately afterward, the authenticated computer environment became unavailable; the computer-use tools were removed and the only Desktop Commander device was offline. No IAM identity/key was created, no credentials were stored and no SNS permissions/subscriptions were changed. Approval is retained for resumption and must not be requested again for this same scope. Credential entry may require a secure user handoff. Production sending and provider test messages require separate explicit approval, including exact sender, recipient and content.
 
 ## Outstanding dependencies
 - Secure IAM creation / credential storage, then STS and read-only provider validation.
@@ -58,3 +58,6 @@ These operations create persistent security-sensitive access and require action-
 - Preserve each brand's independent consent and suppression data; no audience migrations or merges occurred.
 
 Rollback: deployed prior versions email-send v7, sms-send v5, ses-events v6 and sms-events v5 are available through Supabase deployment history. Reverting them restores the security gaps; prefer targeted forward fixes. New SMS configuration sets have no origins/event destinations and emit no messages.
+
+## Approval checkpoint
+Setup access approved; production sends and purchases remain unapproved. Supabase marketing_runtime_config.aws_communications_integration_20261124 records blocked_environment_unavailable. Reconnect the authenticated AWS computer to resume the approved setup. No positive delivery test or full integration completion is claimed.
