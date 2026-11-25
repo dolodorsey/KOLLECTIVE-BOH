@@ -1,0 +1,59 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "MessagingReadinessOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ses:GetAccount",
+        "ses:ListEmailIdentities",
+        "ses:GetEmailIdentity",
+        "ses:ListConfigurationSets",
+        "ses:GetConfigurationSet",
+        "ses:GetConfigurationSetEventDestinations",
+        "sms-voice:DescribeAccountAttributes",
+        "sms-voice:DescribeAccountLimits",
+        "sms-voice:DescribeSpendLimits",
+        "sms-voice:DescribePhoneNumbers",
+        "sms-voice:DescribePools",
+        "sms-voice:DescribeConfigurationSets",
+        "sms-voice:DescribeEventDestinations",
+        "sms-voice:DescribeRegistrations"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "us-east-1"
+        }
+      }
+    },
+    {
+      "Sid": "PinnedTrackingRead",
+      "Effect": "Allow",
+      "Action": [
+        "sns:GetTopicAttributes",
+        "sns:ListSubscriptionsByTopic"
+      ],
+      "Resource": [
+        "arn:aws:sns:us-east-1:875476617776:khg-ses-events",
+        "arn:aws:sns:us-east-1:875476617776:khg-sms-events"
+      ]
+    },
+    {
+      "Sid": "ProductionMessagingHold",
+      "Effect": "Deny",
+      "Action": [
+        "ses:SendEmail",
+        "ses:SendRawEmail",
+        "ses:SendBulkEmail",
+        "ses:SendTemplatedEmail",
+        "ses:SendBulkTemplatedEmail",
+        "sms-voice:SendTextMessage",
+        "sms-voice:SendMediaMessage",
+        "sms-voice:SendVoiceMessage",
+        "sns:Publish"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
